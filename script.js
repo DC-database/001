@@ -1,8 +1,11 @@
-// Initialize records array and variables
-let records = [];
-let activeFilter = 'all';
-let usingGitHub = false;
-let isLoading = false;
+// Environment detection
+const isLocal = window.location.protocol === 'file:' || 
+                window.location.hostname === 'localhost' || 
+                window.location.hostname.endsWith('.local');
+
+// Path configurations
+const PDF_BASE_PATH = isLocal ? "L:/Files/INVOICE/" : null;
+const SRV_BASE_PATH = isLocal ? "L:/Files/SRV/" : null;
 
 // GitHub CSV URLs
 const GITHUB_CSV_URLS = {
@@ -10,22 +13,52 @@ const GITHUB_CSV_URLS = {
     '2022-2024': "https://raw.githubusercontent.com/DC-database/Invoice/main/records_2022-2024.csv"
 };
 
-const PDF_BASE_PATH = "L:/Files/INVOICE/";
-const SRV_BASE_PATH = "L:/Files/SRV/";
+// Application state
+let records = [];
+let activeFilter = 'all';
+let usingGitHub = false;
+let isLoading = false;
 
-// Show loading overlay
+// View PDF file
+function viewPDF(fileName) {
+    if (!fileName) {
+        alert("No PDF file linked to this record.");
+        return;
+    }
+    
+    if (isLocal) {
+        window.open(`${PDF_BASE_PATH}${fileName}`);
+    } else {
+        alert("Invoice files are only accessible when using the system on the local network.");
+    }
+}
+
+// View SRV file
+function viewSRV(fileName) {
+    if (!fileName) {
+        alert("No SRV file linked to this record.");
+        return;
+    }
+    
+    if (isLocal) {
+        window.open(`${SRV_BASE_PATH}${fileName}`);
+    } else {
+        alert("SRV files are only accessible when using the system on the local network.");
+    }
+}
+
+// Loading overlay functions
 function showLoading() {
     isLoading = true;
     document.getElementById('loadingOverlay').style.display = 'flex';
 }
 
-// Hide loading overlay
 function hideLoading() {
     isLoading = false;
     document.getElementById('loadingOverlay').style.display = 'none';
 }
 
-// Add this function to get progress percentage
+// Status progress calculation
 function getStatusPercentage(status) {
     const statusProgress = {
         'Pending': 0,
@@ -41,11 +74,9 @@ function getStatusPercentage(status) {
     return statusProgress[status] || 0;
 }
 
-
-// Function to get the last commit date for a GitHub file
+// GitHub API functions
 async function getGitHubFileLastUpdated(url) {
     try {
-        // Convert raw GitHub URL to API URL
         const apiUrl = url
             .replace('https://raw.githubusercontent.com/', 'https://api.github.com/repos/')
             .replace('/main/', '/commits?path=');
@@ -64,7 +95,6 @@ async function getGitHubFileLastUpdated(url) {
     }
 }
 
-// Update the file info with last update date
 async function updateFileInfo() {
     const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
     const url = GITHUB_CSV_URLS[selectedYear];
@@ -92,7 +122,6 @@ async function updateFileInfo() {
     }
 }
 
-// Format date for display in file info
 function formatDateForDisplay(date) {
     if (!date) return 'Unknown';
     return date.toLocaleDateString(undefined, {
@@ -104,7 +133,7 @@ function formatDateForDisplay(date) {
     });
 }
 
-// Toggle report section visibility
+// Report section functions
 function toggleReportSection() {
     const reportSection = document.getElementById('statementOfAccountSection');
     reportSection.style.display = reportSection.style.display === 'none' ? 'block' : 'none';
@@ -114,7 +143,6 @@ function closeReportSection() {
     document.getElementById('statementOfAccountSection').style.display = 'none';
 }
 
-// Clear report search
 function clearReportSearch() {
     document.getElementById('reportSearchTerm').value = '';
     document.getElementById('reportType').selectedIndex = 0;
@@ -128,7 +156,7 @@ function clearReportSearch() {
     document.getElementById('reportTotalAmount').textContent = '0.00';
 }
 
-// Update connection status
+// Connection status
 function updateConnectionStatus(connected) {
     const indicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('connectionStatus');
@@ -157,11 +185,10 @@ function updateConnectionStatus(connected) {
         usingGitHub = false;
     }
     
-    // Update file info
     updateFileInfo();
 }
 
-// Process CSV data into records
+// Data processing
 function processCSVData(data) {
     return data.map(item => ({
         entryDate: item['Entered Date'] || new Date().toISOString().split('T')[0],
@@ -179,7 +206,6 @@ function processCSVData(data) {
     }));
 }
 
-// Migrate status names for existing data
 function migrateStatus(records) {
     return records.map(record => {
         if (record.status === 'Under Process') {
@@ -189,7 +215,7 @@ function migrateStatus(records) {
     });
 }
 
-// Load data from GitHub CSV
+// Data loading
 async function loadFromGitHub(forceRefresh = false) {
     const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
     const url = GITHUB_CSV_URLS[selectedYear] + (forceRefresh ? `?timestamp=${new Date().getTime()}` : '');
@@ -236,7 +262,6 @@ async function loadFromGitHub(forceRefresh = false) {
     }
 }
 
-// Load data from localStorage
 function loadFromLocalStorage() {
     const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
     const savedData = localStorage.getItem(`recordsData_${selectedYear}`);
@@ -257,13 +282,11 @@ function loadFromLocalStorage() {
     }
 }
 
-// Save data to localStorage
 function saveData() {
     const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
     localStorage.setItem(`recordsData_${selectedYear}`, JSON.stringify(records));
 }
 
-// Clear local storage and reload data
 function clearLocalStorage() {
     if (confirm('Are you sure you want to clear all locally cached data? This cannot be undone.')) {
         const previousSelection = document.querySelector('input[name="dataSource"]:checked').value;
@@ -280,7 +303,7 @@ function clearLocalStorage() {
     }
 }
 
-// Update refreshTable function
+// Table functions
 function refreshTable(filteredRecords = null) {
     const tableBody = document.querySelector('#recordsTable tbody');
     tableBody.innerHTML = '';
@@ -316,46 +339,27 @@ function refreshTable(filteredRecords = null) {
             </td>
             <td class="action-btns">
                 <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
-                    onclick="viewPDF('${record.fileName ? PDF_BASE_PATH + record.fileName : ''}')" 
-                    ${!record.fileName ? 'disabled' : ''}>INV</button>
+                  onclick="viewPDF('${record.fileName || ''}')" 
+                  ${!record.fileName ? 'disabled' : ''}>INV</button>
                 <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
-                    onclick="viewSRV('${record.details ? SRV_BASE_PATH + record.details : ''}')" 
-                    ${!record.details ? 'disabled' : ''}>SRV</button>
+                  onclick="viewSRV('${record.details || ''}')" 
+                  ${!record.details ? 'disabled' : ''}>SRV</button>
             </td>
         `;
         tableBody.appendChild(row);
     });
 }
-// View PDF file
-function viewPDF(filepath) {
-    if (!filepath) {
-        alert('No PDF file associated with this record');
-        return;
-    }
-    window.open(filepath);
-}
 
-// View SRV file
-function viewSRV(filepath) {
-    if (!filepath) {
-        alert('No SRV file associated with this record');
-        return;
-    }
-    window.open(filepath);
-}
-
-// Format date for display
+// Utility functions
 function formatDate(dateString) {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-// Format number with commas
 function formatNumber(value) {
     return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-// Get CSS class for status badge
 function getStatusClass(status) {
     const statusClasses = {
         'For SRV': 'status-srv',
@@ -371,7 +375,7 @@ function getStatusClass(status) {
     return statusClasses[status] || '';
 }
 
-// Search records based on term and filters
+// Search and filter
 function searchRecords() {
     const term = document.getElementById('searchTerm').value.toLowerCase();
     const releaseDateInput = document.getElementById('releaseDateFilter').value;
@@ -404,7 +408,6 @@ function searchRecords() {
     refreshTable(filtered);
 }
 
-// Filter records by status
 function filterRecords(status) {
     activeFilter = status;
 
@@ -418,7 +421,6 @@ function filterRecords(status) {
     searchRecords();
 }
 
-// Clear all search and filters
 function clearSearch() {
     document.getElementById('searchTerm').value = '';
     document.getElementById('releaseDateFilter').value = '';
@@ -434,13 +436,12 @@ function clearSearch() {
     document.getElementById('recordsTable').style.display = 'none';
 }
 
-// Clear just the date filter
 function clearDate() {
     document.getElementById('releaseDateFilter').value = '';
     searchRecords();
 }
 
-// Show preview modal for export
+// Export functions
 function showPreview() {
     const modal = document.getElementById('previewModal');
     modal.style.display = 'block';
@@ -513,7 +514,6 @@ function showPreview() {
     };
 }
 
-// Export preview to Excel
 function exportPreviewToExcel() {
     const tableRows = document.querySelectorAll('#recordsTable tbody tr');
     const exportData = [];
@@ -560,7 +560,6 @@ function exportPreviewToExcel() {
     document.getElementById('previewModal').style.display = 'none';
 }
 
-// Export preview to PDF
 function exportPreviewToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -635,7 +634,6 @@ function exportPreviewToPDF() {
     document.getElementById('previewModal').style.display = 'none';
 }
 
-// Replace the existing export functions
 function exportToExcel() {
     showPreview();
 }
@@ -644,7 +642,7 @@ function exportToPDF() {
     showPreview();
 }
 
-// Statement of Account Report Functions
+// Report functions
 function generateReport() {
     const reportType = document.getElementById('reportType').value;
     const searchTerm = document.getElementById('reportSearchTerm').value.trim();
@@ -695,7 +693,6 @@ function generateReport() {
         return;
     }
     
-    // Calculate totals
     const invoiceTotal = filteredRecords
         .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
         
@@ -708,16 +705,12 @@ function generateReport() {
     
     const balance = poTotal - invoiceTotal;
 
-    // Update report header
     document.getElementById('reportHeader').innerHTML = headerText;
-    
-    // Update financial summary
     document.getElementById('poTotal').textContent = formatNumber(poTotal);
     document.getElementById('grandTotal').textContent = formatNumber(invoiceTotal);
     document.getElementById('accountsTotal').textContent = formatNumber(withAccountsTotal);
     document.getElementById('balanceTotal').textContent = formatNumber(balance);
     
-    // Populate report table without PO Value column
     const reportTableBody = document.querySelector('#reportTable tbody');
     reportTableBody.innerHTML = '';
     
@@ -736,14 +729,9 @@ function generateReport() {
         reportTableBody.appendChild(row);
     });
     
-    // Update the total amount in footer
     document.getElementById('reportTotalAmount').textContent = formatNumber(invoiceTotal);
-    
-    // Show the report section and table
     document.getElementById('statementOfAccountSection').style.display = 'block';
     document.getElementById('reportTable').style.display = 'table';
-    
-    // Scroll to report section
     document.querySelector('.report-section').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -756,12 +744,10 @@ function exportReport() {
     const accountsTotal = document.getElementById('accountsTotal').textContent;
     const balance = document.getElementById('balanceTotal').textContent;
     
-    // Get the filtered records
     const reportType = document.getElementById('reportType').value;
     const searchTerm = document.getElementById('reportSearchTerm').value.trim();
     let filteredRecords = [];
     
-    // Same filtering logic as generateReport()
     switch(reportType) {
         case 'po':
             filteredRecords = records.filter(record => 
@@ -780,7 +766,6 @@ function exportReport() {
             break;
     }
     
-    // Prepare data without PO Value column
     const data = filteredRecords.map((record, index) => [
         index + 1,
         formatDate(record.entryDate),
@@ -792,27 +777,22 @@ function exportReport() {
         record.status
     ]);
     
-    // Add total row
     data.push(['', '', '', '', 'Total:', formatNumber(invoiceTotal), '', '']);
     
-    // Add header
     doc.setFontSize(14);
     doc.setTextColor(40);
     doc.text('IBA Trading Statement of Account', 300, 30, { align: 'center' });
     
-    // Add report header info
     doc.setFontSize(10);
     const splitHeader = doc.splitTextToSize(reportHeader, 500);
     doc.text(splitHeader, 40, 60);
     
-    // Add financial summary
     doc.setFontSize(10);
     doc.text(`PO Value: ${poTotal}`, 40, 90);
     doc.text(`Invoice Total: ${invoiceTotal}`, 150, 90);
     doc.text(`With Accounts Total: ${accountsTotal}`, 260, 90);
     doc.text(`Balance: ${balance}`, 370, 90);
     
-    // Add table without PO Value column
     doc.autoTable({
         head: [['ID', 'Date', 'PO', 'Vendor', 'Invoice', 'Amount', 'Release Date', 'Status']],
         body: data,
@@ -832,7 +812,7 @@ function exportReport() {
             fillColor: [240, 240, 240]
         },
         columnStyles: {
-            5: { halign: 'right' } // Amount column right-aligned
+            5: { halign: 'right' }
         },
         styles: {
             overflow: 'linebreak',
@@ -850,7 +830,6 @@ function printReport() {
     const accountsTotal = document.getElementById('accountsTotal').textContent;
     const balance = document.getElementById('balanceTotal').textContent;
     
-    // Create a print-specific version
     const printContent = `
         <style>
             @page { size: auto; margin: 5mm; }
@@ -913,6 +892,7 @@ function printReport() {
     }, 500);
 }
 
+// Contact function
 function contactAboutMissingData() {
     const searchTerm = document.getElementById('searchTerm').value;
     const releaseDate = document.getElementById('releaseDateFilter').value;
@@ -931,11 +911,10 @@ function contactAboutMissingData() {
     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
 }
 
-// Initialize the application
+// Initialization
 window.onload = function() {
     updateConnectionStatus(false);
     
-    // Connect button event listener
     document.getElementById('connectBtn').addEventListener('click', async function() {
         const btn = this;
         const originalHTML = btn.innerHTML;
@@ -957,7 +936,6 @@ window.onload = function() {
         }
     });
     
-    // Year selector change event
     document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
         radio.addEventListener('change', async function() {
             const selectedYear = this.value;
@@ -995,7 +973,6 @@ window.onload = function() {
         });
     });
     
-    // Search input event listeners
     document.getElementById('searchTerm').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -1010,7 +987,6 @@ window.onload = function() {
         }
     });
     
-    // Close modal event listeners
     document.querySelector('.close').onclick = function() {
         document.getElementById('previewModal').style.display = 'none';
     };
@@ -1022,7 +998,6 @@ window.onload = function() {
         }
     };
     
-    // Initial load
     document.querySelector('input[value="2025"]').checked = true;
     loadFromLocalStorage();
     
