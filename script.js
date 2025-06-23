@@ -1,13 +1,3 @@
-
-
-// Add this at the top of script.js
-const isLocal = window.location.protocol === 'file:' || 
-                window.location.hostname === 'localhost' || 
-                window.location.hostname.endsWith('.local');
-
-const PDF_BASE_PATH = isLocal ? "L:/Files/INVOICE/" : null;
-const SRV_BASE_PATH = isLocal ? "L:/Files/SRV/" : null;
-
 // Initialize records array and variables
 let records = [];
 let activeFilter = 'all';
@@ -326,39 +316,32 @@ function refreshTable(filteredRecords = null) {
             </td>
             <td class="action-btns">
                 <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
-  onclick="viewPDF('${record.fileName || ''}')" 
-  ${!record.fileName ? 'disabled' : ''}>INV</button>
-
- <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
-  onclick="viewSRV('${record.details || ''}')" 
-  ${!record.details ? 'disabled' : ''}>SRV</button>
+                    onclick="viewPDF('${record.fileName ? PDF_BASE_PATH + record.fileName : ''}')" 
+                    ${!record.fileName ? 'disabled' : ''}>INV</button>
+                <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
+                    onclick="viewSRV('${record.details ? SRV_BASE_PATH + record.details : ''}')" 
+                    ${!record.details ? 'disabled' : ''}>SRV</button>
             </td>
         `;
         tableBody.appendChild(row);
     });
 }
 // View PDF file
-function viewPDF(fileName) {
-  if (!fileName) {
-    alert("No PDF file linked to this record.");
-    return;
-  }
-  // Encode filenames for GitHub (handles spaces/special chars)
-  const fullPath = isGitHub 
-    ? `${PDF_BASE_PATH}${encodeURIComponent(fileName)}` 
-    : `${PDF_BASE_PATH}${fileName}`;
-  window.open(fullPath);
+function viewPDF(filepath) {
+    if (!filepath) {
+        alert('No PDF file associated with this record');
+        return;
+    }
+    window.open(filepath);
 }
 
-function viewSRV(fileName) {
-  if (!fileName) {
-    alert("No SRV file linked to this record.");
-    return;
-  }
-  const fullPath = isGitHub 
-    ? `${SRV_BASE_PATH}${encodeURIComponent(fileName)}` 
-    : `${SRV_BASE_PATH}${fileName}`;
-  window.open(fullPath);
+// View SRV file
+function viewSRV(filepath) {
+    if (!filepath) {
+        alert('No SRV file associated with this record');
+        return;
+    }
+    window.open(filepath);
 }
 
 // Format date for display
