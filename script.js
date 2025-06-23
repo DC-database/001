@@ -326,12 +326,12 @@ function refreshTable(filteredRecords = null) {
             </td>
             <td class="action-btns">
                 <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
-    onclick="viewPDF('${record.fileName || ''}')" 
-    ${!record.fileName ? 'disabled' : ''}>INV</button>
+  onclick="viewPDF('${record.fileName || ''}')" 
+  ${!record.fileName ? 'disabled' : ''}>INV</button>
 
-<button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
-    onclick="viewSRV('${record.details || ''}')" 
-    ${!record.details ? 'disabled' : ''}>SRV</button>
+ <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
+  onclick="viewSRV('${record.details || ''}')" 
+  ${!record.details ? 'disabled' : ''}>SRV</button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -339,25 +339,26 @@ function refreshTable(filteredRecords = null) {
 }
 // View PDF file
 function viewPDF(fileName) {
-    if (!fileName) {
-        alert('No PDF file associated with this record');
-        return;
-    }
-    const fullPath = isGitHub ? 
-        `${PDF_BASE_PATH}${encodeURIComponent(fileName)}` : 
-        `${PDF_BASE_PATH}${fileName}`;
-    window.open(fullPath);
+  if (!fileName) {
+    alert("No PDF file linked to this record.");
+    return;
+  }
+  // Encode filenames for GitHub (handles spaces/special chars)
+  const fullPath = isGitHub 
+    ? `${PDF_BASE_PATH}${encodeURIComponent(fileName)}` 
+    : `${PDF_BASE_PATH}${fileName}`;
+  window.open(fullPath);
 }
 
 function viewSRV(fileName) {
-    if (!fileName) {
-        alert('No SRV file associated with this record');
-        return;
-    }
-    const fullPath = isGitHub ? 
-        `${SRV_BASE_PATH}${encodeURIComponent(fileName)}` : 
-        `${SRV_BASE_PATH}${fileName}`;
-    window.open(fullPath);
+  if (!fileName) {
+    alert("No SRV file linked to this record.");
+    return;
+  }
+  const fullPath = isGitHub 
+    ? `${SRV_BASE_PATH}${encodeURIComponent(fileName)}` 
+    : `${SRV_BASE_PATH}${fileName}`;
+  window.open(fullPath);
 }
 
 // Format date for display
