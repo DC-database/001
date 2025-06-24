@@ -86,11 +86,11 @@ function hideLoading() {
 function getStatusPercentage(status) {
     const statusProgress = {
         'Open': 0,
-        'For SRV': 25,
-        'For IPC': 50,
-        'No Invoice': 50,
-        'Report': 50,
-        'Under Review': 60,
+        'For SRV': 10,
+        'For IPC': 25,
+        'No Invoice': 25,
+        'Report': 25,
+        'Under Review': 50,
         'CEO Approval': 80,
         'With Accounts': 100
     };
