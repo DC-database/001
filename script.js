@@ -977,14 +977,14 @@ function setupResponsiveElements() {
     
     // Then hide columns based on screen size
     if (screenWidth <= 400) {
-        // Very small screens - show ID, PO, Vendor, Status, Actions
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        // Very small screens - show ID, Site, PO, Amount, Status, Actions
+        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
         
         // Adjust column widths
-        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5)').forEach(el => {
-            el.style.maxWidth = '70px';
+        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7)').forEach(el => {
+            el.style.maxWidth = '60px';
             el.style.overflow = 'hidden';
             el.style.textOverflow = 'ellipsis';
             el.style.whiteSpace = 'nowrap';
