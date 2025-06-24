@@ -6,10 +6,10 @@ function detectDeviceType() {
     if (isTouchDevice) {
         document.body.classList.add('touch-device');
         
-        if (screenWidth <= 576) {
+        if (screenWidth <= 400) {
             document.body.classList.add('mobile-device');
             document.body.classList.remove('tablet-device', 'desktop-device');
-        } else if (screenWidth <= 992) {
+        } else if (screenWidth <= 768) {
             document.body.classList.add('tablet-device');
             document.body.classList.remove('mobile-device', 'desktop-device');
         } else {
@@ -91,7 +91,7 @@ function getStatusPercentage(status) {
         'No Invoice': 25,
         'Report': 25,
         'Under Review': 50,
-        'CEO Approval': 80,
+        'CEO Approval': 75,
         'With Accounts': 100
     };
     return statusProgress[status] || 0;
@@ -967,31 +967,58 @@ function setupResponsiveElements() {
     detectDeviceType();
     const screenWidth = window.innerWidth;
     
-    // Adjust table columns based on screen size
+    // Get all table header and data cells
+    const allTh = document.querySelectorAll('#recordsTable th');
+    const allTd = document.querySelectorAll('#recordsTable td');
+    
+    // First, show all columns
+    allTh.forEach(th => th.style.display = '');
+    allTd.forEach(td => td.style.display = '');
+    
+    // Then hide columns based on screen size
     if (screenWidth <= 400) {
-        // Very small screens - show minimal columns
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        // Very small screens - show ID, PO, Vendor, Status, Actions
+        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
+        });
+        
+        // Adjust column widths
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5)').forEach(el => {
+            el.style.maxWidth = '70px';
+            el.style.overflow = 'hidden';
+            el.style.textOverflow = 'ellipsis';
+            el.style.whiteSpace = 'nowrap';
         });
     } else if (screenWidth <= 576) {
-        // Small mobile screens
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-    } else if (screenWidth <= 768) {
-        // Tablets and larger phones
+        // Small mobile screens - show ID, PO, Vendor, Invoice, Status, Actions
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
-    } else if (screenWidth <= 992) {
-        // Small desktop/laptop
-        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        
+        // Adjust column widths
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6)').forEach(el => {
+            el.style.maxWidth = '80px';
+            el.style.overflow = 'hidden';
+            el.style.textOverflow = 'ellipsis';
+            el.style.whiteSpace = 'nowrap';
+        });
+    } else if (screenWidth <= 768) {
+        // Tablets and larger phones - show ID, PO, Vendor, Invoice, Status, Actions
+        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
-    } else {
-        // Show all columns on larger screens
-        document.querySelectorAll('#recordsTable th, #recordsTable td').forEach(el => {
-            el.style.display = '';
+        
+        // Adjust column widths
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6)').forEach(el => {
+            el.style.maxWidth = '100px';
+            el.style.overflow = 'hidden';
+            el.style.textOverflow = 'ellipsis';
+            el.style.whiteSpace = 'nowrap';
+        });
+    } else if (screenWidth <= 992) {
+        // Small desktop/laptop - hide less important columns
+        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+            el.style.display = 'none';
         });
     }
 }

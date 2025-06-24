@@ -779,6 +779,7 @@ tr:hover {
         font-size: 13px;
     }
     
+    /* Hide less important columns on medium screens */
     #recordsTable th:nth-child(3), 
     #recordsTable td:nth-child(3),
     #recordsTable th:nth-child(8), 
@@ -840,11 +841,45 @@ tr:hover {
         -webkit-overflow-scrolling: touch;
     }
     
+    /* Show more columns on mobile */
+    #recordsTable th:nth-child(1), 
+    #recordsTable td:nth-child(1),
+    #recordsTable th:nth-child(4), 
+    #recordsTable td:nth-child(4),
+    #recordsTable th:nth-child(5), 
+    #recordsTable td:nth-child(5),
+    #recordsTable th:nth-child(6), 
+    #recordsTable td:nth-child(6),
+    #recordsTable th:nth-child(9), 
+    #recordsTable td:nth-child(9),
+    #recordsTable th:nth-child(10), 
+    #recordsTable td:nth-child(10) {
+        display: table-cell;
+    }
+    
+    /* Hide less important columns on mobile */
     #recordsTable th:nth-child(2), 
     #recordsTable td:nth-child(2),
+    #recordsTable th:nth-child(3), 
+    #recordsTable td:nth-child(3),
     #recordsTable th:nth-child(7), 
-    #recordsTable td:nth-child(7) {
+    #recordsTable td:nth-child(7),
+    #recordsTable th:nth-child(8), 
+    #recordsTable td:nth-child(8) {
         display: none;
+    }
+    
+    /* Adjust column widths for better mobile display */
+    #recordsTable th:nth-child(4), 
+    #recordsTable td:nth-child(4),
+    #recordsTable th:nth-child(5), 
+    #recordsTable td:nth-child(5),
+    #recordsTable th:nth-child(6), 
+    #recordsTable td:nth-child(6) {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
     .financial-summary {
@@ -876,11 +911,14 @@ tr:hover {
         padding: 6px 8px;
     }
     
+    /* Adjust column widths for very small screens */
     #recordsTable th:nth-child(4), 
     #recordsTable td:nth-child(4),
+    #recordsTable th:nth-child(5), 
+    #recordsTable td:nth-child(5),
     #recordsTable th:nth-child(6), 
     #recordsTable td:nth-child(6) {
-        display: none;
+        max-width: 80px;
     }
     
     .action-btns .btn {
@@ -904,9 +942,40 @@ tr:hover {
 }
 
 @media (max-width: 400px) {
+    /* On smallest screens, show ID, PO, Vendor, Status, Actions */
+    #recordsTable th:nth-child(1), 
+    #recordsTable td:nth-child(1),
+    #recordsTable th:nth-child(4), 
+    #recordsTable td:nth-child(4),
+    #recordsTable th:nth-child(5), 
+    #recordsTable td:nth-child(5),
+    #recordsTable th:nth-child(9), 
+    #recordsTable td:nth-child(9),
+    #recordsTable th:nth-child(10), 
+    #recordsTable td:nth-child(10) {
+        display: table-cell;
+    }
+    
+    /* Hide other columns */
+    #recordsTable th:nth-child(2), 
+    #recordsTable td:nth-child(2),
+    #recordsTable th:nth-child(3), 
+    #recordsTable td:nth-child(3),
+    #recordsTable th:nth-child(6), 
+    #recordsTable td:nth-child(6),
+    #recordsTable th:nth-child(7), 
+    #recordsTable td:nth-child(7),
+    #recordsTable th:nth-child(8), 
+    #recordsTable td:nth-child(8) {
+        display: none;
+    }
+    
+    /* Make PO and Vendor columns narrower */
+    #recordsTable th:nth-child(4), 
+    #recordsTable td:nth-child(4),
     #recordsTable th:nth-child(5), 
     #recordsTable td:nth-child(5) {
-        display: none;
+        max-width: 70px;
     }
 }
 
