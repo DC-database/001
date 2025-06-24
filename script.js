@@ -1,40 +1,31 @@
+// Enhanced device detection
+function detectDeviceType() {
+    const screenWidth = window.innerWidth;
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    if (isTouchDevice) {
+        document.body.classList.add('touch-device');
+        
+        if (screenWidth <= 576) {
+            document.body.classList.add('mobile-device');
+            document.body.classList.remove('tablet-device', 'desktop-device');
+        } else if (screenWidth <= 992) {
+            document.body.classList.add('tablet-device');
+            document.body.classList.remove('mobile-device', 'desktop-device');
+        } else {
+            document.body.classList.add('desktop-device');
+            document.body.classList.remove('mobile-device', 'tablet-device');
+        }
+    } else {
+        document.body.classList.add('desktop-device');
+        document.body.classList.remove('mobile-device', 'tablet-device', 'touch-device');
+    }
+}
+
 // Environment detection
 const isLocal = window.location.protocol === 'file:' || 
                 window.location.hostname === 'localhost' || 
                 window.location.hostname.endsWith('.local');
-
-// Touch device detection
-function isTouchDevice() {
-    return 'ontouchstart' in window || navigator.maxTouchPoints;
-}
-
-// Initialize touch device class
-if (isTouchDevice()) {
-    document.body.classList.add('touch-device');
-}
-
-// Responsive adjustments
-function setupResponsiveElements() {
-    const screenWidth = window.innerWidth;
-    
-    // Adjust table columns based on screen size
-    if (screenWidth <= 480) {
-        // Very small screens - show minimal columns
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-    } else if (screenWidth <= 768) {
-        // Small screens - hide some columns
-        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-    } else {
-        // Show all columns on larger screens
-        document.querySelectorAll('#recordsTable th, #recordsTable td').forEach(el => {
-            el.style.display = '';
-        });
-    }
-}
 
 // Path configurations
 const PDF_BASE_PATH = isLocal ? "L:/Files/INVOICE/" : null;
@@ -95,11 +86,11 @@ function hideLoading() {
 function getStatusPercentage(status) {
     const statusProgress = {
         'Open': 0,
-        'For SRV': 10,
-        'For IPC': 25,
-        'No Invoice': 25,
-        'Report': 25,
-        'Under Review': 50,
+        'For SRV': 25,
+        'For IPC': 50,
+        'No Invoice': 50,
+        'Report': 50,
+        'Under Review': 60,
         'CEO Approval': 80,
         'With Accounts': 100
     };
@@ -359,46 +350,46 @@ function refreshTable(filteredRecords = null) {
         const percentage = getStatusPercentage(record.status);
         const row = document.createElement('tr');
         row.innerHTML = `
-    <td>${index + 1}</td>
-    <td>${formatDate(record.entryDate)}</td>
-    <td>${record.site || '-'}</td>
-    <td>${record.poNumber || '-'}</td>
-    <td>${record.vendor || '-'}</td>
-    <td>${record.invoiceNumber || '-'}</td>
-    <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
-    <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
-    <td class="status-cell">
-        <div class="step-progress-container">
-            <div class="step-progress" data-percentage="${percentage}">
-                <div class="step step-1 ${percentage >= 25 ? 'active' : ''}"></div>
-                <div class="step-connector ${percentage >= 25 ? 'active' : ''}"></div>
-                <div class="step step-2 ${percentage >= 50 ? 'active' : ''}"></div>
-                <div class="step-connector ${percentage >= 50 ? 'active' : ''}"></div>
-                <div class="step step-3 ${percentage >= 60 ? 'active' : ''}"></div>
-                <div class="step-connector ${percentage >= 60 ? 'active' : ''}"></div>
-                <div class="step step-4 ${percentage >= 80 ? 'active' : ''}"></div>
-                <div class="step-connector ${percentage >= 80 ? 'active' : ''}"></div>
-                <div class="step step-5 ${percentage >= 100 ? 'active' : ''}"></div>
-            </div>
-            <div class="step-labels">
-                <span class="step-label">SRV</span>
-                <span class="step-label">IPC/Report</span>
-                <span class="step-label">Review</span>
-                <span class="step-label">CEO</span>
-                <span class="step-label">Accounts</span>
-            </div>
-            <div class="status-tooltip">${record.status} - ${percentage}%</div>
-        </div>
-    </td>
-    <td class="action-btns">
-        <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
-          onclick="viewPDF('${record.fileName || ''}')" 
-          ${!record.fileName ? 'disabled' : ''}>INV</button>
-        <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
-          onclick="viewSRV('${record.details || ''}')" 
-          ${!record.details ? 'disabled' : ''}>SRV</button>
-    </td>
-`;
+            <td>${index + 1}</td>
+            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.site || '-'}</td>
+            <td>${record.poNumber || '-'}</td>
+            <td>${record.vendor || '-'}</td>
+            <td>${record.invoiceNumber || '-'}</td>
+            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+            <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
+            <td class="status-cell">
+                <div class="step-progress-container">
+                    <div class="step-progress" data-percentage="${percentage}">
+                        <div class="step step-1 ${percentage >= 25 ? 'active' : ''}"></div>
+                        <div class="step-connector ${percentage >= 25 ? 'active' : ''}"></div>
+                        <div class="step step-2 ${percentage >= 50 ? 'active' : ''}"></div>
+                        <div class="step-connector ${percentage >= 50 ? 'active' : ''}"></div>
+                        <div class="step step-3 ${percentage >= 60 ? 'active' : ''}"></div>
+                        <div class="step-connector ${percentage >= 60 ? 'active' : ''}"></div>
+                        <div class="step step-4 ${percentage >= 80 ? 'active' : ''}"></div>
+                        <div class="step-connector ${percentage >= 80 ? 'active' : ''}"></div>
+                        <div class="step step-5 ${percentage >= 100 ? 'active' : ''}"></div>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-label">SRV</span>
+                        <span class="step-label">IPC/Report</span>
+                        <span class="step-label">Review</span>
+                        <span class="step-label">CEO</span>
+                        <span class="step-label">Accounts</span>
+                    </div>
+                    <div class="status-tooltip">${record.status} - ${percentage}%</div>
+                </div>
+            </td>
+            <td class="action-btns">
+                <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
+                  onclick="viewPDF('${record.fileName || ''}')" 
+                  ${!record.fileName ? 'disabled' : ''}>INV</button>
+                <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
+                  onclick="viewSRV('${record.details || ''}')" 
+                  ${!record.details ? 'disabled' : ''}>SRV</button>
+            </td>
+        `;
         tableBody.appendChild(row);
     });
     
@@ -653,7 +644,7 @@ function exportPreviewToPDF() {
         }
     });
 
-    data.push(['', '', '', '', '', 'TOTAL', formatNumber(total), '']);
+    data.push(['', '', '', '', 'TOTAL', formatNumber(total), '', '']);
 
     doc.autoTable({
         head: [['ID', 'Date', 'Site', 'PO', 'Vendor', 'Invoice', 'Amount', 'Status']],
@@ -971,15 +962,48 @@ function contactAboutMissingData() {
     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
 }
 
+// Responsive setup
+function setupResponsiveElements() {
+    detectDeviceType();
+    const screenWidth = window.innerWidth;
+    
+    // Adjust table columns based on screen size
+    if (screenWidth <= 400) {
+        // Very small screens - show minimal columns
+        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+            el.style.display = 'none';
+        });
+    } else if (screenWidth <= 576) {
+        // Small mobile screens
+        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+            el.style.display = 'none';
+        });
+    } else if (screenWidth <= 768) {
+        // Tablets and larger phones
+        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+            el.style.display = 'none';
+        });
+    } else if (screenWidth <= 992) {
+        // Small desktop/laptop
+        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+            el.style.display = 'none';
+        });
+    } else {
+        // Show all columns on larger screens
+        document.querySelectorAll('#recordsTable th, #recordsTable td').forEach(el => {
+            el.style.display = '';
+        });
+    }
+}
+
 // Initialization
 window.onload = function() {
+    detectDeviceType();
     updateConnectionStatus(false);
     
-    // Setup responsive elements
-    setupResponsiveElements();
-    
-    // Add window resize listener
+    // Add event listeners for responsive behavior
     window.addEventListener('resize', setupResponsiveElements);
+    window.addEventListener('orientationchange', setupResponsiveElements);
     
     document.getElementById('connectBtn').addEventListener('click', async function() {
         const btn = this;

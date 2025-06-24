@@ -89,6 +89,7 @@ h3 {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 16px;
 }
 
 .filter-container {
@@ -180,6 +181,7 @@ h3 {
     font-weight: 500;
     transition: all 0.3s;
     color: white;
+    min-height: 44px;
 }
 
 .btn-primary {
@@ -307,6 +309,7 @@ tr:hover {
 .action-btns {
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
 .numeric {
@@ -477,6 +480,7 @@ tr:hover {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 16px;
 }
 
 .report-controls input {
@@ -612,14 +616,12 @@ tr:hover {
     100% { transform: rotate(360deg); }
 }
 
-/* New styles for progress bar */
+/* Status progress */
 .status-cell {
     position: relative;
     padding: 0 !important;
 }
 
-
-/* Add new step progress styles */
 .step-progress-container {
     position: relative;
     padding: 25px 0 5px;
@@ -677,11 +679,6 @@ tr:hover {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-/* Tooltip styling */
-.step-progress-container:hover .status-tooltip {
-    display: block;
 }
 
 .status-tooltip {
@@ -742,71 +739,27 @@ tr:hover {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
-    .step {
-        width: 12px;
-        height: 12px;
+@media (max-width: 1200px) {
+    .container {
+        padding: 20px;
     }
     
-    .step-connector {
-        height: 3px;
+    .filter-container {
+        justify-content: center;
     }
     
-    .step-labels {
-        font-size: 8px;
-    }
-    
-    .step-progress-container {
-        padding: 20px 0 5px;
+    .financial-summary {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 480px) {
-    .step {
-        width: 10px;
-        height: 10px;
-    }
-    
-    .step-connector {
-        height: 2px;
-    }
-    
-    .step-labels {
-        font-size: 7px;
-    }
-    
-    .step-progress-container {
-        padding: 15px 0 5px;
-    }
-}
-
-
-/* Adjust column widths */
-#recordsTable th:nth-child(9),
-#recordsTable td:nth-child(9) {
-    min-width: 140px;
-    max-width: 160px;
-}
-
-#recordsTable th:nth-child(10),
-#recordsTable td:nth-child(10) {
-    min-width: 100px;
-    width: 100px;
-}
-
-/* Smaller buttons */
-.action-btns .btn {
-    padding: 4px 8px;
-    font-size: 12px;
-    min-width: 50px;
-    margin: 2px;
-}
-
-/* Responsive Tables */
 @media (max-width: 992px) {
-    /* Tablet styles */
     .container {
         padding: 15px;
+    }
+    
+    h1 {
+        font-size: 28px;
     }
     
     .search-container, 
@@ -826,13 +779,32 @@ tr:hover {
         font-size: 13px;
     }
     
-    .financial-summary {
-        grid-template-columns: 1fr 1fr;
+    #recordsTable th:nth-child(3), 
+    #recordsTable td:nth-child(3),
+    #recordsTable th:nth-child(8), 
+    #recordsTable td:nth-child(8) {
+        display: none;
+    }
+    
+    .step-progress-container {
+        padding: 20px 0 5px;
+    }
+    
+    .step {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .step-connector {
+        height: 3px;
+    }
+    
+    .step-labels {
+        font-size: 8px;
     }
 }
 
 @media (max-width: 768px) {
-    /* Mobile styles */
     .container {
         padding: 10px;
     }
@@ -862,27 +834,16 @@ tr:hover {
         margin-bottom: 5px;
     }
     
-    .filter-container {
-        justify-content: center;
-    }
-    
-    .filter-btn {
-        padding: 6px 10px;
-        font-size: 12px;
-    }
-    
-    /* Stack table cells vertically on small screens */
     #recordsTable, #reportTable {
         display: block;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
     
-    /* Hide some columns on mobile */
-    #recordsTable th:nth-child(3), 
-    #recordsTable td:nth-child(3), /* Site */
-    #recordsTable th:nth-child(8), 
-    #recordsTable td:nth-child(8) { /* Release Date */
+    #recordsTable th:nth-child(2), 
+    #recordsTable td:nth-child(2),
+    #recordsTable th:nth-child(7), 
+    #recordsTable td:nth-child(7) {
         display: none;
     }
     
@@ -896,18 +857,12 @@ tr:hover {
         padding: 15px;
     }
     
-    /* Adjust progress bar for mobile */
-    .status-text {
-        font-size: 9px;
-    }
-    
-    .status-progress-container {
-        height: 20px;
+    .action-btns {
+        flex-direction: column;
     }
 }
 
-@media (max-width: 480px) {
-    /* Extra small devices */
+@media (max-width: 576px) {
     h1 {
         font-size: 20px;
     }
@@ -921,17 +876,11 @@ tr:hover {
         padding: 6px 8px;
     }
     
-    /* Hide more columns on very small screens */
-    #recordsTable th:nth-child(2), 
-    #recordsTable td:nth-child(2), /* Date */
-    #recordsTable th:nth-child(7), 
-    #recordsTable td:nth-child(7) { /* Amount */
+    #recordsTable th:nth-child(4), 
+    #recordsTable td:nth-child(4),
+    #recordsTable th:nth-child(6), 
+    #recordsTable td:nth-child(6) {
         display: none;
-    }
-    
-    .action-btns {
-        flex-direction: column;
-        gap: 3px;
     }
     
     .action-btns .btn {
@@ -939,32 +888,25 @@ tr:hover {
         padding: 3px 5px;
         font-size: 11px;
     }
+    
+    .step {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .step-connector {
+        height: 2px;
+    }
+    
+    .step-labels {
+        font-size: 7px;
+    }
 }
 
-/* Touch device adjustments */
-.touch-device .btn {
-    padding: 12px 15px;
-    min-height: 44px; /* Minimum touch target size */
-}
-
-.touch-device .filter-btn {
-    padding: 10px 15px;
-}
-
-.touch-device input, 
-.touch-device select {
-    min-height: 44px;
-    font-size: 16px; /* Larger text for touch devices */
-}
-
-.touch-device .action-btns .btn {
-    min-height: 36px;
-}
-
-/* Prevent zoom on input focus */
-@media screen and (max-width: 768px) {
-    input, select, textarea {
-        font-size: 16px !important;
+@media (max-width: 400px) {
+    #recordsTable th:nth-child(5), 
+    #recordsTable td:nth-child(5) {
+        display: none;
     }
 }
 
