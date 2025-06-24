@@ -612,24 +612,363 @@ tr:hover {
     100% { transform: rotate(360deg); }
 }
 
+/* New styles for progress bar */
+.status-cell {
+    position: relative;
+    padding: 0 !important;
+}
+
+
+/* Add new step progress styles */
+.step-progress-container {
+    position: relative;
+    padding: 25px 0 5px;
+    width: 100%;
+}
+
+.step-progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+}
+
+.step {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    border: 2px solid #e0e0e0;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.step-connector {
+    flex-grow: 1;
+    height: 4px;
+    background-color: #e0e0e0;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.step-connector.active {
+    background-color: #4CAF50;
+}
+
+.step-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 5px;
+    font-size: 10px;
+    color: #666;
+}
+
+.step-label {
+    width: 20%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tooltip styling */
+.step-progress-container:hover .status-tooltip {
+    display: block;
+}
+
+.status-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0,0,0,0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 5px;
+}
+
+.status-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0,0,0,0.8) transparent transparent transparent;
+}
+
+/* Color transition for steps */
+.step-1.active {
+    background-color: #FFEB3B;
+    border-color: #FFEB3B;
+}
+
+.step-2.active {
+    background-color: #8BC34A;
+    border-color: #8BC34A;
+}
+
+.step-3.active {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.step-4.active {
+    background-color: #388E3C;
+    border-color: #388E3C;
+}
+
+.step-5.active {
+    background-color: #2E7D32;
+    border-color: #2E7D32;
+}
+
+.step-connector.active {
+    background: linear-gradient(to right, #FFEB3B, #8BC34A, #4CAF50, #388E3C, #2E7D32);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
+    .step {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .step-connector {
+        height: 3px;
+    }
+    
+    .step-labels {
+        font-size: 8px;
+    }
+    
+    .step-progress-container {
+        padding: 20px 0 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .step {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .step-connector {
+        height: 2px;
+    }
+    
+    .step-labels {
+        font-size: 7px;
+    }
+    
+    .step-progress-container {
+        padding: 15px 0 5px;
+    }
+}
+
+
+/* Adjust column widths */
+#recordsTable th:nth-child(9),
+#recordsTable td:nth-child(9) {
+    min-width: 140px;
+    max-width: 160px;
+}
+
+#recordsTable th:nth-child(10),
+#recordsTable td:nth-child(10) {
+    min-width: 100px;
+    width: 100px;
+}
+
+/* Smaller buttons */
+.action-btns .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 50px;
+    margin: 2px;
+}
+
+/* Responsive Tables */
+@media (max-width: 992px) {
+    /* Tablet styles */
+    .container {
+        padding: 15px;
+    }
+    
+    .search-container, 
+    .filter-container, 
+    .export-import-container,
+    .report-controls {
+        gap: 8px;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    th, td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .financial-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile styles */
+    .container {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .search-container, 
+    .filter-container, 
+    .export-import-container,
+    .report-controls {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .search-container input,
+    .report-controls input,
+    .report-controls select {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .filter-container {
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    /* Stack table cells vertically on small screens */
+    #recordsTable, #reportTable {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Hide some columns on mobile */
+    #recordsTable th:nth-child(3), 
+    #recordsTable td:nth-child(3), /* Site */
+    #recordsTable th:nth-child(8), 
+    #recordsTable td:nth-child(8) { /* Release Date */
+        display: none;
+    }
+    
     .financial-summary {
         grid-template-columns: 1fr;
     }
     
-    .search-container, .report-controls {
-        flex-wrap: wrap;
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 15px;
     }
     
-    .search-container input, 
-    .report-controls input, 
-    .report-controls select {
-        min-width: 100%;
-        margin-bottom: 10px;
+    /* Adjust progress bar for mobile */
+    .status-text {
+        font-size: 9px;
+    }
+    
+    .status-progress-container {
+        height: 20px;
     }
 }
 
+@media (max-width: 480px) {
+    /* Extra small devices */
+    h1 {
+        font-size: 20px;
+    }
+    
+    .year-selector {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .year-option {
+        padding: 6px 8px;
+    }
+    
+    /* Hide more columns on very small screens */
+    #recordsTable th:nth-child(2), 
+    #recordsTable td:nth-child(2), /* Date */
+    #recordsTable th:nth-child(7), 
+    #recordsTable td:nth-child(7) { /* Amount */
+        display: none;
+    }
+    
+    .action-btns {
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .action-btns .btn {
+        width: 100%;
+        padding: 3px 5px;
+        font-size: 11px;
+    }
+}
+
+/* Touch device adjustments */
+.touch-device .btn {
+    padding: 12px 15px;
+    min-height: 44px; /* Minimum touch target size */
+}
+
+.touch-device .filter-btn {
+    padding: 10px 15px;
+}
+
+.touch-device input, 
+.touch-device select {
+    min-height: 44px;
+    font-size: 16px; /* Larger text for touch devices */
+}
+
+.touch-device .action-btns .btn {
+    min-height: 36px;
+}
+
+/* Prevent zoom on input focus */
+@media screen and (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Print styles */
 @media print {
     body * {
         visibility: hidden;
@@ -688,94 +1027,4 @@ tr:hover {
         padding: 5px 6px !important;
         font-size: 11px !important;
     }
-}
-/* New styles for progress bar */
-.status-cell {
-    position: relative;
-    padding: 0 !important;
-}
-
-.status-progress-container {
-    position: relative;
-    height: 24px;
-    background-color: #f0f0f0;
-    border-radius: 4px;
-    overflow: hidden;
-    width: 100%;
-}
-
-.status-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #FFEB3B, #4CAF50);
-    transition: width 0.3s ease;
-    position: relative;
-}
-
-.status-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 11px;
-    font-weight: bold;
-    color: #333;
-    z-index: 2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 95%;
-    padding: 0 5px;
-}
-
-/* Tooltip styling */
-.status-progress-container:hover .status-tooltip {
-    display: block;
-}
-
-.status-tooltip {
-    display: none;
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0,0,0,0.8);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    z-index: 10;
-    margin-bottom: 5px;
-}
-
-.status-tooltip::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: rgba(0,0,0,0.8) transparent transparent transparent;
-}
-
-/* Adjust column widths */
-#recordsTable th:nth-child(9),
-#recordsTable td:nth-child(9) {
-    min-width: 140px;
-    max-width: 160px;
-}
-
-#recordsTable th:nth-child(10),
-#recordsTable td:nth-child(10) {
-    min-width: 100px;
-    width: 100px;
-}
-
-/* Smaller buttons */
-.action-btns .btn {
-    padding: 4px 8px;
-    font-size: 12px;
-    min-width: 50px;
-    margin: 2px;
 }
