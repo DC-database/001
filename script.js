@@ -1,25 +1,7 @@
-// Enhanced device detection
+// Enhanced device detection with touch support
 function detectDeviceType() {
-    const screenWidth = window.innerWidth;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    if (isTouchDevice) {
-        document.body.classList.add('touch-device');
-        
-        if (screenWidth <= 400) {
-            document.body.classList.add('mobile-device');
-            document.body.classList.remove('tablet-device', 'desktop-device');
-        } else if (screenWidth <= 768) {
-            document.body.classList.add('tablet-device');
-            document.body.classList.remove('mobile-device', 'desktop-device');
-        } else {
-            document.body.classList.add('desktop-device');
-            document.body.classList.remove('mobile-device', 'tablet-device');
-        }
-    } else {
-        document.body.classList.add('desktop-device');
-        document.body.classList.remove('mobile-device', 'tablet-device', 'touch-device');
-    }
+    document.body.classList.toggle('touch-device', isTouchDevice);
 }
 
 // Environment detection
@@ -42,6 +24,7 @@ let records = [];
 let activeFilter = 'all';
 let usingGitHub = false;
 let isLoading = false;
+let currentYear = '2025';
 
 // View PDF file
 function viewPDF(fileName) {
@@ -119,18 +102,17 @@ async function getGitHubFileLastUpdated(url) {
 }
 
 async function updateFileInfo() {
-    const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
-    const url = GITHUB_CSV_URLS[selectedYear];
+    const url = GITHUB_CSV_URLS[currentYear];
     const fileInfo = document.getElementById('fileInfo');
     
     try {
         const lastUpdated = await getGitHubFileLastUpdated(url);
-        const lastFetch = localStorage.getItem(`lastGitHubFetch_${selectedYear}`);
+        const lastFetch = localStorage.getItem(`lastGitHubFetch_${currentYear}`);
         
-        let infoHTML = `<strong>File Source:</strong> ${selectedYear} CSV<br>`;
+        let infoHTML = `<strong>File Source:</strong> ${currentYear} CSV<br>`;
         
         if (lastUpdated) {
-            infoHTML += `<strong>Last Updated on Main Server:</strong> ${formatDateForDisplay(lastUpdated)}<br>`;
+            infoHTML += `<strong>Last Updated:</strong> ${formatDateForDisplay(lastUpdated)}<br>`;
         }
         
         if (lastFetch) {
@@ -161,8 +143,7 @@ function toggleReportSection() {
     const reportSection = document.getElementById('statementOfAccountSection');
     reportSection.style.display = reportSection.style.display === 'none' ? 'block' : 'none';
     
-    // Scroll to report section on mobile
-    if (window.innerWidth <= 768 && reportSection.style.display === 'block') {
+    if (reportSection.style.display === 'block' && window.innerWidth <= 768) {
         reportSection.scrollIntoView({ behavior: 'smooth' });
     }
 }
@@ -189,27 +170,16 @@ function updateConnectionStatus(connected) {
     const indicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('connectionStatus');
     const connectBtn = document.getElementById('connectBtn');
-    const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
 
     if (connected) {
         indicator.className = 'status-indicator connected';
-        statusText.textContent = `Connected to: ${selectedYear} CSV`;
-        connectBtn.innerHTML = `
-            <svg class="excel-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-            Data Updated (${selectedYear})
-        `;
+        statusText.textContent = `Connected to: ${currentYear} CSV`;
+        connectBtn.innerHTML = `<i class="fas fa-file-excel"></i> Data Updated (${currentYear})`;
         usingGitHub = true;
     } else {
         indicator.className = 'status-indicator disconnected';
         statusText.textContent = 'Not connected to data source';
-        connectBtn.innerHTML = `
-            <svg class="excel-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-            Click to Refresh Data
-        `;
+        connectBtn.innerHTML = `<i class="fas fa-file-excel"></i> Click to Refresh Data`;
         usingGitHub = false;
     }
     
@@ -245,8 +215,7 @@ function migrateStatus(records) {
 
 // Data loading
 async function loadFromGitHub(forceRefresh = false) {
-    const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
-    const url = GITHUB_CSV_URLS[selectedYear] + (forceRefresh ? `?timestamp=${new Date().getTime()}` : '');
+    const url = GITHUB_CSV_URLS[currentYear] + (forceRefresh ? `?timestamp=${new Date().getTime()}` : '');
     
     try {
         showLoading();
@@ -267,8 +236,8 @@ async function loadFromGitHub(forceRefresh = false) {
                         records = migrateStatus(records);
                     }
                     
-                    localStorage.setItem(`recordsData_${selectedYear}`, JSON.stringify(records));
-                    localStorage.setItem(`lastGitHubFetch_${selectedYear}`, new Date().toISOString());
+                    localStorage.setItem(`recordsData_${currentYear}`, JSON.stringify(records));
+                    localStorage.setItem(`lastGitHubFetch_${currentYear}`, new Date().toISOString());
                     
                     refreshTable();
                     updateConnectionStatus(true);
@@ -291,13 +260,13 @@ async function loadFromGitHub(forceRefresh = false) {
 }
 
 function loadFromLocalStorage() {
-    const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
-    const savedData = localStorage.getItem(`recordsData_${selectedYear}`);
+    const savedData = localStorage.getItem(`recordsData_${currentYear}`);
     
     if (savedData) {
         try {
             records = JSON.parse(savedData);
             records = migrateStatus(records);
+            refreshTable();
             updateConnectionStatus(true);
             updateFileInfo();
         } catch (e) {
@@ -311,22 +280,23 @@ function loadFromLocalStorage() {
 }
 
 function saveData() {
-    const selectedYear = document.querySelector('input[name="dataSource"]:checked').value;
-    localStorage.setItem(`recordsData_${selectedYear}`, JSON.stringify(records));
+    localStorage.setItem(`recordsData_${currentYear}`, JSON.stringify(records));
 }
 
 function clearLocalStorage() {
     if (confirm('Are you sure you want to clear all locally cached data? This cannot be undone.')) {
-        const previousSelection = document.querySelector('input[name="dataSource"]:checked').value;
+        const previousYear = currentYear;
+        currentYear = '2025';
         document.querySelector('input[value="2025"]').checked = true;
         
         loadFromGitHub(true).then(() => {
-            document.querySelector(`input[value="${previousSelection}"]`).checked = true;
-            if (previousSelection !== '2025') {
+            if (previousYear !== '2025') {
+                currentYear = previousYear;
+                document.querySelector(`input[value="${previousYear}"]`).checked = true;
                 loadFromGitHub(true);
             }
         }).catch(() => {
-            location.reload(true);
+            location.reload();
         });
     }
 }
@@ -384,16 +354,19 @@ function refreshTable(filteredRecords = null) {
             <td class="action-btns">
                 <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
                   onclick="viewPDF('${record.fileName || ''}')" 
-                  ${!record.fileName ? 'disabled' : ''}>INV</button>
+                  ${!record.fileName ? 'disabled' : ''}>
+                  <i class="fas fa-file-pdf"></i>
+                </button>
                 <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
                   onclick="viewSRV('${record.details || ''}')" 
-                  ${!record.details ? 'disabled' : ''}>SRV</button>
+                  ${!record.details ? 'disabled' : ''}>
+                  <i class="fas fa-file-alt"></i>
+                </button>
             </td>
         `;
         tableBody.appendChild(row);
     });
     
-    // Apply responsive adjustments after table refresh
     setupResponsiveElements();
 }
 
@@ -505,7 +478,7 @@ function showPreview() {
             <th>ID</th>
             <th>Date</th>
             <th>Site</th>
-            <th>PO Number</th>
+            <th>PO</th>
             <th>Vendor</th>
             <th>Invoice</th>
             <th>Amount</th>
@@ -780,7 +753,6 @@ function generateReport() {
     document.getElementById('statementOfAccountSection').style.display = 'block';
     document.getElementById('reportTable').style.display = 'table';
     
-    // Scroll to report section on mobile
     if (window.innerWidth <= 768) {
         document.querySelector('.report-section').scrollIntoView({ behavior: 'smooth' });
     }
@@ -981,39 +953,15 @@ function setupResponsiveElements() {
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
-        
-        // Adjust column widths
-        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7)').forEach(el => {
-            el.style.maxWidth = '60px';
-            el.style.overflow = 'hidden';
-            el.style.textOverflow = 'ellipsis';
-            el.style.whiteSpace = 'nowrap';
-        });
     } else if (screenWidth <= 576) {
         // Small mobile screens - show ID, PO, Vendor, Invoice, Status, Actions
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
-        
-        // Adjust column widths
-        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6)').forEach(el => {
-            el.style.maxWidth = '80px';
-            el.style.overflow = 'hidden';
-            el.style.textOverflow = 'ellipsis';
-            el.style.whiteSpace = 'nowrap';
-        });
     } else if (screenWidth <= 768) {
         // Tablets and larger phones - show ID, PO, Vendor, Invoice, Status, Actions
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
-        });
-        
-        // Adjust column widths
-        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(5), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6)').forEach(el => {
-            el.style.maxWidth = '100px';
-            el.style.overflow = 'hidden';
-            el.style.textOverflow = 'ellipsis';
-            el.style.whiteSpace = 'nowrap';
         });
     } else if (screenWidth <= 992) {
         // Small desktop/laptop - hide less important columns
@@ -1024,23 +972,19 @@ function setupResponsiveElements() {
 }
 
 // Initialization
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', function() {
     detectDeviceType();
     updateConnectionStatus(false);
     
     // Add event listeners for responsive behavior
     window.addEventListener('resize', setupResponsiveElements);
-    window.addEventListener('orientationchange', setupResponsiveElements);
     
     document.getElementById('connectBtn').addEventListener('click', async function() {
         const btn = this;
         const originalHTML = btn.innerHTML;
         
         btn.disabled = true;
-        btn.innerHTML = `
-            <div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div>
-            Loading...
-        `;
+        btn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading...`;
         
         try {
             await loadFromGitHub(true);
@@ -1055,20 +999,17 @@ window.onload = function() {
     
     document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
         radio.addEventListener('change', async function() {
-            const selectedYear = this.value;
+            currentYear = this.value;
             const connectBtn = document.getElementById('connectBtn');
             const originalHTML = connectBtn.innerHTML;
             
             records = [];
             refreshTable();
             connectBtn.disabled = true;
-            connectBtn.innerHTML = `
-                <div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div>
-                Loading ${selectedYear} Data...
-            `;
+            connectBtn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading ${currentYear} Data...`;
             
             try {
-                const savedData = localStorage.getItem(`recordsData_${selectedYear}`);
+                const savedData = localStorage.getItem(`recordsData_${currentYear}`);
                 if (savedData) {
                     records = JSON.parse(savedData);
                     records = migrateStatus(records);
@@ -1118,11 +1059,10 @@ window.onload = function() {
     document.querySelector('input[value="2025"]').checked = true;
     loadFromLocalStorage();
     
-    const selectedYear = '2025';
-    const lastFetch = localStorage.getItem(`lastGitHubFetch_${selectedYear}`);
+    const lastFetch = localStorage.getItem(`lastGitHubFetch_${currentYear}`);
     if (!lastFetch || (new Date() - new Date(lastFetch)) > 3600000) {
         loadFromGitHub().catch(() => {
             updateConnectionStatus(false);
         });
     }
-};
+});

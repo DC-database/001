@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Invoice Management System</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -14,19 +17,17 @@
             <div class="year-selector">
                 <label class="year-option">
                     <input type="radio" name="dataSource" value="2025" checked>
-                    2025 Data
+                    <span class="year-text">2025 Data</span>
                 </label>
                 <label class="year-option">
                     <input type="radio" name="dataSource" value="2022-2024"> 
-                    2022-2024 Data
+                    <span class="year-text">2022-2024 Data</span>
                 </label>
             </div>
             
             <button id="connectBtn" class="btn btn-primary">
-                <svg class="excel-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                </svg>
-                Click Here to Refresh Data
+                <i class="fas fa-file-excel"></i>
+                <span class="btn-text">Click Here to Refresh Data</span>
             </button>
             
             <div class="connection-status">
@@ -37,7 +38,6 @@
             <div id="fileInfo" class="storage-info"></div>
         </div>
         
-        <!-- Loading Overlay -->
         <div id="loadingOverlay" class="loading-overlay">
             <div class="loading-content">
                 <div class="corporate-spinner"></div>
@@ -46,33 +46,52 @@
         </div>
         
         <div class="export-import-container">
-            <button class="btn btn-warning" onclick="exportToExcel()">Export to Excel</button>
-            <button class="btn btn-warning" onclick="exportToPDF()">Export to PDF</button>
-            <button class="btn btn-danger" onclick="clearLocalStorage()">Refresh Records</button>
-            <button class="btn btn-primary" onclick="toggleReportSection()">Statement of Account</button>
+            <button class="btn btn-warning" onclick="exportToExcel()">
+                <i class="fas fa-file-excel"></i>
+                <span class="btn-text">Export Excel</span>
+            </button>
+            <button class="btn btn-warning" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf"></i>
+                <span class="btn-text">Export PDF</span>
+            </button>
+            <button class="btn btn-danger" onclick="clearLocalStorage()">
+                <i class="fas fa-sync-alt"></i>
+                <span class="btn-text">Refresh</span>
+            </button>
+            <button class="btn btn-primary" onclick="toggleReportSection()">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="btn-text">Statement</span>
+            </button>
         </div>
         
         <div class="search-container">
-            <input type="text" id="searchTerm" placeholder="Type to search and display records...">
-            <button class="btn btn-primary" onclick="searchRecords()">Search</button>
-            <button class="btn clear-search-btn" onclick="clearSearch()">Clear</button>
-            <input type="text" id="releaseDateFilter" placeholder="Filter by Release Date" onfocus="(this.type='date')" onblur="(this.type='text')">
-            <button class="btn clear-date-btn" onclick="clearDate()">Clear Date</button>
+            <input type="text" id="searchTerm" placeholder="Search...">
+            <button class="btn btn-primary" onclick="searchRecords()">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="btn clear-search-btn" onclick="clearSearch()">
+                <i class="fas fa-times"></i>
+            </button>
+            <input type="text" id="releaseDateFilter" placeholder="Date" onfocus="(this.type='date')" onblur="(this.type='text')">
+            <button class="btn clear-date-btn" onclick="clearDate()">
+                <i class="fas fa-times"></i>
+            </button>
             <button class="btn btn-success" onclick="contactAboutMissingData()">
-                <i class="whatsapp-icon"></i> Questions? Ask me.
+                <i class="fab fa-whatsapp"></i>
+                <span class="btn-text">Help</span>
             </button>
         </div>
         
         <div class="filter-container">
             <div class="filter-btn active" onclick="filterRecords('all')">All</div>
-            <div class="filter-btn" onclick="filterRecords('For SRV')">For SRV</div>
+            <div class="filter-btn" onclick="filterRecords('For SRV')">SRV</div>
             <div class="filter-btn" onclick="filterRecords('Report')">Report</div>
-            <div class="filter-btn" onclick="filterRecords('Under Review')">Under Review</div>
+            <div class="filter-btn" onclick="filterRecords('Under Review')">Review</div>
             <div class="filter-btn" onclick="filterRecords('Pending')">Pending</div>
-            <div class="filter-btn" onclick="filterRecords('With Accounts')">With Accounts</div>
-            <div class="filter-btn" onclick="filterRecords('CEO Approval')">CEO Approval</div>
-            <div class="filter-btn" onclick="filterRecords('For IPC')">For IPC</div>
-            <div class="filter-btn" onclick="filterRecords('No Invoice')">No Invoice</div>
+            <div class="filter-btn" onclick="filterRecords('With Accounts')">Accounts</div>
+            <div class="filter-btn" onclick="filterRecords('CEO Approval')">CEO</div>
+            <div class="filter-btn" onclick="filterRecords('For IPC')">IPC</div>
+            <div class="filter-btn" onclick="filterRecords('No Invoice')">No INV</div>
             <div class="filter-btn" onclick="filterRecords('Open')">Open</div>
         </div>
 
@@ -80,16 +99,31 @@
             <h2>Statement of Account</h2>
             <div class="report-controls">
                 <select id="reportType">
-                    <option value="po">By PO Number</option>
-                    <option value="vendor">By Vendor</option>
-                    <option value="site">By Site</option>
+                    <option value="po">PO Number</option>
+                    <option value="vendor">Vendor</option>
+                    <option value="site">Site</option>
                 </select>
-                <input type="text" id="reportSearchTerm" placeholder="Enter search term...">
-                <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-                <button class="btn btn-warning" onclick="printReport()">Print Report</button>
-                <button class="btn btn-danger" onclick="exportReport()">Export PDF</button>
-                <button class="btn clear-search-btn" onclick="clearReportSearch()">Clear Search</button>
-                <button class="btn clear-search-btn" onclick="closeReportSection()">Close</button>
+                <input type="text" id="reportSearchTerm" placeholder="Search term...">
+                <button class="btn btn-primary" onclick="generateReport()">
+                    <i class="fas fa-calculator"></i>
+                    <span>Generate</span>
+                </button>
+                <button class="btn btn-warning" onclick="printReport()">
+                    <i class="fas fa-print"></i>
+                    <span>Print</span>
+                </button>
+                <button class="btn btn-danger" onclick="exportReport()">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>PDF</span>
+                </button>
+                <button class="btn clear-search-btn" onclick="clearReportSearch()">
+                    <i class="fas fa-times"></i>
+                    <span>Clear</span>
+                </button>
+                <button class="btn clear-search-btn" onclick="closeReportSection()">
+                    <i class="fas fa-times"></i>
+                    <span>Close</span>
+                </button>
             </div>
             
             <div class="report-header" id="reportHeader"></div>
@@ -107,7 +141,7 @@
                     <span class="financial-summary-value" id="grandTotal">0.00</span>
                 </div>
                 <div class="financial-summary-item">
-                    <span class="financial-summary-label">With Accounts Total</span>
+                    <span class="financial-summary-label">With Accounts</span>
                     <span class="financial-summary-value" id="accountsTotal">0.00</span>
                 </div>
                 <div class="financial-summary-item">
@@ -122,18 +156,18 @@
                         <tr>
                             <th>ID</th>
                             <th>Date</th>
-                            <th>PO Number</th>
+                            <th>PO</th>
                             <th>Vendor</th>
                             <th>Invoice</th>
                             <th>Amount</th>
-                            <th>Release Date</th>
+                            <th>Release</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                     <tfoot>
                         <tr class="total-row">
-                            <td colspan="5" style="text-align: right;">Total Amount:</td>
+                            <td colspan="5">Total Amount:</td>
                             <td class="numeric" id="reportTotalAmount">0.00</td>
                             <td colspan="2"></td>
                         </tr>
@@ -149,11 +183,11 @@
                         <th>ID</th>
                         <th>Date</th>
                         <th>Site</th>
-                        <th>PO Number</th>
+                        <th>PO</th>
                         <th>Vendor</th>
                         <th>Invoice</th>
                         <th>Amount</th>
-                        <th>Release Date</th>
+                        <th>Release</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -165,18 +199,12 @@
         <div class="data-source-info">
             IBA Trading
         </div>
-        <div class="storage-info" id="storageInfo">
-            Currently using browser's cache for temporary storage
-        </div>
     </div>
 
-    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
-    <!-- Local Script -->
     <script src="script.js"></script>
     
     <div id="previewModal" class="modal">
@@ -184,8 +212,12 @@
             <span class="close">&times;</span>
             <h2>Export Preview</h2>
             <div class="export-options">
-                <button class="btn btn-primary" onclick="exportPreviewToExcel()">Export to Excel</button>
-                <button class="btn btn-primary" onclick="exportPreviewToPDF()">Export to PDF</button>
+                <button class="btn btn-primary" onclick="exportPreviewToExcel()">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+                <button class="btn btn-primary" onclick="exportPreviewToPDF()">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
             </div>
             <div id="previewTableContainer"></div>
         </div>
