@@ -629,6 +629,11 @@ tr:hover {
     border-color: #4CAF50;
 }
 
+.step.current {
+    background-color: #f2d202;
+    border-color: #f2d202;
+}
+
 .step-connector {
     flex-grow: 1;
     height: 3px;
@@ -684,6 +689,13 @@ tr:hover {
     border-width: 5px;
     border-style: solid;
     border-color: rgba(0,0,0,0.9) transparent transparent transparent;
+}
+
+/* Show tooltip on hover or touch */
+.step-progress-container:hover .status-tooltip,
+.step-progress-container:focus .status-tooltip,
+.touch-device .step-progress-container:active .status-tooltip {
+    display: block;
 }
 
 /* Responsive adjustments */

@@ -200,6 +200,7 @@ function processCSVData(data) {
         releaseDate: item['Release Date'] || '',
         status: item['Status'] || 'For SRV',
         fileName: item['FileName'] || '',
+        note: item['Note'] || '', // Added Note column here
         lastUpdated: new Date().toISOString()
     }));
 }
@@ -239,7 +240,8 @@ async function loadFromGitHub(forceRefresh = false) {
                     localStorage.setItem(`recordsData_${currentYear}`, JSON.stringify(records));
                     localStorage.setItem(`lastGitHubFetch_${currentYear}`, new Date().toISOString());
                     
-                    refreshTable();
+                    // Don't refresh table here - wait for search/filter
+                    document.getElementById('recordsTable').style.display = 'none';
                     updateConnectionStatus(true);
                     updateFileInfo();
                     resolve();
@@ -266,7 +268,8 @@ function loadFromLocalStorage() {
         try {
             records = JSON.parse(savedData);
             records = migrateStatus(records);
-            refreshTable();
+            // Don't refresh table here - wait for search/filter
+            document.getElementById('recordsTable').style.display = 'none';
             updateConnectionStatus(true);
             updateFileInfo();
         } catch (e) {
@@ -318,6 +321,18 @@ function refreshTable(filteredRecords = null) {
     
     displayRecords.forEach((record, index) => {
         const percentage = getStatusPercentage(record.status);
+        const statusSteps = {
+            'Open': 0,
+            'For SRV': 1,
+            'For IPC': 2,
+            'No Invoice': 2,
+            'Report': 2,
+            'Under Review': 3,
+            'CEO Approval': 4,
+            'With Accounts': 5
+        };
+        const currentStep = statusSteps[record.status] || 0;
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
@@ -331,15 +346,15 @@ function refreshTable(filteredRecords = null) {
             <td class="status-cell">
                 <div class="step-progress-container">
                     <div class="step-progress" data-percentage="${percentage}">
-                        <div class="step step-1 ${percentage >= 25 ? 'active' : ''}"></div>
-                        <div class="step-connector ${percentage >= 25 ? 'active' : ''}"></div>
-                        <div class="step step-2 ${percentage >= 50 ? 'active' : ''}"></div>
-                        <div class="step-connector ${percentage >= 50 ? 'active' : ''}"></div>
-                        <div class="step step-3 ${percentage >= 60 ? 'active' : ''}"></div>
-                        <div class="step-connector ${percentage >= 60 ? 'active' : ''}"></div>
-                        <div class="step step-4 ${percentage >= 80 ? 'active' : ''}"></div>
-                        <div class="step-connector ${percentage >= 80 ? 'active' : ''}"></div>
-                        <div class="step step-5 ${percentage >= 100 ? 'active' : ''}"></div>
+                        <div class="step step-1 ${currentStep > 1 ? 'active' : ''} ${currentStep === 1 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 1 ? 'active' : ''}"></div>
+                        <div class="step step-2 ${currentStep > 2 ? 'active' : ''} ${currentStep === 2 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 2 ? 'active' : ''}"></div>
+                        <div class="step step-3 ${currentStep > 3 ? 'active' : ''} ${currentStep === 3 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 3 ? 'active' : ''}"></div>
+                        <div class="step step-4 ${currentStep > 4 ? 'active' : ''} ${currentStep === 4 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 4 ? 'active' : ''}"></div>
+                        <div class="step step-5 ${currentStep > 5 ? 'active' : ''} ${currentStep === 5 ? 'current' : ''}"></div>
                     </div>
                     <div class="step-labels">
                         <span class="step-label">SRV</span>
@@ -408,7 +423,8 @@ function searchRecords() {
             (record.vendor && record.vendor.toLowerCase().includes(term)) ||
             (record.invoiceNumber && record.invoiceNumber.toLowerCase().includes(term)) ||
             (record.details && record.details.toLowerCase().includes(term)) ||
-            (record.fileName && record.fileName.toLowerCase().includes(term))
+            (record.fileName && record.fileName.toLowerCase().includes(term)) ||
+            (record.note && record.note.toLowerCase().includes(term)) // Added note to search
         );
     }
 
@@ -483,6 +499,7 @@ function showPreview() {
             <th>Invoice</th>
             <th>Amount</th>
             <th>Status</th>
+            <th>Note</th>
         </tr>
     `;
     table.appendChild(thead);
@@ -496,6 +513,10 @@ function showPreview() {
             const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
             total += value;
             
+            // Get the original record to access the note
+            const recordIndex = parseInt(cells[0].textContent) - 1;
+            const record = records[recordIndex];
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${cells[0].textContent.trim()}</td>
@@ -506,6 +527,7 @@ function showPreview() {
                 <td>${cells[5].textContent.trim()}</td>
                 <td class="numeric">${formatNumber(value)}</td>
                 <td>${cells[8].textContent.trim()}</td>
+                <td>${record.note || ''}</td>
             `;
             tbody.appendChild(tr);
         }
@@ -514,7 +536,7 @@ function showPreview() {
     const totalRow = document.createElement('tr');
     totalRow.className = 'total-row';
     totalRow.innerHTML = `
-        <td colspan="6" style="text-align: right;">TOTAL</td>
+        <td colspan="7" style="text-align: right;">TOTAL</td>
         <td class="numeric">${formatNumber(total)}</td>
         <td></td>
     `;
@@ -544,6 +566,10 @@ function exportPreviewToExcel() {
         if (cells.length >= 10) {
             const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
             total += value;
+            
+            // Get the original record to access the note
+            const recordIndex = parseInt(cells[0].textContent) - 1;
+            const record = records[recordIndex];
 
             exportData.push({
                 'ID': cells[0].textContent.trim(),
@@ -553,7 +579,8 @@ function exportPreviewToExcel() {
                 'Vendor': cells[4].textContent.trim(),
                 'Invoice': cells[5].textContent.trim(),
                 'Amount': value.toFixed(2),
-                'Status': cells[8].textContent.trim()
+                'Status': cells[8].textContent.trim(),
+                'Note': record.note || '' // Include note in export
             });
         }
     });
@@ -573,8 +600,8 @@ function exportPreviewToExcel() {
     XLSX.utils.sheet_add_aoa(ws, companyInfo, { origin: "A1" });
     
     if (!ws['!merges']) ws['!merges'] = [];
-    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } });
-    ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 7 } });
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } });
+    ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 8 } });
     
     XLSX.writeFile(wb, "invoice_records.xlsx");
     document.getElementById('previewModal').style.display = 'none';
@@ -603,6 +630,10 @@ function exportPreviewToPDF() {
         if (cells.length >= 10) {
             const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
             total += value;
+            
+            // Get the original record to access the note
+            const recordIndex = parseInt(cells[0].textContent) - 1;
+            const record = records[recordIndex];
 
             data.push([
                 index + 1,
@@ -612,15 +643,16 @@ function exportPreviewToPDF() {
                 cells[4].textContent.trim(),
                 cells[5].textContent.trim(),
                 formatNumber(value),
-                cells[8].textContent.trim()
+                cells[8].textContent.trim(),
+                record.note || ''
             ]);
         }
     });
 
-    data.push(['', '', '', '', 'TOTAL', formatNumber(total), '', '']);
+    data.push(['', '', '', '', '', 'TOTAL', formatNumber(total), '', '']);
 
     doc.autoTable({
-        head: [['ID', 'Date', 'Site', 'PO', 'Vendor', 'Invoice', 'Amount', 'Status']],
+        head: [['ID', 'Date', 'Site', 'PO', 'Vendor', 'Invoice', 'Amount', 'Status', 'Note']],
         body: data,
         startY: 30,
         headStyles: {
@@ -683,7 +715,8 @@ function generateReport() {
             if (filteredRecords.length > 0) {
                 headerText = `PO: ${filteredRecords[0].poNumber}<br>
                     Vendor: ${filteredRecords[0].vendor || 'N/A'}<br>
-                    Site: ${filteredRecords[0].site || 'N/A'}`;
+                    Site: ${filteredRecords[0].site || 'N/A'}<br>
+                    Note: ${filteredRecords[0].note || 'N/A'}`;
             }
             break;
             
@@ -797,10 +830,11 @@ function exportReport() {
         record.invoiceNumber || '-',
         record.value ? formatNumber(record.value) : '-',
         record.releaseDate ? formatDate(record.releaseDate) : '-',
-        record.status
+        record.status,
+        record.note || '-'
     ]);
     
-    data.push(['', '', '', '', 'Total:', formatNumber(invoiceTotal), '', '']);
+    data.push(['', '', '', '', 'Total:', formatNumber(invoiceTotal), '', '', '']);
     
     doc.setFontSize(14);
     doc.setTextColor(40);
@@ -817,7 +851,7 @@ function exportReport() {
     doc.text(`Balance: ${balance}`, 370, 90);
     
     doc.autoTable({
-        head: [['ID', 'Date', 'PO', 'Vendor', 'Invoice', 'Amount', 'Release Date', 'Status']],
+        head: [['ID', 'Date', 'PO', 'Vendor', 'Invoice', 'Amount', 'Release Date', 'Status', 'Note']],
         body: data,
         startY: 110,
         margin: { left: 40, right: 40 },
@@ -1004,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const originalHTML = connectBtn.innerHTML;
             
             records = [];
-            refreshTable();
+            document.getElementById('recordsTable').style.display = 'none';
             connectBtn.disabled = true;
             connectBtn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading ${currentYear} Data...`;
             
@@ -1013,11 +1047,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (savedData) {
                     records = JSON.parse(savedData);
                     records = migrateStatus(records);
-                    refreshTable();
                 }
                 
                 await loadFromGitHub(true);
-                refreshTable();
                 updateConnectionStatus(true);
                 
             } catch (error) {
@@ -1026,7 +1058,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } finally {
                 connectBtn.disabled = false;
                 connectBtn.innerHTML = originalHTML;
-                setTimeout(() => refreshTable(), 100);
             }
         });
     });
