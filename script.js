@@ -165,6 +165,211 @@ function clearReportSearch() {
     document.getElementById('reportTotalAmount').textContent = '0.00';
 }
 
+// Petty Cash Report functions
+function togglePettyCashSection() {
+    const pettyCashSection = document.getElementById('pettyCashSection');
+    pettyCashSection.style.display = pettyCashSection.style.display === 'none' ? 'block' : 'none';
+    
+    if (pettyCashSection.style.display === 'block' && window.innerWidth <= 768) {
+        pettyCashSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function closePettyCashSection() {
+    document.getElementById('pettyCashSection').style.display = 'none';
+}
+
+function clearPettyCashSearch() {
+    document.getElementById('pettyCashSearchTerm').value = '';
+    document.getElementById('pettyCashTable').style.display = 'none';
+    document.getElementById('pettyCashTotal').textContent = '0.00';
+    document.getElementById('pettyCashCount').textContent = '0';
+    document.querySelector('#pettyCashTable tbody').innerHTML = '';
+    document.getElementById('pettyCashTableTotal').textContent = '0.00';
+}
+
+function generatePettyCashReport() {
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    
+    if (!searchTerm) {
+        alert('Please enter a search term for the notes field');
+        return;
+    }
+    
+    const filteredRecords = records.filter(record => 
+        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (filteredRecords.length === 0) {
+        alert('No petty cash records found matching your search criteria');
+        return;
+    }
+    
+    const totalValue = filteredRecords
+        .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
+    
+    document.getElementById('pettyCashTotal').textContent = formatNumber(totalValue);
+    document.getElementById('pettyCashCount').textContent = filteredRecords.length;
+    
+    const pettyCashTableBody = document.querySelector('#pettyCashTable tbody');
+    pettyCashTableBody.innerHTML = '';
+    
+    filteredRecords.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.site || '-'}</td>
+            <td>${record.vendor || '-'}</td>
+            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+            <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+        `;
+        pettyCashTableBody.appendChild(row);
+    });
+    
+    document.getElementById('pettyCashTableTotal').textContent = formatNumber(totalValue);
+    document.getElementById('pettyCashTable').style.display = 'table';
+    
+    if (window.innerWidth <= 768) {
+        document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function exportPettyCashReport() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    const totalValue = document.getElementById('pettyCashTotal').textContent;
+    const recordCount = document.getElementById('pettyCashCount').textContent;
+    
+    const filteredRecords = records.filter(record => 
+        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    const data = filteredRecords.map((record, index) => [
+        index + 1,
+        formatDate(record.entryDate),
+        record.site || '-',
+        record.vendor || '-',
+        record.value ? formatNumber(record.value) : '-',
+        record.status
+    ]);
+    
+    data.push(['', '', '', 'Total:', formatNumber(totalValue), '']);
+    
+    doc.setFontSize(16);
+    doc.setTextColor(40);
+    doc.text('IBA Trading Petty Cash Summary', 105, 15, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text(`Search Term: ${searchTerm}`, 105, 22, { align: 'center' });
+    doc.text(`Export Date: ${new Date().toLocaleDateString()}`, 105, 29, { align: 'center' });
+    
+    doc.setDrawColor(74, 111, 165);
+    doc.setLineWidth(0.5);
+    doc.line(20, 35, 190, 35);
+    
+    doc.setFontSize(10);
+    doc.text(`Total Value: ${totalValue}`, 40, 45);
+    doc.text(`Records Found: ${recordCount}`, 150, 45);
+    
+    doc.autoTable({
+        head: [['ID', 'Date', 'Site', 'Vendor', 'Amount', 'Status']],
+        body: data,
+        startY: 55,
+        margin: { left: 40, right: 40 },
+        headStyles: {
+            fillColor: [74, 111, 165],
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 8
+        },
+        bodyStyles: {
+            fontSize: 8,
+            cellPadding: 3
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240]
+        },
+        columnStyles: {
+            4: { halign: 'right' }
+        },
+        styles: {
+            overflow: 'linebreak',
+            cellWidth: 'wrap'
+        }
+    });
+    
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    doc.save('petty_cash_summary.pdf');
+}
+
+function printPettyCashReport() {
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    const totalValue = document.getElementById('pettyCashTotal').textContent;
+    const recordCount = document.getElementById('pettyCashCount').textContent;
+    
+    const printContent = `
+        <style>
+            @page { size: auto; margin: 5mm; }
+            body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 10px; }
+            h2 { text-align: center; font-size: 14px; margin-bottom: 5px; }
+            .report-info { text-align: center; font-size: 10px; margin-bottom: 10px; }
+            .financial-summary { 
+                display: grid; 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 5px; 
+                margin-bottom: 10px; 
+                padding: 5px; 
+                border-bottom: 1px solid #ddd;
+            }
+            .financial-label { font-size: 9px; color: #666; }
+            .financial-value { font-size: 10px; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
+            th { background-color: #4a6fa5; color: white; padding: 4px; text-align: left; }
+            td { padding: 4px; border: 1px solid #ddd; }
+            .numeric { text-align: right; font-family: 'Courier New', monospace; }
+            .status-badge { 
+                display: inline-block; 
+                padding: 2px 5px; 
+                border-radius: 10px; 
+                font-size: 8px; 
+                font-weight: bold;
+            }
+            tfoot td { font-weight: bold; border-top: 2px solid #4a6fa5; }
+        </style>
+        <h2>Petty Cash Summary</h2>
+        <div class="report-info">Search Term: ${searchTerm}</div>
+        <div class="financial-summary">
+            <div>
+                <div class="financial-label">Total Value</div>
+                <div class="financial-value">${totalValue}</div>
+            </div>
+            <div>
+                <div class="financial-label">Records Found</div>
+                <div class="financial-value">${recordCount}</div>
+            </div>
+        </div>
+        ${document.getElementById('pettyCashTable').outerHTML}
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+}
+
 // Connection status
 function updateConnectionStatus(connected) {
     const indicator = document.getElementById('statusIndicator');
@@ -1073,6 +1278,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             e.preventDefault();
             generateReport();
+        }
+    });
+    
+    document.getElementById('pettyCashSearchTerm').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            generatePettyCashReport();
         }
     });
     

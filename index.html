@@ -62,6 +62,10 @@
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span class="btn-text">Statement</span>
             </button>
+            <button class="btn btn-success" onclick="togglePettyCashSection()">
+                <i class="fas fa-money-bill-wave"></i>
+                <span class="btn-text">Petty Cash</span>
+            </button>
         </div>
         
         <div class="search-container">
@@ -170,6 +174,70 @@
                             <td colspan="5">Total Amount:</td>
                             <td class="numeric" id="reportTotalAmount">0.00</td>
                             <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        
+        <div id="pettyCashSection" class="report-section" style="display: none;">
+            <h2>Petty Cash Summary</h2>
+            <div class="report-controls">
+                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes...">
+                <button class="btn btn-primary" onclick="generatePettyCashReport()">
+                    <i class="fas fa-calculator"></i>
+                    <span>Generate</span>
+                </button>
+                <button class="btn btn-warning" onclick="printPettyCashReport()">
+                    <i class="fas fa-print"></i>
+                    <span>Print</span>
+                </button>
+                <button class="btn btn-danger" onclick="exportPettyCashReport()">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>PDF</span>
+                </button>
+                <button class="btn clear-search-btn" onclick="clearPettyCashSearch()">
+                    <i class="fas fa-times"></i>
+                    <span>Clear</span>
+                </button>
+                <button class="btn clear-search-btn" onclick="closePettyCashSection()">
+                    <i class="fas fa-times"></i>
+                    <span>Close</span>
+                </button>
+            </div>
+            
+            <div class="financial-summary">
+                <div class="financial-summary-header">
+                    <h3>Petty Cash Summary</h3>
+                </div>
+                <div class="financial-summary-item">
+                    <span class="financial-summary-label">Total Value</span>
+                    <span class="financial-summary-value" id="pettyCashTotal">0.00</span>
+                </div>
+                <div class="financial-summary-item">
+                    <span class="financial-summary-label">Records Found</span>
+                    <span class="financial-summary-value" id="pettyCashCount">0</span>
+                </div>
+            </div>
+            
+            <div class="report-table-container">
+                <table id="pettyCashTable" class="compact-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Site</th>
+                            <th>Vendor</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4">Total Amount:</td>
+                            <td class="numeric" id="pettyCashTableTotal">0.00</td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
