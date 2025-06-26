@@ -181,12 +181,17 @@
         </div>
         
         <div id="pettyCashSection" class="report-section" style="display: none;">
-            <h2>Petty Cash Summary</h2>
+            <h2>Summary Statement</h2>
             <div class="report-controls">
-                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes...">
+                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes..." list="noteSuggestions">
+                <datalist id="noteSuggestions"></datalist>
                 <button class="btn btn-primary" onclick="generatePettyCashReport()">
                     <i class="fas fa-calculator"></i>
                     <span>Generate</span>
+                </button>
+                <button class="btn btn-warning" onclick="previewPettyCashReport()">
+                    <i class="fas fa-eye"></i>
+                    <span>Preview</span>
                 </button>
                 <button class="btn btn-warning" onclick="printPettyCashReport()">
                     <i class="fas fa-print"></i>
@@ -208,7 +213,7 @@
             
             <div class="financial-summary">
                 <div class="financial-summary-header">
-                    <h3>Petty Cash Summary</h3>
+                    <h3>Summary Statement</h3>
                 </div>
                 <div class="financial-summary-item">
                     <span class="financial-summary-label">Total Value</span>
@@ -225,7 +230,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Date</th>
+                            <th>Date Release</th>
                             <th>Site</th>
                             <th>Vendor</th>
                             <th>Amount</th>
@@ -288,6 +293,22 @@
                 </button>
             </div>
             <div id="previewTableContainer"></div>
+        </div>
+    </div>
+
+    <div id="pettyCashPreviewModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Summary Statement Preview</h2>
+            <div class="export-options">
+                <button class="btn btn-primary" onclick="printPettyCashReport()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="btn btn-danger" onclick="exportPettyCashReport()">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+            <div id="pettyCashPreviewTableContainer"></div>
         </div>
     </div>
 </body>

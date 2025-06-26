@@ -401,7 +401,7 @@ tr:hover {
     flex-wrap: wrap;
 }
 
-#previewTableContainer {
+#previewTableContainer, #pettyCashPreviewTableContainer {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }

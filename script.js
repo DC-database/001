@@ -170,8 +170,12 @@ function togglePettyCashSection() {
     const pettyCashSection = document.getElementById('pettyCashSection');
     pettyCashSection.style.display = pettyCashSection.style.display === 'none' ? 'block' : 'none';
     
-    if (pettyCashSection.style.display === 'block' && window.innerWidth <= 768) {
-        pettyCashSection.scrollIntoView({ behavior: 'smooth' });
+    if (pettyCashSection.style.display === 'block') {
+        // Update note suggestions when section is shown
+        updateNoteSuggestions();
+        if (window.innerWidth <= 768) {
+            pettyCashSection.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 }
 
@@ -186,6 +190,23 @@ function clearPettyCashSearch() {
     document.getElementById('pettyCashCount').textContent = '0';
     document.querySelector('#pettyCashTable tbody').innerHTML = '';
     document.getElementById('pettyCashTableTotal').textContent = '0.00';
+}
+
+function updateNoteSuggestions() {
+    const noteSuggestions = document.getElementById('noteSuggestions');
+    noteSuggestions.innerHTML = '';
+    
+    // Get all unique notes from records
+    const uniqueNotes = [...new Set(records
+        .filter(record => record.note && record.note.trim() !== '')
+        .map(record => record.note.trim()))];
+    
+    // Add each unique note as an option to the datalist
+    uniqueNotes.forEach(note => {
+        const option = document.createElement('option');
+        option.value = note;
+        noteSuggestions.appendChild(option);
+    });
 }
 
 function generatePettyCashReport() {
@@ -235,6 +256,85 @@ function generatePettyCashReport() {
     }
 }
 
+function previewPettyCashReport() {
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    const totalValue = document.getElementById('pettyCashTotal').textContent;
+    const recordCount = document.getElementById('pettyCashCount').textContent;
+    
+    const filteredRecords = records.filter(record => 
+        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (filteredRecords.length === 0) {
+        alert('No records to preview. Please generate a report first.');
+        return;
+    }
+    
+    const modal = document.getElementById('pettyCashPreviewModal');
+    const previewContainer = document.getElementById('pettyCashPreviewTableContainer');
+    previewContainer.innerHTML = '';
+    
+    // Create preview table
+    const table = document.createElement('table');
+    table.className = 'preview-table';
+    
+    // Create table header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>ID</th>
+            <th>Date Release</th>
+            <th>Site</th>
+            <th>Vendor</th>
+            <th>Amount</th>
+            <th>Status</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+    
+    // Create table body with data
+    const tbody = document.createElement('tbody');
+    filteredRecords.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.site || '-'}</td>
+            <td>${record.vendor || '-'}</td>
+            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+            <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Add total row
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'total-row';
+    totalRow.innerHTML = `
+        <td colspan="4">Total Amount:</td>
+        <td class="numeric">${totalValue}</td>
+        <td></td>
+    `;
+    tbody.appendChild(totalRow);
+    
+    table.appendChild(tbody);
+    previewContainer.appendChild(table);
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Close modal handlers
+    document.querySelector('#pettyCashPreviewModal .close').onclick = function() {
+        modal.style.display = 'none';
+    };
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
 function exportPettyCashReport() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'a4');
@@ -259,7 +359,7 @@ function exportPettyCashReport() {
     
     doc.setFontSize(16);
     doc.setTextColor(40);
-    doc.text('IBA Trading Petty Cash Summary', 105, 15, { align: 'center' });
+    doc.text('IBA Trading Summary Statement', 105, 15, { align: 'center' });
     
     doc.setFontSize(12);
     doc.text(`Search Term: ${searchTerm}`, 105, 22, { align: 'center' });
@@ -274,7 +374,7 @@ function exportPettyCashReport() {
     doc.text(`Records Found: ${recordCount}`, 150, 45);
     
     doc.autoTable({
-        head: [['ID', 'Date', 'Site', 'Vendor', 'Amount', 'Status']],
+        head: [['ID', 'Date Release', 'Site', 'Vendor', 'Amount', 'Status']],
         body: data,
         startY: 55,
         margin: { left: 40, right: 40 },
@@ -308,7 +408,7 @@ function exportPettyCashReport() {
         doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
     }
     
-    doc.save('petty_cash_summary.pdf');
+    doc.save('summary_statement.pdf');
 }
 
 function printPettyCashReport() {
@@ -345,7 +445,7 @@ function printPettyCashReport() {
             }
             tfoot td { font-weight: bold; border-top: 2px solid #4a6fa5; }
         </style>
-        <h2>Petty Cash Summary</h2>
+        <h2>Summary Statement</h2>
         <div class="report-info">Search Term: ${searchTerm}</div>
         <div class="financial-summary">
             <div>
@@ -445,6 +545,9 @@ async function loadFromGitHub(forceRefresh = false) {
                     localStorage.setItem(`recordsData_${currentYear}`, JSON.stringify(records));
                     localStorage.setItem(`lastGitHubFetch_${currentYear}`, new Date().toISOString());
                     
+                    // Update note suggestions when data is loaded
+                    updateNoteSuggestions();
+                    
                     // Don't refresh table here - wait for search/filter
                     document.getElementById('recordsTable').style.display = 'none';
                     updateConnectionStatus(true);
@@ -473,6 +576,8 @@ function loadFromLocalStorage() {
         try {
             records = JSON.parse(savedData);
             records = migrateStatus(records);
+            // Update note suggestions when data is loaded
+            updateNoteSuggestions();
             // Don't refresh table here - wait for search/filter
             document.getElementById('recordsTable').style.display = 'none';
             updateConnectionStatus(true);
