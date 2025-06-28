@@ -10,97 +10,122 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Invoice Management System</h1>
-        
-        <div class="file-access-container">
-            <div class="year-selector">
-                <label class="year-option">
-                    <input type="radio" name="dataSource" value="2025" checked>
-                    <span class="year-text">2025 Data</span>
-                </label>
-                <label class="year-option">
-                    <input type="radio" name="dataSource" value="2022-2024"> 
-                    <span class="year-text">2022-2024 Data</span>
-                </label>
-            </div>
-            
-            <button id="connectBtn" class="btn btn-primary">
-                <i class="fas fa-file-excel"></i>
-                <span class="btn-text">Click Here to Refresh Data</span>
-            </button>
-            
-            <div class="connection-status">
-                <span id="statusIndicator" class="status-indicator disconnected"></span>
-                <span id="connectionStatus">Not connected to data source</span>
-            </div>
-            
-            <div id="fileInfo" class="storage-info"></div>
+    <div class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+    
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <span class="close-menu" onclick="toggleMobileMenu()">&times;</span>
         </div>
-        
-        <div id="loadingOverlay" class="loading-overlay">
-            <div class="loading-content">
-                <div class="corporate-spinner"></div>
-                <p>Loading Data...</p>
-            </div>
+        <div class="menu-item active" onclick="showSection('invoiceSection')">
+            <i class="fas fa-file-invoice"></i> Invoice Management
         </div>
-        
-        <div class="export-import-container">
-            <button class="btn btn-warning" onclick="exportToExcel()">
-                <i class="fas fa-file-excel"></i>
-                <span class="btn-text">Export Excel</span>
-            </button>
-            <button class="btn btn-warning" onclick="exportToPDF()">
-                <i class="fas fa-file-pdf"></i>
-                <span class="btn-text">Export PDF</span>
-            </button>
-            <button class="btn btn-danger" onclick="clearLocalStorage()">
-                <i class="fas fa-sync-alt"></i>
-                <span class="btn-text">Refresh</span>
-            </button>
-            <button class="btn btn-primary" onclick="toggleReportSection()">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span class="btn-text">Statement</span>
-            </button>
-            <button class="btn btn-success" onclick="togglePettyCashSection()">
-                <i class="fas fa-money-bill-wave"></i>
-                <span class="btn-text">Petty Cash</span>
-            </button>
+        <div class="menu-item" onclick="showSection('statementSection')">
+            <i class="fas fa-file-alt"></i> Statement of Account
         </div>
-        
-        <div class="search-container">
-            <input type="text" id="searchTerm" placeholder="Search...">
-            <button class="btn btn-primary" onclick="searchRecords()">
-                <i class="fas fa-search"></i>
-            </button>
-            <button class="btn clear-search-btn" onclick="clearSearch()">
-                <i class="fas fa-times"></i>
-            </button>
-            <input type="text" id="releaseDateFilter" placeholder="Date" onfocus="(this.type='date')" onblur="(this.type='text')">
-            <button class="btn clear-date-btn" onclick="clearDate()">
-                <i class="fas fa-times"></i>
-            </button>
-            <button class="btn btn-success" onclick="contactAboutMissingData()">
-                <i class="fab fa-whatsapp"></i>
-                <span class="btn-text">Help</span>
-            </button>
+        <div class="menu-item" onclick="showSection('pettyCashSection')">
+            <i class="fas fa-money-bill-wave"></i> Petty Cash
         </div>
-        
-        <div class="filter-container">
-            <div class="filter-btn active" onclick="filterRecords('all')">All</div>
-            <div class="filter-btn" onclick="filterRecords('Open')">Open</div>
-            <div class="filter-btn" onclick="filterRecords('Pending')">Pending</div>
-            <div class="filter-btn" onclick="filterRecords('No Invoice')">No INV</div>
-            <div class="filter-btn" onclick="filterRecords('For SRV')">SRV</div>
-            <div class="filter-btn" onclick="filterRecords('For IPC')">IPC</div>
-            <div class="filter-btn" onclick="filterRecords('Report')">Report</div>
-            <div class="filter-btn" onclick="filterRecords('Under Review')">Review</div>
-            <div class="filter-btn" onclick="filterRecords('CEO Approval')">CEO</div>
-            <div class="filter-btn" onclick="filterRecords('With Accounts')">Accounts</div>
-        </div>
+    </div>
 
-        <div id="statementOfAccountSection" class="report-section" style="display: none;">
-            <h2>Statement of Account</h2>
+    <div class="container">
+        <!-- Invoice Management Section -->
+        <div id="invoiceSection" class="content-section active">
+            <h1>Invoice Management System</h1>
+            
+            <div class="file-access-container">
+                <div class="year-selector">
+                    <label class="year-option">
+                        <input type="radio" name="dataSource" value="2025" checked>
+                        <span class="year-text">2025 Data</span>
+                    </label>
+                    <label class="year-option">
+                        <input type="radio" name="dataSource" value="2022-2024"> 
+                        <span class="year-text">2022-2024 Data</span>
+                    </label>
+                </div>
+                
+                <button id="connectBtn" class="btn btn-primary">
+                    <i class="fas fa-file-excel"></i>
+                    <span class="btn-text">Click Here to Refresh Data</span>
+                </button>
+                
+                <div class="connection-status">
+                    <span id="statusIndicator" class="status-indicator disconnected"></span>
+                    <span id="connectionStatus">Not connected to data source</span>
+                </div>
+                
+                <div id="fileInfo" class="storage-info"></div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="searchTerm" placeholder="Search...">
+                <button class="btn btn-primary" onclick="searchRecords()">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="btn clear-search-btn" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <input type="text" id="releaseDateFilter" placeholder="Date" onfocus="(this.type='date')" onblur="(this.type='text')">
+                <button class="btn clear-date-btn" onclick="clearDate()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="btn btn-success" onclick="contactAboutMissingData()">
+                    <i class="fab fa-whatsapp"></i>
+                    <span class="btn-text">Help</span>
+                </button>
+            </div>
+            
+            <div class="filter-dropdown">
+                <button class="filter-dropbtn" onclick="toggleFilterDropdown()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <div class="filter-dropdown-content" id="filterDropdown">
+                    <div class="filter-btn active" onclick="filterRecords('all')">All</div>
+                    <div class="filter-btn" onclick="filterRecords('Open')">Open</div>
+                    <div class="filter-btn" onclick="filterRecords('Pending')">Pending</div>
+                    <div class="filter-btn" onclick="filterRecords('No Invoice')">No INV</div>
+                    <div class="filter-btn" onclick="filterRecords('For SRV')">SRV</div>
+                    <div class="filter-btn" onclick="filterRecords('For IPC')">IPC</div>
+                    <div class="filter-btn" onclick="filterRecords('Report')">Report</div>
+                    <div class="filter-btn" onclick="filterRecords('Under Review')">Review</div>
+                    <div class="filter-btn" onclick="filterRecords('CEO Approval')">CEO</div>
+                    <div class="filter-btn" onclick="filterRecords('With Accounts')">Accounts</div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Site</th>
+                            <th>PO</th>
+                            <th>Vendor</th>
+                            <th>Invoice</th>
+                            <th>Amount</th>
+                            <th>Release</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Statement of Account Section -->
+        <div id="statementSection" class="content-section">
+            <div class="section-header">
+                <h1>Statement of Account</h1>
+                <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+            
             <div class="report-controls">
                 <select id="reportType">
                     <option value="po">PO Number</option>
@@ -112,21 +137,9 @@
                     <i class="fas fa-calculator"></i>
                     <span>Generate</span>
                 </button>
-                <button class="btn btn-warning" onclick="printReport()">
-                    <i class="fas fa-print"></i>
-                    <span>Print</span>
-                </button>
-                <button class="btn btn-danger" onclick="exportReport()">
-                    <i class="fas fa-file-pdf"></i>
-                    <span>PDF</span>
-                </button>
                 <button class="btn clear-search-btn" onclick="clearReportSearch()">
                     <i class="fas fa-times"></i>
                     <span>Clear</span>
-                </button>
-                <button class="btn clear-search-btn" onclick="closeReportSection()">
-                    <i class="fas fa-times"></i>
-                    <span>Close</span>
                 </button>
             </div>
             
@@ -154,17 +167,26 @@
                 </div>
             </div>
             
+            <div class="report-actions">
+                <button class="btn btn-warning" onclick="printReport()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="btn btn-danger" onclick="exportReport()">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+            
             <div class="report-table-container">
                 <table id="reportTable" class="compact-table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Date</th>
-                            <th>PO</th>
+                            <th>PO Number</th>
                             <th>Vendor</th>
                             <th>Invoice</th>
                             <th>Amount</th>
-                            <th>Release</th>
+                            <th>Release Date</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -180,34 +202,26 @@
             </div>
         </div>
         
-        <div id="pettyCashSection" class="report-section" style="display: none;">
-            <h2>Summary Statement</h2>
+        <!-- Petty Cash Section -->
+        <div id="pettyCashSection" class="content-section">
+            <div class="section-header">
+                <h1>Summary Statement</h1>
+                <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+            
             <div class="report-controls">
-                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes..." list="noteSuggestions">
+                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes..." 
+                    list="noteSuggestions" autocomplete="off">
                 <datalist id="noteSuggestions"></datalist>
                 <button class="btn btn-primary" onclick="generatePettyCashReport()">
                     <i class="fas fa-calculator"></i>
                     <span>Generate</span>
                 </button>
-                <button class="btn btn-warning" onclick="previewPettyCashReport()">
-                    <i class="fas fa-eye"></i>
-                    <span>Preview</span>
-                </button>
-                <button class="btn btn-warning" onclick="printPettyCashReport()">
-                    <i class="fas fa-print"></i>
-                    <span>Print</span>
-                </button>
-                <button class="btn btn-danger" onclick="exportPettyCashReport()">
-                    <i class="fas fa-file-pdf"></i>
-                    <span>PDF</span>
-                </button>
                 <button class="btn clear-search-btn" onclick="clearPettyCashSearch()">
                     <i class="fas fa-times"></i>
                     <span>Clear</span>
-                </button>
-                <button class="btn clear-search-btn" onclick="closePettyCashSection()">
-                    <i class="fas fa-times"></i>
-                    <span>Close</span>
                 </button>
             </div>
             
@@ -225,12 +239,24 @@
                 </div>
             </div>
             
+            <div class="report-actions">
+                <button class="btn btn-warning" onclick="previewPettyCashReport()">
+                    <i class="fas fa-eye"></i> Preview
+                </button>
+                <button class="btn btn-warning" onclick="printPettyCashReport()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="btn btn-danger" onclick="exportPettyCashReport()">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+            
             <div class="report-table-container">
                 <table id="pettyCashTable" class="compact-table">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Date Release</th>
+                            <th>PO Number</th>
                             <th>Site</th>
                             <th>Vendor</th>
                             <th>Amount</th>
@@ -249,28 +275,15 @@
             </div>
         </div>
         
-        <div class="table-responsive">
-            <table id="recordsTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Date</th>
-                        <th>Site</th>
-                        <th>PO</th>
-                        <th>Vendor</th>
-                        <th>Invoice</th>
-                        <th>Amount</th>
-                        <th>Release</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        
         <div class="data-source-info">
             IBA Trading
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="corporate-spinner"></div>
+            <p>Loading Data...</p>
         </div>
     </div>
 

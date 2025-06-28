@@ -13,7 +13,7 @@ const isLocal = window.location.protocol === 'file:' ||
 const PDF_BASE_PATH = isLocal ? "L:/Files/INVOICE/" : null;
 const SRV_BASE_PATH = isLocal ? "L:/Files/SRV/" : null;
 
-// GitHub CSV URLs
+// GitHub CSV URLs with cache-busting
 const GITHUB_CSV_URLS = {
     '2025': "https://raw.githubusercontent.com/DC-database/Invoice/main/records_2025.csv",
     '2022-2024': "https://raw.githubusercontent.com/DC-database/Invoice/main/records_2022-2024.csv"
@@ -25,6 +25,74 @@ let activeFilter = 'all';
 let usingGitHub = false;
 let isLoading = false;
 let currentYear = '2025';
+
+// Cache for GitHub data
+const dataCache = {
+    '2025': { data: null, lastUpdated: null },
+    '2022-2024': { data: null, lastUpdated: null }
+};
+
+// Mobile menu functions
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu.classList.contains('show')) {
+        mobileMenu.classList.remove('show');
+    } else {
+        mobileMenu.classList.add('show');
+    }
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    document.getElementById(sectionId).classList.add('active');
+    document.getElementById('mobileMenu').classList.remove('show');
+    
+    // Update note suggestions when Petty Cash section is shown
+    if (sectionId === 'pettyCashSection') {
+        updateNoteSuggestions();
+    }
+    
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    if (sectionId === 'invoiceSection') {
+        document.querySelector('.menu-item:nth-child(1)').classList.add('active');
+    } else if (sectionId === 'statementSection') {
+        document.querySelector('.menu-item:nth-child(2)').classList.add('active');
+    } else if (sectionId === 'pettyCashSection') {
+        document.querySelector('.menu-item:nth-child(3)').classList.add('active');
+    }
+}
+
+function toggleFilterDropdown() {
+    document.getElementById('filterDropdown').classList.toggle('show');
+}
+
+// Close the dropdown if clicked outside
+window.onclick = function(event) {
+    if (!event.target.matches('.filter-dropbtn')) {
+        const dropdowns = document.getElementsByClassName("filter-dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            const openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+    
+    const modal = document.getElementById('previewModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+    
+    const pettyCashModal = document.getElementById('pettyCashPreviewModal');
+    if (event.target == pettyCashModal) {
+        pettyCashModal.style.display = 'none';
+    }
+};
 
 // View PDF file
 function viewPDF(fileName) {
@@ -139,19 +207,6 @@ function formatDateForDisplay(date) {
 }
 
 // Report section functions
-function toggleReportSection() {
-    const reportSection = document.getElementById('statementOfAccountSection');
-    reportSection.style.display = reportSection.style.display === 'none' ? 'block' : 'none';
-    
-    if (reportSection.style.display === 'block' && window.innerWidth <= 768) {
-        reportSection.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function closeReportSection() {
-    document.getElementById('statementOfAccountSection').style.display = 'none';
-}
-
 function clearReportSearch() {
     document.getElementById('reportSearchTerm').value = '';
     document.getElementById('reportType').selectedIndex = 0;
@@ -166,23 +221,6 @@ function clearReportSearch() {
 }
 
 // Petty Cash Report functions
-function togglePettyCashSection() {
-    const pettyCashSection = document.getElementById('pettyCashSection');
-    pettyCashSection.style.display = pettyCashSection.style.display === 'none' ? 'block' : 'none';
-    
-    if (pettyCashSection.style.display === 'block') {
-        // Update note suggestions when section is shown
-        updateNoteSuggestions();
-        if (window.innerWidth <= 768) {
-            pettyCashSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-}
-
-function closePettyCashSection() {
-    document.getElementById('pettyCashSection').style.display = 'none';
-}
-
 function clearPettyCashSearch() {
     document.getElementById('pettyCashSearchTerm').value = '';
     document.getElementById('pettyCashTable').style.display = 'none';
@@ -192,21 +230,35 @@ function clearPettyCashSearch() {
     document.getElementById('pettyCashTableTotal').textContent = '0.00';
 }
 
+// NOTE SUGGESTIONS FUNCTIONALITY - UPDATED VERSION
 function updateNoteSuggestions() {
-    const noteSuggestions = document.getElementById('noteSuggestions');
-    noteSuggestions.innerHTML = '';
-    
-    // Get all unique notes from records
-    const uniqueNotes = [...new Set(records
-        .filter(record => record.note && record.note.trim() !== '')
-        .map(record => record.note.trim()))];
-    
-    // Add each unique note as an option to the datalist
-    uniqueNotes.forEach(note => {
-        const option = document.createElement('option');
-        option.value = note;
-        noteSuggestions.appendChild(option);
-    });
+    try {
+        const noteSuggestions = document.getElementById('noteSuggestions');
+        if (!noteSuggestions) {
+            console.error('Note suggestions datalist element not found');
+            return;
+        }
+        
+        noteSuggestions.innerHTML = '';
+        
+        // Get all unique non-empty notes from records
+        const allNotes = records
+            .filter(record => record.note && record.note.trim() !== '')
+            .map(record => record.note.trim());
+        
+        const uniqueNotes = [...new Set(allNotes)].sort(); // Remove duplicates and sort
+        
+        // Add each unique note as an option to the datalist
+        uniqueNotes.forEach(note => {
+            const option = document.createElement('option');
+            option.value = note;
+            noteSuggestions.appendChild(option);
+        });
+        
+        console.log(`Updated note suggestions with ${uniqueNotes.length} unique notes`);
+    } catch (error) {
+        console.error('Error updating note suggestions:', error);
+    }
 }
 
 function generatePettyCashReport() {
@@ -239,7 +291,7 @@ function generatePettyCashReport() {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.poNumber || '-'}</td>
             <td>${record.site || '-'}</td>
             <td>${record.vendor || '-'}</td>
             <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
@@ -274,16 +326,14 @@ function previewPettyCashReport() {
     const previewContainer = document.getElementById('pettyCashPreviewTableContainer');
     previewContainer.innerHTML = '';
     
-    // Create preview table
     const table = document.createElement('table');
     table.className = 'preview-table';
     
-    // Create table header
     const thead = document.createElement('thead');
     thead.innerHTML = `
         <tr>
             <th>ID</th>
-            <th>Date Release</th>
+            <th>PO Number</th>
             <th>Site</th>
             <th>Vendor</th>
             <th>Amount</th>
@@ -292,13 +342,12 @@ function previewPettyCashReport() {
     `;
     table.appendChild(thead);
     
-    // Create table body with data
     const tbody = document.createElement('tbody');
     filteredRecords.forEach((record, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.poNumber || '-'}</td>
             <td>${record.site || '-'}</td>
             <td>${record.vendor || '-'}</td>
             <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
@@ -307,7 +356,6 @@ function previewPettyCashReport() {
         tbody.appendChild(row);
     });
     
-    // Add total row
     const totalRow = document.createElement('tr');
     totalRow.className = 'total-row';
     totalRow.innerHTML = `
@@ -320,18 +368,10 @@ function previewPettyCashReport() {
     table.appendChild(tbody);
     previewContainer.appendChild(table);
     
-    // Show the modal
     modal.style.display = 'block';
     
-    // Close modal handlers
     document.querySelector('#pettyCashPreviewModal .close').onclick = function() {
         modal.style.display = 'none';
-    };
-    
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
     };
 }
 
@@ -348,7 +388,7 @@ function exportPettyCashReport() {
     
     const data = filteredRecords.map((record, index) => [
         index + 1,
-        formatDate(record.entryDate),
+        record.poNumber || '-',
         record.site || '-',
         record.vendor || '-',
         record.value ? formatNumber(record.value) : '-',
@@ -374,7 +414,7 @@ function exportPettyCashReport() {
     doc.text(`Records Found: ${recordCount}`, 150, 45);
     
     doc.autoTable({
-        head: [['ID', 'Date Release', 'Site', 'Vendor', 'Amount', 'Status']],
+        head: [['ID', 'PO Number', 'Site', 'Vendor', 'Amount', 'Status']],
         body: data,
         startY: 55,
         margin: { left: 40, right: 40 },
@@ -505,7 +545,7 @@ function processCSVData(data) {
         releaseDate: item['Release Date'] || '',
         status: item['Status'] || 'For SRV',
         fileName: item['FileName'] || '',
-        note: item['Note'] || '', // Added Note column here
+        note: item['Note'] || item['Notes'] || item['Description'] || '', // Multiple possible column names
         lastUpdated: new Date().toISOString()
     }));
 }
@@ -521,11 +561,20 @@ function migrateStatus(records) {
 
 // Data loading
 async function loadFromGitHub(forceRefresh = false) {
-    const url = GITHUB_CSV_URLS[currentYear] + (forceRefresh ? `?timestamp=${new Date().getTime()}` : '');
+    const url = GITHUB_CSV_URLS[currentYear];
+    const cacheKey = `githubData_${currentYear}`;
+    
+    if (!forceRefresh && dataCache[currentYear].data) {
+        records = dataCache[currentYear].data;
+        updateNoteSuggestions(); // Added this line
+        updateUI();
+        return;
+    }
+
+    showLoading();
     
     try {
-        showLoading();
-        const response = await fetch(url);
+        const response = await fetch(`${url}?t=${Date.now()}`);
         if (!response.ok) throw new Error('Failed to fetch CSV');
         
         const csvData = await response.text();
@@ -542,14 +591,15 @@ async function loadFromGitHub(forceRefresh = false) {
                         records = migrateStatus(records);
                     }
                     
+                    dataCache[currentYear] = {
+                        data: records,
+                        lastUpdated: new Date()
+                    };
+                    
                     localStorage.setItem(`recordsData_${currentYear}`, JSON.stringify(records));
                     localStorage.setItem(`lastGitHubFetch_${currentYear}`, new Date().toISOString());
                     
-                    // Update note suggestions when data is loaded
-                    updateNoteSuggestions();
-                    
-                    // Don't refresh table here - wait for search/filter
-                    document.getElementById('recordsTable').style.display = 'none';
+                    updateNoteSuggestions(); // Added this line
                     updateConnectionStatus(true);
                     updateFileInfo();
                     resolve();
@@ -563,10 +613,21 @@ async function loadFromGitHub(forceRefresh = false) {
     } catch (error) {
         console.error('Error loading from GitHub:', error);
         updateConnectionStatus(false);
-        throw error;
+        if (dataCache[currentYear].data) {
+            records = dataCache[currentYear].data;
+            updateNoteSuggestions(); // Added this line
+            updateUI();
+        }
     } finally {
         hideLoading();
     }
+}
+
+// Optimized UI updates
+function updateUI() {
+    updateConnectionStatus(true);
+    updateFileInfo();
+    searchRecords();
 }
 
 function loadFromLocalStorage() {
@@ -576,9 +637,7 @@ function loadFromLocalStorage() {
         try {
             records = JSON.parse(savedData);
             records = migrateStatus(records);
-            // Update note suggestions when data is loaded
-            updateNoteSuggestions();
-            // Don't refresh table here - wait for search/filter
+            updateNoteSuggestions(); // Added this line
             document.getElementById('recordsTable').style.display = 'none';
             updateConnectionStatus(true);
             updateFileInfo();
@@ -734,7 +793,7 @@ function searchRecords() {
             (record.invoiceNumber && record.invoiceNumber.toLowerCase().includes(term)) ||
             (record.details && record.details.toLowerCase().includes(term)) ||
             (record.fileName && record.fileName.toLowerCase().includes(term)) ||
-            (record.note && record.note.toLowerCase().includes(term)) // Added note to search
+            (record.note && record.note.toLowerCase().includes(term))
         );
     }
 
@@ -823,7 +882,6 @@ function showPreview() {
             const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
             total += value;
             
-            // Get the original record to access the note
             const recordIndex = parseInt(cells[0].textContent) - 1;
             const record = records[recordIndex];
             
@@ -877,7 +935,6 @@ function exportPreviewToExcel() {
             const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
             total += value;
             
-            // Get the original record to access the note
             const recordIndex = parseInt(cells[0].textContent) - 1;
             const record = records[recordIndex];
 
@@ -890,7 +947,7 @@ function exportPreviewToExcel() {
                 'Invoice': cells[5].textContent.trim(),
                 'Amount': value.toFixed(2),
                 'Status': cells[8].textContent.trim(),
-                'Note': record.note || '' // Include note in export
+                'Note': record.note || ''
             });
         }
     });
@@ -941,7 +998,6 @@ function exportPreviewToPDF() {
             const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
             total += value;
             
-            // Get the original record to access the note
             const recordIndex = parseInt(cells[0].textContent) - 1;
             const record = records[recordIndex];
 
@@ -1093,12 +1149,7 @@ function generateReport() {
     });
     
     document.getElementById('reportTotalAmount').textContent = formatNumber(invoiceTotal);
-    document.getElementById('statementOfAccountSection').style.display = 'block';
     document.getElementById('reportTable').style.display = 'table';
-    
-    if (window.innerWidth <= 768) {
-        document.querySelector('.report-section').scrollIntoView({ behavior: 'smooth' });
-    }
 }
 
 function exportReport() {
@@ -1283,32 +1334,25 @@ function setupResponsiveElements() {
     detectDeviceType();
     const screenWidth = window.innerWidth;
     
-    // Get all table header and data cells
     const allTh = document.querySelectorAll('#recordsTable th');
     const allTd = document.querySelectorAll('#recordsTable td');
     
-    // First, show all columns
     allTh.forEach(th => th.style.display = '');
     allTd.forEach(td => td.style.display = '');
     
-    // Then hide columns based on screen size
     if (screenWidth <= 400) {
-        // Very small screens - show ID, Site, PO, Amount, Status, Actions
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 576) {
-        // Small mobile screens - show ID, PO, Vendor, Invoice, Status, Actions
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 768) {
-        // Tablets and larger phones - show ID, PO, Vendor, Invoice, Status, Actions
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 992) {
-        // Small desktop/laptop - hide less important columns
         document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
@@ -1320,7 +1364,6 @@ document.addEventListener('DOMContentLoaded', function() {
     detectDeviceType();
     updateConnectionStatus(false);
     
-    // Add event listeners for responsive behavior
     window.addEventListener('resize', setupResponsiveElements);
     
     document.getElementById('connectBtn').addEventListener('click', async function() {
@@ -1357,6 +1400,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (savedData) {
                     records = JSON.parse(savedData);
                     records = migrateStatus(records);
+                    updateNoteSuggestions();
                 }
                 
                 await loadFromGitHub(true);
@@ -1395,13 +1439,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.querySelector('.close').onclick = function() {
         document.getElementById('previewModal').style.display = 'none';
-    };
-    
-    window.onclick = function(event) {
-        const modal = document.getElementById('previewModal');
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
     };
     
     document.querySelector('input[value="2025"]').checked = true;
