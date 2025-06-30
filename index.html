@@ -118,68 +118,70 @@
 
             <!-- Invoice Preview Modal -->
             <div id="invoicePreviewModal" class="modal">
-                <div class="modal-content">
-                    <span class="close-modal" onclick="closeInvoicePreview()">&times;</span>
-                    <h3 id="previewTitle">Invoice Details</h3>
-                    <div class="preview-details">
-                        <div class="detail-row">
-                            <span class="detail-label">PO Number:</span>
-                            <span id="previewPoNumber" class="detail-value"></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Invoice Number:</span>
-                            <span id="previewInvoiceNumber" class="detail-value"></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Amount:</span>
-                            <span id="previewAmount" class="detail-value"></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Current Status:</span>
-                            <span id="previewStatus" class="detail-value"></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Notes:</span>
-                            <span id="previewNotes" class="detail-value"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="progress-legend">
-                        <h4>Status Progress</h4>
-                        <div class="step-progress-container">
-                            <div class="step-progress">
-                                <div class="step step-1 active"></div>
-                                <div class="step-connector active"></div>
-                                <div class="step step-2 active"></div>
-                                <div class="step-connector active"></div>
-                                <div class="step step-3 active"></div>
-                                <div class="step-connector active"></div>
-                                <div class="step step-4 active"></div>
-                                <div class="step-connector active"></div>
-                                <div class="step step-5 active"></div>
-                            </div>
-                            <div class="step-labels">
-                                <span class="step-label">SRV</span>
-                                <span class="step-label">IPC/Report</span>
-                                <span class="step-label">Review</span>
-                                <span class="step-label">CEO</span>
-                                <span class="step-label">Accounts</span>
-                            </div>
-                        </div>
-                        <div class="legend-description">
-                            <p>This shows the workflow of an invoice:</p>
-                            <ul>
-                                <li><strong>SRV</strong> - Initial stage when invoice is received</li>
-                                <li><strong>IPC/Report</strong> - Invoice is being processed or reported</li>
-                                <li><strong>Review</strong> - Under department review</li>
-                                <li><strong>CEO</strong> - Waiting for CEO approval</li>
-                                <li><strong>Accounts</strong> - Final stage with accounts department</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeInvoicePreview()">&times;</span>
+        <h3 style="margin-top: 0; color: var(--primary);">Invoice Details</h3>
+        
+        <div class="preview-details">
+            <div class="detail-row">
+                <span class="detail-label">PO Number:</span>
+                <span id="previewPoNumber" class="detail-value">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Invoice Number:</span>
+                <span id="previewInvoiceNumber" class="detail-value">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount:</span>
+                <span id="previewAmount" class="detail-value">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Current Status:</span>
+                <span id="previewStatus" class="detail-value">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Notes:</span>
+                <span id="previewNotes" class="detail-value">-</span>
             </div>
         </div>
+        
+        <div class="progress-legend">
+            <h4 style="margin-bottom: 15px; color: var(--primary);">Workflow Progress</h4>
+            
+            <div class="step-progress-container">
+                <div class="step-progress">
+                    <div class="step step-1"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-2"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-3"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-4"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-5"></div>
+                </div>
+                <div class="step-labels">
+                    <span class="step-label">SRV</span>
+                    <span class="step-label">IPC/Report</span>
+                    <span class="step-label">Review</span>
+                    <span class="step-label">CEO</span>
+                    <span class="step-label">Accounts</span>
+                </div>
+            </div>
+            
+            <div class="legend-description">
+                <p>This visual shows the invoice workflow progression:</p>
+                <ul>
+                    <li><strong>SRV</strong> - Initial stage when invoice is received</li>
+                    <li><strong>IPC/Report</strong> - Payment Certificate and Financial Report</li>
+                    <li><strong>Review</strong> - Under department review</li>
+                    <li><strong>CEO</strong> - Waiting for CEO approval</li>
+                    <li><strong>Accounts</strong> - Final stage with accounts department</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
         
         <!-- Statement of Account Section -->
         <div id="statementSection" class="content-section">

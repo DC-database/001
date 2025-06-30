@@ -1156,3 +1156,155 @@ tr:hover {
         margin-bottom: 5px;
     }
 }
+/* Enhanced Modal Styles */
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.preview-details {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 15px 0;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px;
+    align-items: start;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 14px;
+}
+
+.detail-value {
+    font-size: 14px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary);
+}
+
+.progress-legend {
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.step-progress-container {
+    margin: 15px 0;
+}
+
+.legend-description {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.legend-description ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.legend-description li {
+    margin-bottom: 8px;
+    position: relative;
+    padding-left: 15px;
+}
+
+.legend-description li::before {
+    content: "•";
+    color: var(--primary);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 2% auto;
+        padding: 15px;
+    }
+    
+    .detail-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    
+    .detail-label {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+    
+    .detail-value {
+        padding: 6px;
+        font-size: 13px;
+    }
+    
+    .progress-legend {
+        padding: 12px;
+    }
+    
+    .legend-description {
+        font-size: 13px;
+    }
+    
+    .step-labels {
+        font-size: 9px;
+    }
+    
+    .step {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .step-connector {
+        height: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 98%;
+        padding: 10px;
+    }
+    
+    .preview-details {
+        gap: 8px;
+    }
+    
+    .detail-value {
+        font-size: 12px;
+    }
+    
+    .progress-legend {
+        padding: 10px;
+    }
+    
+    .legend-description {
+        font-size: 12px;
+    }
+    
+    .step-labels span {
+        display: none;
+    }
+    
+    .step-labels::before {
+        content: "SRV → IPC → Review → CEO → Accounts";
+        display: block;
+        text-align: center;
+        font-size: 10px;
+        color: #666;
+        margin-top: 5px;
+    }
+}
