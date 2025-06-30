@@ -49,12 +49,10 @@ function showSection(sectionId) {
     document.getElementById(sectionId).classList.add('active');
     document.getElementById('mobileMenu').classList.remove('show');
     
-    // Update note suggestions when Petty Cash section is shown
     if (sectionId === 'pettyCashSection') {
         updateNoteSuggestions();
     }
     
-    // Update vendor and site suggestions when Statement section is shown
     if (sectionId === 'statementSection') {
         updateVendorSuggestions();
         updateSiteSuggestions();
@@ -202,171 +200,6 @@ function formatDateForDisplay(date) {
     });
 }
 
-// Report section functions
-function clearReportSearch() {
-    document.getElementById('reportSearchTerm').value = '';
-    document.getElementById('reportType').selectedIndex = 0;
-    document.getElementById('reportStatusFilter').selectedIndex = 0;
-    document.getElementById('reportTable').style.display = 'none';
-    document.getElementById('reportHeader').innerHTML = '';
-    document.getElementById('poTotal').textContent = '0.00';
-    document.getElementById('grandTotal').textContent = '0.00';
-    document.getElementById('accountsTotal').textContent = '0.00';
-    document.getElementById('balanceTotal').textContent = '0.00';
-    document.querySelector('#reportTable tbody').innerHTML = '';
-    document.getElementById('reportTotalAmount').textContent = '0.00';
-}
-
-// Petty Cash Report functions
-function clearPettyCashSearch() {
-    document.getElementById('pettyCashSearchTerm').value = '';
-    document.getElementById('pettyCashTable').style.display = 'none';
-    document.getElementById('pettyCashTotal').textContent = '0.00';
-    document.getElementById('pettyCashCount').textContent = '0';
-    document.querySelector('#pettyCashTable tbody').innerHTML = '';
-    document.getElementById('pettyCashTableTotal').textContent = '0.00';
-}
-
-// NOTE SUGGESTIONS FUNCTIONALITY - UPDATED VERSION
-function updateNoteSuggestions() {
-    try {
-        const noteSuggestions = document.getElementById('noteSuggestions');
-        if (!noteSuggestions) {
-            console.error('Note suggestions datalist element not found');
-            return;
-        }
-        
-        noteSuggestions.innerHTML = '';
-        
-        // Get all unique non-empty notes from records
-        const allNotes = records
-            .filter(record => record.note && record.note.trim() !== '')
-            .map(record => record.note.trim());
-        
-        const uniqueNotes = [...new Set(allNotes)].sort(); // Remove duplicates and sort
-        
-        // Add each unique note as an option to the datalist
-        uniqueNotes.forEach(note => {
-            const option = document.createElement('option');
-            option.value = note;
-            noteSuggestions.appendChild(option);
-        });
-        
-        console.log(`Updated note suggestions with ${uniqueNotes.length} unique notes`);
-    } catch (error) {
-        console.error('Error updating note suggestions:', error);
-    }
-}
-
-// Vendor suggestions functionality
-function updateVendorSuggestions() {
-    try {
-        const vendorSuggestions = document.getElementById('vendorSuggestions');
-        if (!vendorSuggestions) {
-            console.error('Vendor suggestions datalist element not found');
-            return;
-        }
-        
-        vendorSuggestions.innerHTML = '';
-        
-        // Get all unique non-empty vendors from records
-        const allVendors = records
-            .filter(record => record.vendor && record.vendor.trim() !== '')
-            .map(record => record.vendor.trim());
-        
-        const uniqueVendors = [...new Set(allVendors)].sort(); // Remove duplicates and sort
-        
-        // Add each unique vendor as an option to the datalist
-        uniqueVendors.forEach(vendor => {
-            const option = document.createElement('option');
-            option.value = vendor;
-            vendorSuggestions.appendChild(option);
-        });
-        
-        console.log(`Updated vendor suggestions with ${uniqueVendors.length} unique vendors`);
-    } catch (error) {
-        console.error('Error updating vendor suggestions:', error);
-    }
-}
-
-// Site suggestions functionality
-function updateSiteSuggestions() {
-    try {
-        const siteSuggestions = document.getElementById('siteSuggestions');
-        if (!siteSuggestions) {
-            console.error('Site suggestions datalist element not found');
-            return;
-        }
-        
-        siteSuggestions.innerHTML = '';
-        
-        // Get all unique non-empty sites from records
-        const allSites = records
-            .filter(record => record.site && record.site.trim() !== '')
-            .map(record => record.site.trim());
-        
-        const uniqueSites = [...new Set(allSites)].sort(); // Remove duplicates and sort
-        
-        // Add each unique site as an option to the datalist
-        uniqueSites.forEach(site => {
-            const option = document.createElement('option');
-            option.value = site;
-            siteSuggestions.appendChild(option);
-        });
-        
-        console.log(`Updated site suggestions with ${uniqueSites.length} unique sites`);
-    } catch (error) {
-        console.error('Error updating site suggestions:', error);
-    }
-}
-
-function generatePettyCashReport() {
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
-    
-    if (!searchTerm) {
-        alert('Please enter a search term for the notes field');
-        return;
-    }
-    
-    const filteredRecords = records.filter(record => 
-        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    if (filteredRecords.length === 0) {
-        alert('No petty cash records found matching your search criteria');
-        return;
-    }
-    
-    const totalValue = filteredRecords
-        .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
-    
-    document.getElementById('pettyCashTotal').textContent = formatNumber(totalValue);
-    document.getElementById('pettyCashCount').textContent = filteredRecords.length;
-    
-    const pettyCashTableBody = document.querySelector('#pettyCashTable tbody');
-    pettyCashTableBody.innerHTML = '';
-    
-    filteredRecords.forEach((record, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${record.poNumber || '-'}</td>
-            <td>${record.site || '-'}</td>
-            <td>${record.vendor || '-'}</td>
-            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
-            <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
-        `;
-        pettyCashTableBody.appendChild(row);
-    });
-    
-    document.getElementById('pettyCashTableTotal').textContent = formatNumber(totalValue);
-    document.getElementById('pettyCashTable').style.display = 'table';
-    
-    if (window.innerWidth <= 768) {
-        document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
 // Connection status
 function updateConnectionStatus(connected) {
     const indicator = document.getElementById('statusIndicator');
@@ -376,12 +209,12 @@ function updateConnectionStatus(connected) {
     if (connected) {
         indicator.className = 'status-indicator connected';
         statusText.textContent = `Connected to: ${currentYear} CSV`;
-        connectBtn.innerHTML = `<i class="fas fa-file-excel"></i> Data Updated (${currentYear})`;
+        connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Data Updated (${currentYear})`;
         usingGitHub = true;
     } else {
         indicator.className = 'status-indicator disconnected';
         statusText.textContent = 'Not connected to data source';
-        connectBtn.innerHTML = `<i class="fas fa-file-excel"></i> Click to Refresh Data`;
+        connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Refresh Data`;
         usingGitHub = false;
     }
     
@@ -402,7 +235,7 @@ function processCSVData(data) {
         releaseDate: item['Release Date'] || '',
         status: item['Status'] || 'For SRV',
         fileName: item['FileName'] || '',
-        note: item['Note'] || item['Notes'] || item['Description'] || '', // Multiple possible column names
+        note: item['Note'] || item['Notes'] || item['Description'] || '',
         lastUpdated: new Date().toISOString()
     }));
 }
@@ -613,6 +446,13 @@ function refreshTable(filteredRecords = null) {
                 </button>
             </td>
         `;
+        
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-btns')) {
+                showInvoicePreview(record);
+            }
+        });
+        
         tableBody.appendChild(row);
     });
     
@@ -736,7 +576,6 @@ function generateReport() {
                     Site: ${filteredRecords[0].site || 'N/A'}<br>
                     Note: ${filteredRecords[0].note || 'N/A'}`;
             }
-            // Show PO Value for PO filter
             document.getElementById('poTotalContainer').style.display = 'flex';
             break;
             
@@ -748,7 +587,6 @@ function generateReport() {
                 headerText = `Vendor: ${filteredRecords[0].vendor}<br>
                     Records: ${filteredRecords.length}`;
             }
-            // Hide PO Value for Vendor filter
             document.getElementById('poTotalContainer').style.display = 'none';
             break;
             
@@ -760,12 +598,10 @@ function generateReport() {
                 headerText = `Site: ${filteredRecords[0].site}<br>
                     Records: ${filteredRecords.length}`;
             }
-            // Hide PO Value for Site filter
             document.getElementById('poTotalContainer').style.display = 'none';
             break;
     }
     
-    // Apply status filter if not 'all'
     if (statusFilter !== 'all') {
         filteredRecords = filteredRecords.filter(record => record.status === statusFilter);
     }
@@ -814,320 +650,174 @@ function generateReport() {
     document.getElementById('reportTable').style.display = 'table';
 }
 
-async function shareReportViaWhatsApp() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4');
-    const reportHeader = document.getElementById('reportHeader').textContent;
-    const poTotal = document.getElementById('poTotal').textContent;
-    const invoiceTotal = document.getElementById('grandTotal').textContent;
-    const accountsTotal = document.getElementById('accountsTotal').textContent;
-    const balance = document.getElementById('balanceTotal').textContent;
-    
-    const reportType = document.getElementById('reportType').value;
-    const searchTerm = document.getElementById('reportSearchTerm').value.trim();
-    const statusFilter = document.getElementById('reportStatusFilter').value;
-    let filteredRecords = [];
-    
-    switch(reportType) {
-        case 'po':
-            filteredRecords = records.filter(record => 
-                record.poNumber && record.poNumber.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            break;
-        case 'vendor':
-            filteredRecords = records.filter(record => 
-                record.vendor && record.vendor.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            break;
-        case 'site':
-            filteredRecords = records.filter(record => 
-                record.site && record.site.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            break;
+// NOTE SUGGESTIONS FUNCTIONALITY
+function updateNoteSuggestions() {
+    try {
+        const noteSuggestions = document.getElementById('noteSuggestions');
+        if (!noteSuggestions) return;
+        
+        noteSuggestions.innerHTML = '';
+        
+        const allNotes = records
+            .filter(record => record.note && record.note.trim() !== '')
+            .map(record => record.note.trim());
+        
+        const uniqueNotes = [...new Set(allNotes)].sort();
+        
+        uniqueNotes.forEach(note => {
+            const option = document.createElement('option');
+            option.value = note;
+            noteSuggestions.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error updating note suggestions:', error);
     }
-    
-    // Apply status filter if not 'all'
-    if (statusFilter !== 'all') {
-        filteredRecords = filteredRecords.filter(record => record.status === statusFilter);
-    }
-    
-    const data = filteredRecords.map((record, index) => [
-        index + 1,
-        record.poNumber || '-',
-        record.vendor || '-',
-        record.invoiceNumber || '-',
-        record.value ? formatNumber(record.value) : '-',
-        record.releaseDate ? formatDate(record.releaseDate) : '-',
-        record.status,
-        record.note || '-'
-    ]);
-    
-    data.push(['', '', '', 'Total:', formatNumber(invoiceTotal), '', '', '']);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(40);
-    doc.text('IBA Trading Statement of Account', 300, 30, { align: 'center' });
-    
-    doc.setFontSize(10);
-    const splitHeader = doc.splitTextToSize(reportHeader, 500);
-    doc.text(splitHeader, 40, 60);
-    
-    doc.setFontSize(10);
-    doc.text(`PO Value: ${poTotal}`, 40, 90);
-    doc.text(`Invoice Total: ${invoiceTotal}`, 150, 90);
-    doc.text(`With Accounts Total: ${accountsTotal}`, 260, 90);
-    doc.text(`Balance: ${balance}`, 370, 90);
-    
-    doc.autoTable({
-        head: [['ID', 'PO', 'Vendor', 'Invoice', 'Amount', 'Release Date', 'Status', 'Note']],
-        body: data,
-        startY: 110,
-        margin: { left: 40, right: 40 },
-        headStyles: {
-            fillColor: [74, 111, 165],
-            textColor: 255,
-            fontStyle: 'bold',
-            fontSize: 8
-        },
-        bodyStyles: {
-            fontSize: 8,
-            cellPadding: 3
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240]
-        },
-        columnStyles: {
-            4: { halign: 'right' }
-        },
-        styles: {
-            overflow: 'linebreak',
-            cellWidth: 'wrap'
-        }
-    });
-    
-    const pdfBlob = doc.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    
-    const message = `Here is the Statement of Account for ${searchTerm} (${reportType}).`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    
-    // Create a temporary link to download the PDF
-    const tempLink = document.createElement('a');
-    tempLink.href = pdfUrl;
-    tempLink.download = 'statement_of_account.pdf';
-    document.body.appendChild(tempLink);
-    tempLink.click();
-    document.body.removeChild(tempLink);
-    
-    // Open WhatsApp after a short delay to allow download
-    setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-    }, 1000);
 }
 
-async function sharePettyCashViaWhatsApp() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4');
+// Vendor suggestions functionality
+function updateVendorSuggestions() {
+    try {
+        const vendorSuggestions = document.getElementById('vendorSuggestions');
+        if (!vendorSuggestions) return;
+        
+        vendorSuggestions.innerHTML = '';
+        
+        const allVendors = records
+            .filter(record => record.vendor && record.vendor.trim() !== '')
+            .map(record => record.vendor.trim());
+        
+        const uniqueVendors = [...new Set(allVendors)].sort();
+        
+        uniqueVendors.forEach(vendor => {
+            const option = document.createElement('option');
+            option.value = vendor;
+            vendorSuggestions.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error updating vendor suggestions:', error);
+    }
+}
+
+// Site suggestions functionality
+function updateSiteSuggestions() {
+    try {
+        const siteSuggestions = document.getElementById('siteSuggestions');
+        if (!siteSuggestions) return;
+        
+        siteSuggestions.innerHTML = '';
+        
+        const allSites = records
+            .filter(record => record.site && record.site.trim() !== '')
+            .map(record => record.site.trim());
+        
+        const uniqueSites = [...new Set(allSites)].sort();
+        
+        uniqueSites.forEach(site => {
+            const option = document.createElement('option');
+            option.value = site;
+            siteSuggestions.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error updating site suggestions:', error);
+    }
+}
+
+function generatePettyCashReport() {
     const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
-    const totalValue = document.getElementById('pettyCashTotal').textContent;
-    const recordCount = document.getElementById('pettyCashCount').textContent;
+    
+    if (!searchTerm) {
+        alert('Please enter a search term for the notes field');
+        return;
+    }
     
     const filteredRecords = records.filter(record => 
         record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
-    const data = filteredRecords.map((record, index) => [
-        index + 1,
-        record.poNumber || '-',
-        record.site || '-',
-        record.vendor || '-',
-        record.value ? formatNumber(record.value) : '-',
-        record.status
-    ]);
+    if (filteredRecords.length === 0) {
+        alert('No petty cash records found matching your search criteria');
+        return;
+    }
     
-    data.push(['', '', '', 'Total:', formatNumber(totalValue), '']);
+    const totalValue = filteredRecords
+        .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
     
-    doc.setFontSize(16);
-    doc.setTextColor(40);
-    doc.text('IBA Trading Summary Statement', 105, 15, { align: 'center' });
+    document.getElementById('pettyCashTotal').textContent = formatNumber(totalValue);
+    document.getElementById('pettyCashCount').textContent = filteredRecords.length;
     
-    doc.setFontSize(12);
-    doc.text(`Search Term: ${searchTerm}`, 105, 22, { align: 'center' });
-    doc.text(`Export Date: ${new Date().toLocaleDateString()}`, 105, 29, { align: 'center' });
+    const pettyCashTableBody = document.querySelector('#pettyCashTable tbody');
+    pettyCashTableBody.innerHTML = '';
     
-    doc.setDrawColor(74, 111, 165);
-    doc.setLineWidth(0.5);
-    doc.line(20, 35, 190, 35);
+    filteredRecords.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${record.poNumber || '-'}</td>
+            <td>${record.site || '-'}</td>
+            <td>${record.vendor || '-'}</td>
+            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+            <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+        `;
+        pettyCashTableBody.appendChild(row);
+    });
     
-    doc.setFontSize(10);
-    doc.text(`Total Value: ${totalValue}`, 40, 45);
-    doc.text(`Records Found: ${recordCount}`, 150, 45);
+    document.getElementById('pettyCashTableTotal').textContent = formatNumber(totalValue);
+    document.getElementById('pettyCashTable').style.display = 'table';
     
-    doc.autoTable({
-        head: [['ID', 'PO Number', 'Site', 'Vendor', 'Amount', 'Status']],
-        body: data,
-        startY: 55,
-        margin: { left: 40, right: 40 },
-        headStyles: {
-            fillColor: [74, 111, 165],
-            textColor: 255,
-            fontStyle: 'bold',
-            fontSize: 8
-        },
-        bodyStyles: {
-            fontSize: 8,
-            cellPadding: 3
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240]
-        },
-        columnStyles: {
-            4: { halign: 'right' }
-        },
-        styles: {
-            overflow: 'linebreak',
-            cellWidth: 'wrap'
+    if (window.innerWidth <= 768) {
+        document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Invoice Preview Functions
+function showInvoicePreview(record) {
+    document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
+    document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
+    document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
+    document.getElementById('previewStatus').textContent = record.status || '-';
+    document.getElementById('previewNotes').textContent = record.note || '-';
+    
+    const statusSteps = {
+        'Open': 0,
+        'For SRV': 1,
+        'For IPC': 2,
+        'No Invoice': 2,
+        'Report': 2,
+        'Under Review': 3,
+        'CEO Approval': 4,
+        'With Accounts': 5
+    };
+    const currentStep = statusSteps[record.status] || 0;
+    
+    document.querySelectorAll('#invoicePreviewModal .step').forEach((step, index) => {
+        step.classList.remove('current');
+        if (index < currentStep) {
+            step.classList.add('active');
+        } else {
+            step.classList.remove('active');
         }
     });
     
-    const pdfBlob = doc.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
+    if (currentStep > 0) {
+        const currentStepElement = document.querySelector(`#invoicePreviewModal .step-${currentStep}`);
+        if (currentStepElement) {
+            currentStepElement.classList.add('current');
+        }
+    }
     
-    const message = `Here is the Summary Statement for "${searchTerm}".`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    document.querySelectorAll('#invoicePreviewModal .step-connector').forEach((connector, index) => {
+        if (index < currentStep - 1) {
+            connector.classList.add('active');
+        } else {
+            connector.classList.remove('active');
+        }
+    });
     
-    // Create a temporary link to download the PDF
-    const tempLink = document.createElement('a');
-    tempLink.href = pdfUrl;
-    tempLink.download = 'summary_statement.pdf';
-    document.body.appendChild(tempLink);
-    tempLink.click();
-    document.body.removeChild(tempLink);
-    
-    // Open WhatsApp after a short delay to allow download
-    setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-    }, 1000);
+    document.getElementById('invoicePreviewModal').style.display = 'block';
 }
 
-function printReport() {
-    const reportHeader = document.getElementById('reportHeader').textContent;
-    const poTotal = document.getElementById('poTotal').textContent;
-    const invoiceTotal = document.getElementById('grandTotal').textContent;
-    const accountsTotal = document.getElementById('accountsTotal').textContent;
-    const balance = document.getElementById('balanceTotal').textContent;
-    
-    const printContent = `
-        <style>
-            @page { size: auto; margin: 5mm; }
-            body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 10px; }
-            h2 { text-align: center; font-size: 14px; margin-bottom: 5px; }
-            .report-info { text-align: center; font-size: 10px; margin-bottom: 10px; }
-            .financial-summary { 
-                display: grid; 
-                grid-template-columns: repeat(4, 1fr); 
-                gap: 5px; 
-                margin-bottom: 10px; 
-                padding: 5px; 
-                border-bottom: 1px solid #ddd;
-            }
-            .financial-label { font-size: 9px; color: #666; }
-            .financial-value { font-size: 10px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
-            th { background-color: #4a6fa5; color: white; padding: 4px; text-align: left; }
-            td { padding: 4px; border: 1px solid #ddd; }
-            .numeric { text-align: right; font-family: 'Courier New', monospace; }
-            .status-badge { 
-                display: inline-block; 
-                padding: 2px 5px; 
-                border-radius: 10px; 
-                font-size: 8px; 
-                font-weight: bold;
-            }
-            tfoot td { font-weight: bold; border-top: 2px solid #4a6fa5; }
-        </style>
-        <h2>Statement of Account</h2>
-        <div class="report-info">${reportHeader}</div>
-        <div class="financial-summary">
-            <div>
-                <div class="financial-label">PO Value</div>
-                <div class="financial-value">${poTotal}</div>
-            </div>
-            <div>
-                <div class="financial-label">Invoice Total</div>
-                <div class="financial-value">${invoiceTotal}</div>
-            </div>
-            <div>
-                <div class="financial-label">With Accounts</div>
-                <div class="financial-value">${accountsTotal}</div>
-            </div>
-            <div>
-                <div class="financial-label">Balance</div>
-                <div class="financial-value">${balance}</div>
-            </div>
-        </div>
-        ${document.getElementById('reportTable').outerHTML}
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    // Removed the auto print functionality
-}
-
-function printPettyCashReport() {
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
-    const totalValue = document.getElementById('pettyCashTotal').textContent;
-    const recordCount = document.getElementById('pettyCashCount').textContent;
-    
-    const printContent = `
-        <style>
-            @page { size: auto; margin: 5mm; }
-            body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 10px; }
-            h2 { text-align: center; font-size: 14px; margin-bottom: 5px; }
-            .report-info { text-align: center; font-size: 10px; margin-bottom: 10px; }
-            .financial-summary { 
-                display: grid; 
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 5px; 
-                margin-bottom: 10px; 
-                padding: 5px; 
-                border-bottom: 1px solid #ddd;
-            }
-            .financial-label { font-size: 9px; color: #666; }
-            .financial-value { font-size: 10px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
-            th { background-color: #4a6fa5; color: white; padding: 4px; text-align: left; }
-            td { padding: 4px; border: 1px solid #ddd; }
-            .numeric { text-align: right; font-family: 'Courier New', monospace; }
-            .status-badge { 
-                display: inline-block; 
-                padding: 2px 5px; 
-                border-radius: 10px; 
-                font-size: 8px; 
-                font-weight: bold;
-            }
-            tfoot td { font-weight: bold; border-top: 2px solid #4a6fa5; }
-        </style>
-        <h2>Summary Statement</h2>
-        <div class="report-info">Search Term: ${searchTerm}</div>
-        <div class="financial-summary">
-            <div>
-                <div class="financial-label">Total Value</div>
-                <div class="financial-value">${totalValue}</div>
-            </div>
-            <div>
-                <div class="financial-label">Records Found</div>
-                <div class="financial-value">${recordCount}</div>
-            </div>
-        </div>
-        ${document.getElementById('pettyCashTable').outerHTML}
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    // Removed the auto print functionality
+function closeInvoicePreview() {
+    document.getElementById('invoicePreviewModal').style.display = 'none';
 }
 
 // Contact function
@@ -1204,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
+    document.querySelectorAll('.mobile-menu input[name="dataSource"]').forEach(radio => {
         radio.addEventListener('change', async function() {
             currentYear = this.value;
             const connectBtn = document.getElementById('connectBtn');
@@ -1269,152 +959,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-// Add these new functions to your existing script.js file
-
-// Invoice Preview Functions
-function showInvoicePreview(record) {
-    document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
-    document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
-    document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
-    document.getElementById('previewStatus').textContent = record.status || '-';
-    document.getElementById('previewNotes').textContent = record.note || '-';
-    
-    // Highlight current step in progress
-    const statusSteps = {
-        'Open': 0,
-        'For SRV': 1,
-        'For IPC': 2,
-        'No Invoice': 2,
-        'Report': 2,
-        'Under Review': 3,
-        'CEO Approval': 4,
-        'With Accounts': 5
-    };
-    const currentStep = statusSteps[record.status] || 0;
-    
-    // Reset all steps
-    document.querySelectorAll('#invoicePreviewModal .step').forEach((step, index) => {
-        step.classList.remove('current');
-        if (index < currentStep) {
-            step.classList.add('active');
-        } else {
-            step.classList.remove('active');
-        }
-    });
-    
-    // Highlight current step
-    if (currentStep > 0) {
-        const currentStepElement = document.querySelector(`#invoicePreviewModal .step-${currentStep}`);
-        if (currentStepElement) {
-            currentStepElement.classList.add('current');
-        }
-    }
-    
-    // Reset all connectors
-    document.querySelectorAll('#invoicePreviewModal .step-connector').forEach((connector, index) => {
-        if (index < currentStep - 1) {
-            connector.classList.add('active');
-        } else {
-            connector.classList.remove('active');
-        }
-    });
-    
-    document.getElementById('invoicePreviewModal').style.display = 'block';
-}
-
-function closeInvoicePreview() {
-    document.getElementById('invoicePreviewModal').style.display = 'none';
-}
-
-// Modify the refreshTable function to add click handlers to rows
-function refreshTable(filteredRecords = null) {
-    const tableBody = document.querySelector('#recordsTable tbody');
-    tableBody.innerHTML = '';
-    
-    const displayRecords = filteredRecords || records;
-    const recordsTable = document.getElementById('recordsTable');
-    
-    if (displayRecords.length === 0) {
-        recordsTable.style.display = 'none';
-        return;
-    }
-    
-    recordsTable.style.display = 'table';
-    
-    displayRecords.forEach((record, index) => {
-        const percentage = getStatusPercentage(record.status);
-        const statusSteps = {
-            'Open': 0,
-            'For SRV': 1,
-            'For IPC': 2,
-            'No Invoice': 2,
-            'Report': 2,
-            'Under Review': 3,
-            'CEO Approval': 4,
-            'With Accounts': 5
-        };
-        const currentStep = statusSteps[record.status] || 0;
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${formatDate(record.entryDate)}</td>
-            <td>${record.site || '-'}</td>
-            <td>${record.poNumber || '-'}</td>
-            <td>${record.vendor || '-'}</td>
-            <td>${record.invoiceNumber || '-'}</td>
-            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
-            <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
-            <td class="status-cell">
-                <div class="step-progress-container">
-                    <div class="step-progress" data-percentage="${percentage}">
-                        <div class="step step-1 ${currentStep > 1 ? 'active' : ''} ${currentStep === 1 ? 'current' : ''}"></div>
-                        <div class="step-connector ${currentStep > 1 ? 'active' : ''}"></div>
-                        <div class="step step-2 ${currentStep > 2 ? 'active' : ''} ${currentStep === 2 ? 'current' : ''}"></div>
-                        <div class="step-connector ${currentStep > 2 ? 'active' : ''}"></div>
-                        <div class="step step-3 ${currentStep > 3 ? 'active' : ''} ${currentStep === 3 ? 'current' : ''}"></div>
-                        <div class="step-connector ${currentStep > 3 ? 'active' : ''}"></div>
-                        <div class="step step-4 ${currentStep > 4 ? 'active' : ''} ${currentStep === 4 ? 'current' : ''}"></div>
-                        <div class="step-connector ${currentStep > 4 ? 'active' : ''}"></div>
-                        <div class="step step-5 ${currentStep > 5 ? 'active' : ''} ${currentStep === 5 ? 'current' : ''}"></div>
-                    </div>
-                    <div class="step-labels">
-                        <span class="step-label">SRV</span>
-                        <span class="step-label">IPC/Report</span>
-                        <span class="step-label">Review</span>
-                        <span class="step-label">CEO</span>
-                        <span class="step-label">Accounts</span>
-                    </div>
-                    <div class="status-tooltip">${record.status} - ${percentage}%</div>
-                </div>
-            </td>
-            <td class="action-btns">
-                <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
-                  onclick="viewPDF('${record.fileName || ''}')" 
-                  ${!record.fileName ? 'disabled' : ''}>
-                  <i class="fas fa-file-pdf"></i>
-                </button>
-                <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
-                  onclick="viewSRV('${record.details || ''}')" 
-                  ${!record.details ? 'disabled' : ''}>
-                  <i class="fas fa-file-alt"></i>
-                </button>
-            </td>
-        `;
-        
-        // Add click handler to the row
-        row.addEventListener('click', function(e) {
-            // Don't trigger if clicking on action buttons
-            if (!e.target.closest('.action-btns')) {
-                showInvoicePreview(record);
-            }
-        });
-        
-        tableBody.appendChild(row);
-    });
-    
-    setupResponsiveElements();
-}
 
 // Close modal when clicking outside of it
 window.addEventListener('click', function(event) {
