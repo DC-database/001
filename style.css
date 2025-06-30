@@ -1,4 +1,3 @@
-/* (No changes needed to CSS) */
 :root {
     --primary: #4a6fa5;
     --secondary: #166088;
@@ -56,6 +55,11 @@ body {
     font-size: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mobile-menu-btn:hover {
+    transform: scale(1.1);
 }
 
 .mobile-menu {
@@ -69,10 +73,13 @@ body {
     z-index: 1000;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-out;
 }
 
 .mobile-menu.show {
     display: block;
+    transform: translateX(0);
 }
 
 .menu-header {
@@ -92,6 +99,11 @@ body {
 .close-menu {
     font-size: 24px;
     cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.close-menu:hover {
+    transform: scale(1.2);
 }
 
 .menu-item {
@@ -101,11 +113,13 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: all 0.2s;
 }
 
 .menu-item i {
     width: 20px;
     text-align: center;
+    color: var(--primary);
 }
 
 .menu-item.active {
@@ -114,9 +128,19 @@ body {
     font-weight: bold;
 }
 
+.menu-item:hover:not(.active) {
+    background-color: #f5f5f5;
+}
+
 /* Content Sections */
 .content-section {
     display: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .content-section.active {
@@ -128,17 +152,25 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .section-header h1 {
     margin: 0;
     flex-grow: 1;
+    font-size: 1.5rem;
+    color: var(--primary);
 }
 
 .back-btn {
     margin-left: 10px;
     padding: 8px 12px;
     min-height: auto;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    transform: translateX(-3px);
 }
 
 h1 {
@@ -174,10 +206,14 @@ h2, h3 {
     transition: all 0.2s;
     flex: 1;
     min-width: 120px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .year-option:hover {
     background: #e9e9e9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .year-option input {
@@ -201,6 +237,13 @@ h2, h3 {
     border-radius: 4px;
     font-size: 14px;
     -webkit-appearance: none;
+    transition: all 0.2s;
+}
+
+.search-container input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
 }
 
 /* Filter Dropdown */
@@ -224,6 +267,11 @@ h2, h3 {
     display: flex;
     align-items: center;
     gap: 8px;
+    transition: all 0.2s;
+}
+
+.filter-dropbtn:hover {
+    border-color: var(--primary);
 }
 
 .filter-dropdown-content {
@@ -237,6 +285,12 @@ h2, h3 {
     max-height: 300px;
     overflow-y: auto;
     width: 100%;
+    animation: fadeInDropdown 0.2s ease-out;
+}
+
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .filter-dropdown-content.show {
@@ -284,14 +338,17 @@ h2, h3 {
     height: 10px;
     border-radius: 50%;
     display: inline-block;
+    transition: all 0.3s;
 }
 
 .connected {
     background-color: var(--success);
+    box-shadow: 0 0 5px var(--success);
 }
 
 .disconnected {
     background-color: var(--danger);
+    box-shadow: 0 0 5px var(--danger);
 }
 
 .btn {
@@ -310,6 +367,17 @@ h2, h3 {
     gap: 8px;
     flex: 1;
     min-width: 100px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .btn i {
@@ -320,7 +388,7 @@ h2, h3 {
     background-color: var(--primary);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background-color: var(--secondary);
 }
 
@@ -328,7 +396,7 @@ h2, h3 {
     background-color: var(--danger);
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
     background-color: #de4050;
 }
 
@@ -361,6 +429,8 @@ h2, h3 {
     background-color: #cccccc;
     cursor: not-allowed;
     opacity: 0.6;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .clear-search-btn, .clear-date-btn {
@@ -408,6 +478,7 @@ tr:hover {
     font-size: 12px;
     font-weight: 500;
     white-space: nowrap;
+    transition: all 0.2s;
 }
 
 .status-srv {
@@ -480,92 +551,6 @@ tr:hover {
     font-weight: 600;
 }
 
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-    -webkit-overflow-scrolling: touch;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 95%;
-    max-width: 800px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: black;
-}
-
-.export-options {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-#previewTableContainer, #pettyCashPreviewTableContainer {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.preview-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 14px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.preview-table th {
-    background-color: var(--primary);
-    color: white;
-    padding: 10px;
-    text-align: left;
-    font-weight: 500;
-}
-
-.preview-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #ddd;
-}
-
-.preview-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.preview-table tr:hover {
-    background-color: rgba(79, 195, 247, 0.1);
-}
-
-.preview-table .total-row {
-    font-weight: bold;
-    background-color: #e9f7fe;
-}
-
 /* Report Section Styles */
 .report-section {
     margin-bottom: 20px;
@@ -592,6 +577,14 @@ tr:hover {
     font-size: 14px;
     flex: 1;
     min-width: 120px;
+    transition: all 0.2s;
+}
+
+.report-controls select:focus,
+.report-controls input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
 }
 
 .report-header {
@@ -625,6 +618,16 @@ tr:hover {
 .financial-summary-item {
     display: flex;
     flex-direction: column;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+}
+
+.financial-summary-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
 .financial-summary-label {
@@ -680,6 +683,8 @@ tr:hover {
     overflow-x: auto;
     margin-bottom: 15px;
     -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .report-actions {
@@ -701,6 +706,7 @@ tr:hover {
     z-index: 1000;
     justify-content: center;
     align-items: center;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .loading-content {
@@ -765,6 +771,13 @@ tr:hover {
 .step.current {
     background-color: #f2d202;
     border-color: #f2d202;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }
 
 .step-connector {
@@ -904,6 +917,18 @@ tr:hover {
     .financial-summary {
         grid-template-columns: 1fr;
     }
+    
+    .mobile-menu {
+        width: 80%;
+    }
+    
+    .report-actions {
+        justify-content: center;
+    }
+    
+    .report-actions .btn {
+        flex: 1 1 45%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -944,7 +969,23 @@ tr:hover {
     }
     
     .mobile-menu {
-        width: 80%;
+        width: 85%;
+    }
+    
+    .report-actions .btn {
+        flex: 1 1 100%;
+    }
+    
+    .financial-summary-item {
+        padding: 8px;
+    }
+    
+    .financial-summary-label {
+        font-size: 10px;
+    }
+    
+    .financial-summary-value {
+        font-size: 14px;
     }
 }
 

@@ -54,6 +54,12 @@ function showSection(sectionId) {
         updateNoteSuggestions();
     }
     
+    // Update vendor and site suggestions when Statement section is shown
+    if (sectionId === 'statementSection') {
+        updateVendorSuggestions();
+        updateSiteSuggestions();
+    }
+    
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
@@ -81,16 +87,6 @@ window.onclick = function(event) {
                 openDropdown.classList.remove('show');
             }
         }
-    }
-    
-    const modal = document.getElementById('previewModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-    
-    const pettyCashModal = document.getElementById('pettyCashPreviewModal');
-    if (event.target == pettyCashModal) {
-        pettyCashModal.style.display = 'none';
     }
 };
 
@@ -210,6 +206,7 @@ function formatDateForDisplay(date) {
 function clearReportSearch() {
     document.getElementById('reportSearchTerm').value = '';
     document.getElementById('reportType').selectedIndex = 0;
+    document.getElementById('reportStatusFilter').selectedIndex = 0;
     document.getElementById('reportTable').style.display = 'none';
     document.getElementById('reportHeader').innerHTML = '';
     document.getElementById('poTotal').textContent = '0.00';
@@ -261,6 +258,68 @@ function updateNoteSuggestions() {
     }
 }
 
+// Vendor suggestions functionality
+function updateVendorSuggestions() {
+    try {
+        const vendorSuggestions = document.getElementById('vendorSuggestions');
+        if (!vendorSuggestions) {
+            console.error('Vendor suggestions datalist element not found');
+            return;
+        }
+        
+        vendorSuggestions.innerHTML = '';
+        
+        // Get all unique non-empty vendors from records
+        const allVendors = records
+            .filter(record => record.vendor && record.vendor.trim() !== '')
+            .map(record => record.vendor.trim());
+        
+        const uniqueVendors = [...new Set(allVendors)].sort(); // Remove duplicates and sort
+        
+        // Add each unique vendor as an option to the datalist
+        uniqueVendors.forEach(vendor => {
+            const option = document.createElement('option');
+            option.value = vendor;
+            vendorSuggestions.appendChild(option);
+        });
+        
+        console.log(`Updated vendor suggestions with ${uniqueVendors.length} unique vendors`);
+    } catch (error) {
+        console.error('Error updating vendor suggestions:', error);
+    }
+}
+
+// Site suggestions functionality
+function updateSiteSuggestions() {
+    try {
+        const siteSuggestions = document.getElementById('siteSuggestions');
+        if (!siteSuggestions) {
+            console.error('Site suggestions datalist element not found');
+            return;
+        }
+        
+        siteSuggestions.innerHTML = '';
+        
+        // Get all unique non-empty sites from records
+        const allSites = records
+            .filter(record => record.site && record.site.trim() !== '')
+            .map(record => record.site.trim());
+        
+        const uniqueSites = [...new Set(allSites)].sort(); // Remove duplicates and sort
+        
+        // Add each unique site as an option to the datalist
+        uniqueSites.forEach(site => {
+            const option = document.createElement('option');
+            option.value = site;
+            siteSuggestions.appendChild(option);
+        });
+        
+        console.log(`Updated site suggestions with ${uniqueSites.length} unique sites`);
+    } catch (error) {
+        console.error('Error updating site suggestions:', error);
+    }
+}
+
 function generatePettyCashReport() {
     const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
     
@@ -306,208 +365,6 @@ function generatePettyCashReport() {
     if (window.innerWidth <= 768) {
         document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
     }
-}
-
-function previewPettyCashReport() {
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
-    const totalValue = document.getElementById('pettyCashTotal').textContent;
-    const recordCount = document.getElementById('pettyCashCount').textContent;
-    
-    const filteredRecords = records.filter(record => 
-        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    if (filteredRecords.length === 0) {
-        alert('No records to preview. Please generate a report first.');
-        return;
-    }
-    
-    const modal = document.getElementById('pettyCashPreviewModal');
-    const previewContainer = document.getElementById('pettyCashPreviewTableContainer');
-    previewContainer.innerHTML = '';
-    
-    const table = document.createElement('table');
-    table.className = 'preview-table';
-    
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-        <tr>
-            <th>ID</th>
-            <th>PO Number</th>
-            <th>Site</th>
-            <th>Vendor</th>
-            <th>Amount</th>
-            <th>Status</th>
-        </tr>
-    `;
-    table.appendChild(thead);
-    
-    const tbody = document.createElement('tbody');
-    filteredRecords.forEach((record, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${record.poNumber || '-'}</td>
-            <td>${record.site || '-'}</td>
-            <td>${record.vendor || '-'}</td>
-            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
-            <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'total-row';
-    totalRow.innerHTML = `
-        <td colspan="4">Total Amount:</td>
-        <td class="numeric">${totalValue}</td>
-        <td></td>
-    `;
-    tbody.appendChild(totalRow);
-    
-    table.appendChild(tbody);
-    previewContainer.appendChild(table);
-    
-    modal.style.display = 'block';
-    
-    document.querySelector('#pettyCashPreviewModal .close').onclick = function() {
-        modal.style.display = 'none';
-    };
-}
-
-function exportPettyCashReport() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4');
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
-    const totalValue = document.getElementById('pettyCashTotal').textContent;
-    const recordCount = document.getElementById('pettyCashCount').textContent;
-    
-    const filteredRecords = records.filter(record => 
-        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    const data = filteredRecords.map((record, index) => [
-        index + 1,
-        record.poNumber || '-',
-        record.site || '-',
-        record.vendor || '-',
-        record.value ? formatNumber(record.value) : '-',
-        record.status
-    ]);
-    
-    data.push(['', '', '', 'Total:', formatNumber(totalValue), '']);
-    
-    doc.setFontSize(16);
-    doc.setTextColor(40);
-    doc.text('IBA Trading Summary Statement', 105, 15, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.text(`Search Term: ${searchTerm}`, 105, 22, { align: 'center' });
-    doc.text(`Export Date: ${new Date().toLocaleDateString()}`, 105, 29, { align: 'center' });
-    
-    doc.setDrawColor(74, 111, 165);
-    doc.setLineWidth(0.5);
-    doc.line(20, 35, 190, 35);
-    
-    doc.setFontSize(10);
-    doc.text(`Total Value: ${totalValue}`, 40, 45);
-    doc.text(`Records Found: ${recordCount}`, 150, 45);
-    
-    doc.autoTable({
-        head: [['ID', 'PO Number', 'Site', 'Vendor', 'Amount', 'Status']],
-        body: data,
-        startY: 55,
-        margin: { left: 40, right: 40 },
-        headStyles: {
-            fillColor: [74, 111, 165],
-            textColor: 255,
-            fontStyle: 'bold',
-            fontSize: 8
-        },
-        bodyStyles: {
-            fontSize: 8,
-            cellPadding: 3
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240]
-        },
-        columnStyles: {
-            4: { halign: 'right' }
-        },
-        styles: {
-            overflow: 'linebreak',
-            cellWidth: 'wrap'
-        }
-    });
-    
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(10);
-        doc.setTextColor(150);
-        doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
-    }
-    
-    doc.save('summary_statement.pdf');
-}
-
-function printPettyCashReport() {
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
-    const totalValue = document.getElementById('pettyCashTotal').textContent;
-    const recordCount = document.getElementById('pettyCashCount').textContent;
-    
-    const printContent = `
-        <style>
-            @page { size: auto; margin: 5mm; }
-            body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 10px; }
-            h2 { text-align: center; font-size: 14px; margin-bottom: 5px; }
-            .report-info { text-align: center; font-size: 10px; margin-bottom: 10px; }
-            .financial-summary { 
-                display: grid; 
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 5px; 
-                margin-bottom: 10px; 
-                padding: 5px; 
-                border-bottom: 1px solid #ddd;
-            }
-            .financial-label { font-size: 9px; color: #666; }
-            .financial-value { font-size: 10px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
-            th { background-color: #4a6fa5; color: white; padding: 4px; text-align: left; }
-            td { padding: 4px; border: 1px solid #ddd; }
-            .numeric { text-align: right; font-family: 'Courier New', monospace; }
-            .status-badge { 
-                display: inline-block; 
-                padding: 2px 5px; 
-                border-radius: 10px; 
-                font-size: 8px; 
-                font-weight: bold;
-            }
-            tfoot td { font-weight: bold; border-top: 2px solid #4a6fa5; }
-        </style>
-        <h2>Summary Statement</h2>
-        <div class="report-info">Search Term: ${searchTerm}</div>
-        <div class="financial-summary">
-            <div>
-                <div class="financial-label">Total Value</div>
-                <div class="financial-value">${totalValue}</div>
-            </div>
-            <div>
-                <div class="financial-label">Records Found</div>
-                <div class="financial-value">${recordCount}</div>
-            </div>
-        </div>
-        ${document.getElementById('pettyCashTable').outerHTML}
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
 }
 
 // Connection status
@@ -566,7 +423,9 @@ async function loadFromGitHub(forceRefresh = false) {
     
     if (!forceRefresh && dataCache[currentYear].data) {
         records = dataCache[currentYear].data;
-        updateNoteSuggestions(); // Added this line
+        updateNoteSuggestions();
+        updateVendorSuggestions();
+        updateSiteSuggestions();
         updateUI();
         return;
     }
@@ -599,7 +458,9 @@ async function loadFromGitHub(forceRefresh = false) {
                     localStorage.setItem(`recordsData_${currentYear}`, JSON.stringify(records));
                     localStorage.setItem(`lastGitHubFetch_${currentYear}`, new Date().toISOString());
                     
-                    updateNoteSuggestions(); // Added this line
+                    updateNoteSuggestions();
+                    updateVendorSuggestions();
+                    updateSiteSuggestions();
                     updateConnectionStatus(true);
                     updateFileInfo();
                     resolve();
@@ -615,7 +476,9 @@ async function loadFromGitHub(forceRefresh = false) {
         updateConnectionStatus(false);
         if (dataCache[currentYear].data) {
             records = dataCache[currentYear].data;
-            updateNoteSuggestions(); // Added this line
+            updateNoteSuggestions();
+            updateVendorSuggestions();
+            updateSiteSuggestions();
             updateUI();
         }
     } finally {
@@ -637,7 +500,9 @@ function loadFromLocalStorage() {
         try {
             records = JSON.parse(savedData);
             records = migrateStatus(records);
-            updateNoteSuggestions(); // Added this line
+            updateNoteSuggestions();
+            updateVendorSuggestions();
+            updateSiteSuggestions();
             document.getElementById('recordsTable').style.display = 'none';
             updateConnectionStatus(true);
             updateFileInfo();
@@ -846,224 +711,11 @@ function clearDate() {
     searchRecords();
 }
 
-// Export functions
-function showPreview() {
-    const modal = document.getElementById('previewModal');
-    modal.style.display = 'block';
-    
-    const previewContainer = document.getElementById('previewTableContainer');
-    previewContainer.innerHTML = '';
-    
-    const table = document.createElement('table');
-    table.className = 'preview-table';
-    
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-        <tr>
-            <th>ID</th>
-            <th>Date</th>
-            <th>Site</th>
-            <th>PO</th>
-            <th>Vendor</th>
-            <th>Invoice</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Note</th>
-        </tr>
-    `;
-    table.appendChild(thead);
-    
-    const tbody = document.createElement('tbody');
-    let total = 0;
-    
-    document.querySelectorAll('#recordsTable tbody tr').forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 10) {
-            const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
-            total += value;
-            
-            const recordIndex = parseInt(cells[0].textContent) - 1;
-            const record = records[recordIndex];
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${cells[0].textContent.trim()}</td>
-                <td>${cells[1].textContent.trim()}</td>
-                <td>${cells[2].textContent.trim()}</td>
-                <td>${cells[3].textContent.trim()}</td>
-                <td>${cells[4].textContent.trim()}</td>
-                <td>${cells[5].textContent.trim()}</td>
-                <td class="numeric">${formatNumber(value)}</td>
-                <td>${cells[8].textContent.trim()}</td>
-                <td>${record.note || ''}</td>
-            `;
-            tbody.appendChild(tr);
-        }
-    });
-    
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'total-row';
-    totalRow.innerHTML = `
-        <td colspan="7" style="text-align: right;">TOTAL</td>
-        <td class="numeric">${formatNumber(total)}</td>
-        <td></td>
-    `;
-    tbody.appendChild(totalRow);
-    
-    table.appendChild(tbody);
-    previewContainer.appendChild(table);
-    
-    document.querySelector('.close').onclick = function() {
-        modal.style.display = 'none';
-    };
-    
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    };
-}
-
-function exportPreviewToExcel() {
-    const tableRows = document.querySelectorAll('#recordsTable tbody tr');
-    const exportData = [];
-    let total = 0;
-
-    tableRows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 10) {
-            const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
-            total += value;
-            
-            const recordIndex = parseInt(cells[0].textContent) - 1;
-            const record = records[recordIndex];
-
-            exportData.push({
-                'ID': cells[0].textContent.trim(),
-                'Date': cells[1].textContent.trim(),
-                'Site': cells[2].textContent.trim(),
-                'PO Number': cells[3].textContent.trim(),
-                'Vendor': cells[4].textContent.trim(),
-                'Invoice': cells[5].textContent.trim(),
-                'Amount': value.toFixed(2),
-                'Status': cells[8].textContent.trim(),
-                'Note': record.note || ''
-            });
-        }
-    });
-
-    exportData.push({ 'Invoice': 'TOTAL', 'Amount': total.toFixed(2) });
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "InvoiceRecords");
-    
-    const companyInfo = [
-        ["IBA Trading Invoice Management System"],
-        ["Export Date: " + new Date().toLocaleDateString()],
-        [""]
-    ];
-    
-    XLSX.utils.sheet_add_aoa(ws, companyInfo, { origin: "A1" });
-    
-    if (!ws['!merges']) ws['!merges'] = [];
-    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } });
-    ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 8 } });
-    
-    XLSX.writeFile(wb, "invoice_records.xlsx");
-    document.getElementById('previewModal').style.display = 'none';
-}
-
-function exportPreviewToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const tableRows = document.querySelectorAll('#recordsTable tbody tr');
-    const data = [];
-    let total = 0;
-
-    doc.setFontSize(16);
-    doc.setTextColor(40);
-    doc.text('IBA Trading Invoice Management System', 105, 15, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.text('Export Date: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-    
-    doc.setDrawColor(74, 111, 165);
-    doc.setLineWidth(0.5);
-    doc.line(20, 25, 190, 25);
-
-    tableRows.forEach((row, index) => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 10) {
-            const value = parseFloat(cells[6].textContent.replace(/,/g, '')) || 0;
-            total += value;
-            
-            const recordIndex = parseInt(cells[0].textContent) - 1;
-            const record = records[recordIndex];
-
-            data.push([
-                index + 1,
-                cells[1].textContent.trim(),
-                cells[2].textContent.trim(),
-                cells[3].textContent.trim(),
-                cells[4].textContent.trim(),
-                cells[5].textContent.trim(),
-                formatNumber(value),
-                cells[8].textContent.trim(),
-                record.note || ''
-            ]);
-        }
-    });
-
-    data.push(['', '', '', '', '', 'TOTAL', formatNumber(total), '', '']);
-
-    doc.autoTable({
-        head: [['ID', 'Date', 'Site', 'PO', 'Vendor', 'Invoice', 'Amount', 'Status', 'Note']],
-        body: data,
-        startY: 30,
-        headStyles: {
-            fillColor: [74, 111, 165],
-            textColor: 255,
-            fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240]
-        },
-        margin: { top: 30 },
-        styles: {
-            cellPadding: 3,
-            fontSize: 9,
-            valign: 'middle'
-        },
-        columnStyles: {
-            6: { halign: 'right' }
-        }
-    });
-
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(10);
-        doc.setTextColor(150);
-        doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
-    }
-
-    doc.save("invoice_records.pdf");
-    document.getElementById('previewModal').style.display = 'none';
-}
-
-function exportToExcel() {
-    showPreview();
-}
-
-function exportToPDF() {
-    showPreview();
-}
-
 // Report functions
 function generateReport() {
     const reportType = document.getElementById('reportType').value;
     const searchTerm = document.getElementById('reportSearchTerm').value.trim();
+    const statusFilter = document.getElementById('reportStatusFilter').value;
     
     if (!searchTerm) {
         alert('Please enter a search term');
@@ -1084,6 +736,8 @@ function generateReport() {
                     Site: ${filteredRecords[0].site || 'N/A'}<br>
                     Note: ${filteredRecords[0].note || 'N/A'}`;
             }
+            // Show PO Value for PO filter
+            document.getElementById('poTotalContainer').style.display = 'flex';
             break;
             
         case 'vendor':
@@ -1094,6 +748,8 @@ function generateReport() {
                 headerText = `Vendor: ${filteredRecords[0].vendor}<br>
                     Records: ${filteredRecords.length}`;
             }
+            // Hide PO Value for Vendor filter
+            document.getElementById('poTotalContainer').style.display = 'none';
             break;
             
         case 'site':
@@ -1104,7 +760,14 @@ function generateReport() {
                 headerText = `Site: ${filteredRecords[0].site}<br>
                     Records: ${filteredRecords.length}`;
             }
+            // Hide PO Value for Site filter
+            document.getElementById('poTotalContainer').style.display = 'none';
             break;
+    }
+    
+    // Apply status filter if not 'all'
+    if (statusFilter !== 'all') {
+        filteredRecords = filteredRecords.filter(record => record.status === statusFilter);
     }
     
     if (filteredRecords.length === 0) {
@@ -1115,14 +778,14 @@ function generateReport() {
     const invoiceTotal = filteredRecords
         .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
         
-    const poTotal = filteredRecords.length > 0 ? 
+    const poTotal = reportType === 'po' && filteredRecords.length > 0 ? 
         parseFloat(filteredRecords[0].poValue) || 0 : 0;
     
     const withAccountsTotal = filteredRecords
         .filter(record => record.status === 'With Accounts')
         .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
     
-    const balance = poTotal - invoiceTotal;
+    const balance = invoiceTotal - withAccountsTotal;
 
     document.getElementById('reportHeader').innerHTML = headerText;
     document.getElementById('poTotal').textContent = formatNumber(poTotal);
@@ -1137,7 +800,6 @@ function generateReport() {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${formatDate(record.entryDate)}</td>
             <td>${record.poNumber || '-'}</td>
             <td>${record.vendor || '-'}</td>
             <td>${record.invoiceNumber || '-'}</td>
@@ -1152,7 +814,7 @@ function generateReport() {
     document.getElementById('reportTable').style.display = 'table';
 }
 
-function exportReport() {
+async function shareReportViaWhatsApp() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'a4');
     const reportHeader = document.getElementById('reportHeader').textContent;
@@ -1163,6 +825,7 @@ function exportReport() {
     
     const reportType = document.getElementById('reportType').value;
     const searchTerm = document.getElementById('reportSearchTerm').value.trim();
+    const statusFilter = document.getElementById('reportStatusFilter').value;
     let filteredRecords = [];
     
     switch(reportType) {
@@ -1183,9 +846,13 @@ function exportReport() {
             break;
     }
     
+    // Apply status filter if not 'all'
+    if (statusFilter !== 'all') {
+        filteredRecords = filteredRecords.filter(record => record.status === statusFilter);
+    }
+    
     const data = filteredRecords.map((record, index) => [
         index + 1,
-        formatDate(record.entryDate),
         record.poNumber || '-',
         record.vendor || '-',
         record.invoiceNumber || '-',
@@ -1195,7 +862,7 @@ function exportReport() {
         record.note || '-'
     ]);
     
-    data.push(['', '', '', '', 'Total:', formatNumber(invoiceTotal), '', '', '']);
+    data.push(['', '', '', 'Total:', formatNumber(invoiceTotal), '', '', '']);
     
     doc.setFontSize(14);
     doc.setTextColor(40);
@@ -1212,7 +879,7 @@ function exportReport() {
     doc.text(`Balance: ${balance}`, 370, 90);
     
     doc.autoTable({
-        head: [['ID', 'Date', 'PO', 'Vendor', 'Invoice', 'Amount', 'Release Date', 'Status', 'Note']],
+        head: [['ID', 'PO', 'Vendor', 'Invoice', 'Amount', 'Release Date', 'Status', 'Note']],
         body: data,
         startY: 110,
         margin: { left: 40, right: 40 },
@@ -1230,7 +897,7 @@ function exportReport() {
             fillColor: [240, 240, 240]
         },
         columnStyles: {
-            5: { halign: 'right' }
+            4: { halign: 'right' }
         },
         styles: {
             overflow: 'linebreak',
@@ -1238,7 +905,109 @@ function exportReport() {
         }
     });
     
-    doc.save('statement_of_account.pdf');
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    const message = `Here is the Statement of Account for ${searchTerm} (${reportType}).`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    
+    // Create a temporary link to download the PDF
+    const tempLink = document.createElement('a');
+    tempLink.href = pdfUrl;
+    tempLink.download = 'statement_of_account.pdf';
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+    
+    // Open WhatsApp after a short delay to allow download
+    setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+    }, 1000);
+}
+
+async function sharePettyCashViaWhatsApp() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    const totalValue = document.getElementById('pettyCashTotal').textContent;
+    const recordCount = document.getElementById('pettyCashCount').textContent;
+    
+    const filteredRecords = records.filter(record => 
+        record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    const data = filteredRecords.map((record, index) => [
+        index + 1,
+        record.poNumber || '-',
+        record.site || '-',
+        record.vendor || '-',
+        record.value ? formatNumber(record.value) : '-',
+        record.status
+    ]);
+    
+    data.push(['', '', '', 'Total:', formatNumber(totalValue), '']);
+    
+    doc.setFontSize(16);
+    doc.setTextColor(40);
+    doc.text('IBA Trading Summary Statement', 105, 15, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text(`Search Term: ${searchTerm}`, 105, 22, { align: 'center' });
+    doc.text(`Export Date: ${new Date().toLocaleDateString()}`, 105, 29, { align: 'center' });
+    
+    doc.setDrawColor(74, 111, 165);
+    doc.setLineWidth(0.5);
+    doc.line(20, 35, 190, 35);
+    
+    doc.setFontSize(10);
+    doc.text(`Total Value: ${totalValue}`, 40, 45);
+    doc.text(`Records Found: ${recordCount}`, 150, 45);
+    
+    doc.autoTable({
+        head: [['ID', 'PO Number', 'Site', 'Vendor', 'Amount', 'Status']],
+        body: data,
+        startY: 55,
+        margin: { left: 40, right: 40 },
+        headStyles: {
+            fillColor: [74, 111, 165],
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 8
+        },
+        bodyStyles: {
+            fontSize: 8,
+            cellPadding: 3
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240]
+        },
+        columnStyles: {
+            4: { halign: 'right' }
+        },
+        styles: {
+            overflow: 'linebreak',
+            cellWidth: 'wrap'
+        }
+    });
+    
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    const message = `Here is the Summary Statement for "${searchTerm}".`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    
+    // Create a temporary link to download the PDF
+    const tempLink = document.createElement('a');
+    tempLink.href = pdfUrl;
+    tempLink.download = 'summary_statement.pdf';
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+    
+    // Open WhatsApp after a short delay to allow download
+    setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+    }, 1000);
 }
 
 function printReport() {
@@ -1303,11 +1072,62 @@ function printReport() {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printContent);
     printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
+    // Removed the auto print functionality
+}
+
+function printPettyCashReport() {
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    const totalValue = document.getElementById('pettyCashTotal').textContent;
+    const recordCount = document.getElementById('pettyCashCount').textContent;
+    
+    const printContent = `
+        <style>
+            @page { size: auto; margin: 5mm; }
+            body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 10px; }
+            h2 { text-align: center; font-size: 14px; margin-bottom: 5px; }
+            .report-info { text-align: center; font-size: 10px; margin-bottom: 10px; }
+            .financial-summary { 
+                display: grid; 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 5px; 
+                margin-bottom: 10px; 
+                padding: 5px; 
+                border-bottom: 1px solid #ddd;
+            }
+            .financial-label { font-size: 9px; color: #666; }
+            .financial-value { font-size: 10px; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 5px; }
+            th { background-color: #4a6fa5; color: white; padding: 4px; text-align: left; }
+            td { padding: 4px; border: 1px solid #ddd; }
+            .numeric { text-align: right; font-family: 'Courier New', monospace; }
+            .status-badge { 
+                display: inline-block; 
+                padding: 2px 5px; 
+                border-radius: 10px; 
+                font-size: 8px; 
+                font-weight: bold;
+            }
+            tfoot td { font-weight: bold; border-top: 2px solid #4a6fa5; }
+        </style>
+        <h2>Summary Statement</h2>
+        <div class="report-info">Search Term: ${searchTerm}</div>
+        <div class="financial-summary">
+            <div>
+                <div class="financial-label">Total Value</div>
+                <div class="financial-value">${totalValue}</div>
+            </div>
+            <div>
+                <div class="financial-label">Records Found</div>
+                <div class="financial-value">${recordCount}</div>
+            </div>
+        </div>
+        ${document.getElementById('pettyCashTable').outerHTML}
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    // Removed the auto print functionality
 }
 
 // Contact function
@@ -1401,6 +1221,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     records = JSON.parse(savedData);
                     records = migrateStatus(records);
                     updateNoteSuggestions();
+                    updateVendorSuggestions();
+                    updateSiteSuggestions();
                 }
                 
                 await loadFromGitHub(true);
@@ -1436,10 +1258,6 @@ document.addEventListener('DOMContentLoaded', function() {
             generatePettyCashReport();
         }
     });
-    
-    document.querySelector('.close').onclick = function() {
-        document.getElementById('previewModal').style.display = 'none';
-    };
     
     document.querySelector('input[value="2025"]').checked = true;
     loadFromLocalStorage();
