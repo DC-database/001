@@ -1269,3 +1269,157 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// Add these new functions to your existing script.js file
+
+// Invoice Preview Functions
+function showInvoicePreview(record) {
+    document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
+    document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
+    document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
+    document.getElementById('previewStatus').textContent = record.status || '-';
+    document.getElementById('previewNotes').textContent = record.note || '-';
+    
+    // Highlight current step in progress
+    const statusSteps = {
+        'Open': 0,
+        'For SRV': 1,
+        'For IPC': 2,
+        'No Invoice': 2,
+        'Report': 2,
+        'Under Review': 3,
+        'CEO Approval': 4,
+        'With Accounts': 5
+    };
+    const currentStep = statusSteps[record.status] || 0;
+    
+    // Reset all steps
+    document.querySelectorAll('#invoicePreviewModal .step').forEach((step, index) => {
+        step.classList.remove('current');
+        if (index < currentStep) {
+            step.classList.add('active');
+        } else {
+            step.classList.remove('active');
+        }
+    });
+    
+    // Highlight current step
+    if (currentStep > 0) {
+        const currentStepElement = document.querySelector(`#invoicePreviewModal .step-${currentStep}`);
+        if (currentStepElement) {
+            currentStepElement.classList.add('current');
+        }
+    }
+    
+    // Reset all connectors
+    document.querySelectorAll('#invoicePreviewModal .step-connector').forEach((connector, index) => {
+        if (index < currentStep - 1) {
+            connector.classList.add('active');
+        } else {
+            connector.classList.remove('active');
+        }
+    });
+    
+    document.getElementById('invoicePreviewModal').style.display = 'block';
+}
+
+function closeInvoicePreview() {
+    document.getElementById('invoicePreviewModal').style.display = 'none';
+}
+
+// Modify the refreshTable function to add click handlers to rows
+function refreshTable(filteredRecords = null) {
+    const tableBody = document.querySelector('#recordsTable tbody');
+    tableBody.innerHTML = '';
+    
+    const displayRecords = filteredRecords || records;
+    const recordsTable = document.getElementById('recordsTable');
+    
+    if (displayRecords.length === 0) {
+        recordsTable.style.display = 'none';
+        return;
+    }
+    
+    recordsTable.style.display = 'table';
+    
+    displayRecords.forEach((record, index) => {
+        const percentage = getStatusPercentage(record.status);
+        const statusSteps = {
+            'Open': 0,
+            'For SRV': 1,
+            'For IPC': 2,
+            'No Invoice': 2,
+            'Report': 2,
+            'Under Review': 3,
+            'CEO Approval': 4,
+            'With Accounts': 5
+        };
+        const currentStep = statusSteps[record.status] || 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.site || '-'}</td>
+            <td>${record.poNumber || '-'}</td>
+            <td>${record.vendor || '-'}</td>
+            <td>${record.invoiceNumber || '-'}</td>
+            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+            <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
+            <td class="status-cell">
+                <div class="step-progress-container">
+                    <div class="step-progress" data-percentage="${percentage}">
+                        <div class="step step-1 ${currentStep > 1 ? 'active' : ''} ${currentStep === 1 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 1 ? 'active' : ''}"></div>
+                        <div class="step step-2 ${currentStep > 2 ? 'active' : ''} ${currentStep === 2 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 2 ? 'active' : ''}"></div>
+                        <div class="step step-3 ${currentStep > 3 ? 'active' : ''} ${currentStep === 3 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 3 ? 'active' : ''}"></div>
+                        <div class="step step-4 ${currentStep > 4 ? 'active' : ''} ${currentStep === 4 ? 'current' : ''}"></div>
+                        <div class="step-connector ${currentStep > 4 ? 'active' : ''}"></div>
+                        <div class="step step-5 ${currentStep > 5 ? 'active' : ''} ${currentStep === 5 ? 'current' : ''}"></div>
+                    </div>
+                    <div class="step-labels">
+                        <span class="step-label">SRV</span>
+                        <span class="step-label">IPC/Report</span>
+                        <span class="step-label">Review</span>
+                        <span class="step-label">CEO</span>
+                        <span class="step-label">Accounts</span>
+                    </div>
+                    <div class="status-tooltip">${record.status} - ${percentage}%</div>
+                </div>
+            </td>
+            <td class="action-btns">
+                <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
+                  onclick="viewPDF('${record.fileName || ''}')" 
+                  ${!record.fileName ? 'disabled' : ''}>
+                  <i class="fas fa-file-pdf"></i>
+                </button>
+                <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
+                  onclick="viewSRV('${record.details || ''}')" 
+                  ${!record.details ? 'disabled' : ''}>
+                  <i class="fas fa-file-alt"></i>
+                </button>
+            </td>
+        `;
+        
+        // Add click handler to the row
+        row.addEventListener('click', function(e) {
+            // Don't trigger if clicking on action buttons
+            if (!e.target.closest('.action-btns')) {
+                showInvoicePreview(record);
+            }
+        });
+        
+        tableBody.appendChild(row);
+    });
+    
+    setupResponsiveElements();
+}
+
+// Close modal when clicking outside of it
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('invoicePreviewModal');
+    if (event.target === modal) {
+        closeInvoicePreview();
+    }
+});
