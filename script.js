@@ -32,6 +32,10 @@ const dataCache = {
     '2022-2024': { data: null, lastUpdated: null }
 };
 
+// Chart instances
+let statusPieChart = null;
+let statusBarChart = null;
+
 // Mobile detection
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -63,16 +67,22 @@ function showSection(sectionId) {
         updateSiteSuggestions();
     }
     
+    if (sectionId === 'mainPageSection') {
+        searchSiteRecords();
+    }
+    
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
     
-    if (sectionId === 'invoiceSection') {
-        document.querySelector('.menu-item:nth-child(1)').classList.add('active');
-    } else if (sectionId === 'statementSection') {
+    if (sectionId === 'mainPageSection') {
+        document.querySelector('.menu-item.main-page').classList.add('active');
+    } else if (sectionId === 'invoiceSection') {
         document.querySelector('.menu-item:nth-child(2)').classList.add('active');
-    } else if (sectionId === 'pettyCashSection') {
+    } else if (sectionId === 'statementSection') {
         document.querySelector('.menu-item:nth-child(3)').classList.add('active');
+    } else if (sectionId === 'pettyCashSection') {
+        document.querySelector('.menu-item:nth-child(4)').classList.add('active');
     }
 }
 
@@ -301,6 +311,12 @@ async function loadFromGitHub(forceRefresh = false) {
                     updateSiteSuggestions();
                     updateConnectionStatus(true);
                     updateFileInfo();
+                    
+                    // Initialize charts after loading data
+                    if (document.getElementById('mainPageSection').classList.contains('active')) {
+                        searchSiteRecords();
+                    }
+                    
                     resolve();
                 },
                 error: (error) => {
@@ -344,6 +360,11 @@ function loadFromLocalStorage() {
             document.getElementById('recordsTable').style.display = 'none';
             updateConnectionStatus(true);
             updateFileInfo();
+            
+            // Initialize charts if on main page
+            if (document.getElementById('mainPageSection').classList.contains('active')) {
+                searchSiteRecords();
+            }
         } catch (e) {
             console.error('Error parsing localStorage data:', e);
             records = [];
@@ -462,6 +483,153 @@ function refreshTable(filteredRecords = null) {
     });
     
     setupResponsiveElements();
+}
+
+// Main Dashboard Functions
+function initializeCharts(filteredRecords = null) {
+    const displayRecords = filteredRecords || records.filter(record => record.status !== 'With Accounts');
+    
+    // Prepare data for charts
+    const statusCounts = {};
+    displayRecords.forEach(record => {
+        statusCounts[record.status] = (statusCounts[record.status] || 0) + 1;
+    });
+    
+    const statusLabels = Object.keys(statusCounts);
+    const statusData = Object.values(statusCounts);
+    const backgroundColors = statusLabels.map(status => {
+        const statusColors = {
+            'For SRV': '#4e73df',
+            'For IPC': '#1cc88a',
+            'Under Review': '#36b9cc',
+            'CEO Approval': '#f6c23e',
+            'Open': '#e74a3b',
+            'Pending': '#858796',
+            'Report': '#5a5c69',
+            'No Invoice': '#2c3e50'
+        };
+        return statusColors[status] || '#cccccc';
+    });
+    
+    // Pie Chart
+    const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+    if (statusPieChart) statusPieChart.destroy();
+    statusPieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusData,
+                backgroundColor: backgroundColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Invoice Status Distribution',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+    
+    // Bar Chart
+    const barCtx = document.getElementById('statusBarChart').getContext('2d');
+    if (statusBarChart) statusBarChart.destroy();
+    statusBarChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                label: 'Count',
+                data: statusData,
+                backgroundColor: backgroundColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Invoice Status Count',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+}
+
+function searchSiteRecords() {
+    const term = document.getElementById('siteSearchTerm').value.toLowerCase();
+    let filtered = records.filter(record => record.status !== 'With Accounts');
+    
+    if (term) {
+        filtered = filtered.filter(record => 
+            record.site && record.site.toLowerCase().includes(term)
+        );
+    }
+    
+    refreshSiteTable(filtered);
+    initializeCharts(filtered);
+}
+
+function refreshSiteTable(filteredRecords = null) {
+    const tableBody = document.querySelector('#siteRecordsTable tbody');
+    tableBody.innerHTML = '';
+    
+    const displayRecords = filteredRecords || records.filter(record => record.status !== 'With Accounts');
+    const siteRecordsTable = document.getElementById('siteRecordsTable');
+    
+    if (displayRecords.length === 0) {
+        siteRecordsTable.style.display = 'none';
+        return;
+    }
+    
+    siteRecordsTable.style.display = 'table';
+    
+    displayRecords.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.site || '-'}</td>
+            <td>${record.poNumber || '-'}</td>
+            <td>${record.vendor || '-'}</td>
+            <td>${record.invoiceNumber || '-'}</td>
+            <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+            <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function clearSiteSearch() {
+    document.getElementById('siteSearchTerm').value = '';
+    searchSiteRecords();
 }
 
 // Utility functions
@@ -725,89 +893,101 @@ async function generatePDF(contentElementId, title = 'Report') {
 }
 
 function printReport() {
-    if (handleMobilePrint()) {
-        generatePDF('statementSection', 'Statement of Account');
-        return;
-    }
+    const contentElement = document.getElementById('statementSection');
+    const printContent = contentElement.cloneNode(true);
     
-    try {
-        // Create a clone of the report section
-        const printContent = document.getElementById('statementSection').cloneNode(true);
-        
-        // Remove elements that shouldn't be printed
-        const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
-        elementsToRemove.forEach(el => el.remove());
-        
-        // Create a new window for printing
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Print Report</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { padding: 8px; border: 1px solid #ddd; }
-                    th { background-color: #4a6fa5; color: white; }
-                    .total-row { font-weight: bold; background-color: #e9f7fe; }
-                    .numeric { text-align: right; }
-                    @page { size: auto; margin: 5mm; }
-                </style>
-            </head>
-            <body>
-                ${printContent.innerHTML}
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-    } catch (e) {
-        console.error("Print error, falling back to PDF:", e);
-        generatePDF('statementSection', 'Statement of Account');
-    }
+    // Remove elements that shouldn't be printed
+    const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Add CSS for printing
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Print Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { padding: 8px; border: 1px solid #ddd; }
+                th { background-color: #4a6fa5 !important; color: white !important; -webkit-print-color-adjust: exact; }
+                .total-row { font-weight: bold; background-color: #e9f7fe; }
+                .numeric { text-align: right; }
+                @page { size: auto; margin: 5mm; }
+                @media print {
+                    body { padding: 0; margin: 0; }
+                    .financial-summary { page-break-inside: avoid; }
+                    table { page-break-inside: auto; }
+                    tr { page-break-inside: avoid; page-break-after: auto; }
+                }
+            </style>
+        </head>
+        <body>
+            ${printContent.innerHTML}
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 200);
+                }
+            </script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 function printPettyCashReport() {
-    if (handleMobilePrint()) {
-        generatePDF('pettyCashSection', 'Petty Cash Summary');
-        return;
-    }
+    const contentElement = document.getElementById('pettyCashSection');
+    const printContent = contentElement.cloneNode(true);
     
-    try {
-        // Create a clone of the petty cash section
-        const printContent = document.getElementById('pettyCashSection').cloneNode(true);
-        
-        // Remove elements that shouldn't be printed
-        const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
-        elementsToRemove.forEach(el => el.remove());
-        
-        // Create a new window for printing
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Print Summary</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { padding: 8px; border: 1px solid #ddd; }
-                    th { background-color: #4a6fa5; color: white; }
-                    .total-row { font-weight: bold; background-color: #e9f7fe; }
-                    .numeric { text-align: right; }
-                    @page { size: auto; margin: 5mm; }
-                </style>
-            </head>
-            <body>
-                ${printContent.innerHTML}
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-    } catch (e) {
-        console.error("Print error, falling back to PDF:", e);
-        generatePDF('pettyCashSection', 'Petty Cash Summary');
-    }
+    // Remove elements that shouldn't be printed
+    const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Add CSS for printing
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Print Petty Cash Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { padding: 8px; border: 1px solid #ddd; }
+                th { background-color: #4a6fa5 !important; color: white !important; -webkit-print-color-adjust: exact; }
+                .total-row { font-weight: bold; background-color: #e9f7fe; }
+                .numeric { text-align: right; }
+                @page { size: auto; margin: 5mm; }
+                @media print {
+                    body { padding: 0; margin: 0; }
+                    .financial-summary { page-break-inside: avoid; }
+                    table { page-break-inside: auto; }
+                    tr { page-break-inside: avoid; page-break-after: auto; }
+                }
+            </style>
+        </head>
+        <body>
+            ${printContent.innerHTML}
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 200);
+                }
+            </script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 // NOTE SUGGESTIONS FUNCTIONALITY
@@ -862,9 +1042,11 @@ function updateVendorSuggestions() {
 function updateSiteSuggestions() {
     try {
         const siteSuggestions = document.getElementById('siteSuggestions');
-        if (!siteSuggestions) return;
+        const siteSuggestionsMain = document.getElementById('siteSuggestionsMain');
+        if (!siteSuggestions || !siteSuggestionsMain) return;
         
         siteSuggestions.innerHTML = '';
+        siteSuggestionsMain.innerHTML = '';
         
         const allSites = records
             .filter(record => record.site && record.site.trim() !== '')
@@ -876,6 +1058,7 @@ function updateSiteSuggestions() {
             const option = document.createElement('option');
             option.value = site;
             siteSuggestions.appendChild(option);
+            siteSuggestionsMain.appendChild(option.cloneNode(true));
         });
     } catch (error) {
         console.error('Error updating site suggestions:', error);
@@ -987,7 +1170,6 @@ function contactAboutMissingData() {
     const activeFilter = document.querySelector('.filter-btn.active').textContent;
     
     let message = `Hi, Irwin.\n\n`;
-
     
     const encodedMessage = encodeURIComponent(message);
     const whatsappNumber = '+97450992023';
@@ -1135,6 +1317,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             e.preventDefault();
             generatePettyCashReport();
+        }
+    });
+    
+    document.getElementById('siteSearchTerm').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchSiteRecords();
         }
     });
     

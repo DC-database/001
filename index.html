@@ -19,7 +19,10 @@
             <h3>Menu</h3>
             <span class="close-menu" onclick="toggleMobileMenu()">&times;</span>
         </div>
-        <div class="menu-item active" onclick="showSection('invoiceSection')">
+        <div class="menu-item main-page active" onclick="showSection('mainPageSection')">
+            <i class="fas fa-home"></i> Main Dashboard
+        </div>
+        <div class="menu-item" onclick="showSection('invoiceSection')">
             <i class="fas fa-file-invoice"></i> Invoice Management
         </div>
         <div class="menu-item" onclick="showSection('statementSection')">
@@ -57,8 +60,51 @@
     </div>
 
     <div class="container">
+        <!-- Main Dashboard Section -->
+        <div id="mainPageSection" class="content-section active">
+            <h1>INVOICE TRACKING SYSTEM</h1>
+            
+            <div class="search-container">
+                <input type="text" id="siteSearchTerm" placeholder="Search by site..." list="siteSuggestionsMain">
+                <datalist id="siteSuggestionsMain"></datalist>
+                <button class="btn btn-primary" onclick="searchSiteRecords()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button class="btn clear-search-btn" onclick="clearSiteSearch()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            
+            <div class="charts-container">
+                <div class="chart-box">
+                    <canvas id="statusPieChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="statusBarChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table id="siteRecordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Site</th>
+                            <th>PO</th>
+                            <th>Vendor</th>
+                            <th>Invoice</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Invoice Management Section -->
-        <div id="invoiceSection" class="content-section active">
+        <div id="invoiceSection" class="content-section">
             <h1>INVOICE MANAGEMENT SYSTEM</h1>
             
             <div class="search-container">
@@ -369,6 +415,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
