@@ -32,6 +32,11 @@ const dataCache = {
     '2022-2024': { data: null, lastUpdated: null }
 };
 
+// Mobile detection
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 // Mobile menu functions
 function toggleMobileMenu() {
     const mobileMenu = document.getElementById('mobileMenu');
@@ -650,6 +655,165 @@ function generateReport() {
     document.getElementById('reportTable').style.display = 'table';
 }
 
+// Enhanced print functions
+function handleMobilePrint() {
+    if (isMobileDevice()) {
+        alert("For best printing results on mobile:\n1. Use Chrome or Safari browser\n2. Tap the share button and select 'Print'\n3. Alternatively, use the 'Share as PDF' option");
+        return true;
+    }
+    return false;
+}
+
+async function generatePDF(contentElementId, title = 'Report') {
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text(title, 105, 15, { align: 'center' });
+        
+        // Get the HTML content
+        const contentElement = document.getElementById(contentElementId);
+        const printContent = contentElement.cloneNode(true);
+        
+        // Remove elements that shouldn't be printed
+        const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+        elementsToRemove.forEach(el => el.remove());
+        
+        // Add content to PDF
+        await doc.html(printContent, {
+            margin: [20, 15, 20, 15],
+            width: 170,
+            windowWidth: 800,
+            autoPaging: 'text',
+            x: 20,
+            y: 25
+        });
+        
+        // Save the PDF
+        doc.save(`${title.toLowerCase().replace(/ /g, '_')}.pdf`);
+        
+        return true;
+    } catch (error) {
+        console.error('PDF generation error:', error);
+        alert('Failed to generate PDF. Please try again or use the print option.');
+        return false;
+    }
+}
+
+function printReport() {
+    if (handleMobilePrint()) {
+        generatePDF('statementSection', 'Statement of Account');
+        return;
+    }
+    
+    try {
+        // Create a clone of the report section
+        const printContent = document.getElementById('statementSection').cloneNode(true);
+        
+        // Remove elements that shouldn't be printed
+        const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+        elementsToRemove.forEach(el => el.remove());
+        
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 8px; border: 1px solid #ddd; }
+                    th { background-color: #4a6fa5; color: white; }
+                    .total-row { font-weight: bold; background-color: #e9f7fe; }
+                    .numeric { text-align: right; }
+                    @page { size: auto; margin: 5mm; }
+                </style>
+            </head>
+            <body>
+                ${printContent.innerHTML}
+                <script>
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 200);
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+        // Focus the window (may not work on all mobile browsers)
+        setTimeout(() => {
+            if (printWindow) {
+                printWindow.focus();
+            }
+        }, 500);
+    } catch (e) {
+        console.error("Print error, falling back to PDF:", e);
+        generatePDF('statementSection', 'Statement of Account');
+    }
+}
+
+function printPettyCashReport() {
+    if (handleMobilePrint()) {
+        generatePDF('pettyCashSection', 'Petty Cash Summary');
+        return;
+    }
+    
+    try {
+        // Create a clone of the petty cash section
+        const printContent = document.getElementById('pettyCashSection').cloneNode(true);
+        
+        // Remove elements that shouldn't be printed
+        const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+        elementsToRemove.forEach(el => el.remove());
+        
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Summary</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 8px; border: 1px solid #ddd; }
+                    th { background-color: #4a6fa5; color: white; }
+                    .total-row { font-weight: bold; background-color: #e9f7fe; }
+                    .numeric { text-align: right; }
+                    @page { size: auto; margin: 5mm; }
+                </style>
+            </head>
+            <body>
+                ${printContent.innerHTML}
+                <script>
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 200);
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+        // Focus the window
+        setTimeout(() => {
+            if (printWindow) {
+                printWindow.focus();
+            }
+        }, 500);
+    } catch (e) {
+        console.error("Print error, falling back to PDF:", e);
+        generatePDF('pettyCashSection', 'Petty Cash Summary');
+    }
+}
+
 // NOTE SUGGESTIONS FUNCTIONALITY
 function updateNoteSuggestions() {
     try {
@@ -832,6 +996,39 @@ function contactAboutMissingData() {
     message += `- Release Date: ${releaseDate || 'None'}\n`;
     message += `- Filter: ${activeFilter}\n\n`;
     message += `Could you please help me locate this information?`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappNumber = '+97450992023';
+    
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+}
+
+// Share functions
+function shareReportViaWhatsApp() {
+    const reportHeader = document.getElementById('reportHeader').textContent;
+    const totalAmount = document.getElementById('grandTotal').textContent;
+    
+    let message = `*Report Summary*\n\n`;
+    message += `${reportHeader}\n\n`;
+    message += `*Total Amount:* ${totalAmount}\n\n`;
+    message += `Generated from IBA Trading Invoice Management System`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappNumber = '+97450992023';
+    
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+}
+
+function sharePettyCashViaWhatsApp() {
+    const totalAmount = document.getElementById('pettyCashTotal').textContent;
+    const recordCount = document.getElementById('pettyCashCount').textContent;
+    const searchTerm = document.getElementById('pettyCashSearchTerm').value;
+    
+    let message = `*Petty Cash Summary*\n\n`;
+    message += `Search Term: ${searchTerm}\n`;
+    message += `Records Found: ${recordCount}\n`;
+    message += `Total Amount: ${totalAmount}\n\n`;
+    message += `Generated from IBA Trading Invoice Management System`;
     
     const encodedMessage = encodeURIComponent(message);
     const whatsappNumber = '+97450992023';
