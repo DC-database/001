@@ -19,12 +19,36 @@ const GITHUB_CSV_URLS = {
     '2022-2024': "https://raw.githubusercontent.com/DC-database/Invoice/main/records_2022-2024.csv"
 };
 
+// Site WhatsApp numbers mapping
+const SITE_WHATSAPP_NUMBERS = {
+    '169': '50992040',
+    '174': '50992040',
+    '175': '50992040',
+    '176': '50992067',
+    '166': '50992049',
+    '161': '50992040',
+    'M161': '50992040',
+    'M17': '50992049',
+    '168': '39937600',
+    '1061': '39964504',
+    '1009': '50992083',
+    '100': '50992023',
+    '173': '39937600',
+    'M28': '50485111',
+    '180': '50999203',
+    '144': '50485111',
+    '129': '50992083',
+    '137.19': '50485111',
+    '122': '50707183'
+};
+
 // Application state
 let records = [];
 let activeFilter = 'all';
 let usingGitHub = false;
 let isLoading = false;
 let currentYear = '2025';
+let currentFilteredRecords = null;
 
 // Cache for GitHub data
 const dataCache = {
@@ -403,6 +427,7 @@ function refreshTable(filteredRecords = null) {
     tableBody.innerHTML = '';
     
     const displayRecords = filteredRecords || records;
+    currentFilteredRecords = displayRecords;
     const recordsTable = document.getElementById('recordsTable');
     
     if (displayRecords.length === 0) {
@@ -537,6 +562,24 @@ function initializeCharts(filteredRecords = null) {
                     font: {
                         size: 16
                     }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            onClick: function(evt, elements) {
+                if (elements.length > 0) {
+                    const clickedIndex = elements[0].index;
+                    const status = statusLabels[clickedIndex];
+                    filterRecords(status);
                 }
             }
         }
@@ -577,6 +620,22 @@ function initializeCharts(filteredRecords = null) {
                     font: {
                         size: 16
                     }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: ${value}`;
+                        }
+                    }
+                }
+            },
+            onClick: function(evt, elements) {
+                if (elements.length > 0) {
+                    const clickedIndex = elements[0].index;
+                    const status = statusLabels[clickedIndex];
+                    filterRecords(status);
                 }
             }
         }
@@ -602,6 +661,7 @@ function refreshSiteTable(filteredRecords = null) {
     tableBody.innerHTML = '';
     
     const displayRecords = filteredRecords || records.filter(record => record.status !== 'With Accounts');
+    currentFilteredRecords = displayRecords;
     const siteRecordsTable = document.getElementById('siteRecordsTable');
     
     if (displayRecords.length === 0) {
@@ -692,7 +752,7 @@ function searchRecords() {
 }
 
 function filterRecords(status) {
-    activeFilter = status;
+    activeFilter = status === 'all' ? 'all' : status;
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -701,7 +761,15 @@ function filterRecords(status) {
         }
     });
 
-    searchRecords();
+    if (document.getElementById('mainPageSection').classList.contains('active')) {
+        let filtered = records.filter(record => record.status !== 'With Accounts');
+        if (status !== 'all') {
+            filtered = filtered.filter(record => record.status === status);
+        }
+        refreshSiteTable(filtered);
+    } else {
+        searchRecords();
+    }
 }
 
 function clearSearch() {
@@ -1156,11 +1224,43 @@ function showInvoicePreview(record) {
         }
     });
     
+    // Update WhatsApp button with site-specific number
+    const whatsappBtn = document.getElementById('whatsappReminderBtn');
+    let whatsappNumber = '50992023'; // Default number
+    
+    // Extract site number from the record's site
+    if (record.site) {
+        for (const [sitePattern, number] of Object.entries(SITE_WHATSAPP_NUMBERS)) {
+            if (record.site.includes(sitePattern)) {
+                whatsappNumber = number;
+                break;
+            }
+        }
+    }
+    
+    whatsappBtn.onclick = function() {
+        sendWhatsAppReminder(record, whatsappNumber);
+    };
+    
     document.getElementById('invoicePreviewModal').style.display = 'block';
 }
 
 function closeInvoicePreview() {
     document.getElementById('invoicePreviewModal').style.display = 'none';
+}
+
+// WhatsApp reminder function
+function sendWhatsAppReminder(record, whatsappNumber) {
+    let message = `*Invoice Reminder*\n\n`;
+    message += `PO: ${record.poNumber || 'N/A'}\n`;
+    message += `Invoice: ${record.invoiceNumber || 'N/A'}\n`;
+    message += `Vendor: ${record.vendor || 'N/A'}\n`;
+    message += `Amount: ${record.value ? formatNumber(record.value) : 'N/A'}\n`;
+    message += `Status: ${record.status || 'N/A'}\n\n`;
+    message += `Please provide an update on this invoice.`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
 }
 
 // Contact function
