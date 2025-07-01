@@ -548,12 +548,34 @@ function clearSearch() {
         }
     });
     
-    document.getElementById('recordsTable').style.display = 'none';
+    searchRecords();
 }
 
 function clearDate() {
     document.getElementById('releaseDateFilter').value = '';
     searchRecords();
+}
+
+function clearReportSearch() {
+    document.getElementById('reportSearchTerm').value = '';
+    document.getElementById('reportType').value = 'po';
+    document.getElementById('reportStatusFilter').value = 'all';
+    document.getElementById('reportHeader').innerHTML = '';
+    document.getElementById('reportTable').style.display = 'none';
+    document.getElementById('poTotal').textContent = '0.00';
+    document.getElementById('grandTotal').textContent = '0.00';
+    document.getElementById('accountsTotal').textContent = '0.00';
+    document.getElementById('balanceTotal').textContent = '0.00';
+    document.querySelector('#reportTable tbody').innerHTML = '';
+}
+
+function clearPettyCashSearch() {
+    document.getElementById('pettyCashSearchTerm').value = '';
+    document.getElementById('pettyCashTotal').textContent = '0.00';
+    document.getElementById('pettyCashCount').textContent = '0';
+    document.getElementById('pettyCashTable').style.display = 'none';
+    document.getElementById('pettyCashTableTotal').textContent = '0.00';
+    document.querySelector('#pettyCashTable tbody').innerHTML = '';
 }
 
 // Report functions
@@ -658,7 +680,6 @@ function generateReport() {
 // Enhanced print functions
 function handleMobilePrint() {
     if (isMobileDevice()) {
-        alert("For best printing results on mobile:\n1. Use Chrome or Safari browser\n2. Tap the share button and select 'Print'\n3. Alternatively, use the 'Share as PDF' option");
         return true;
     }
     return false;
@@ -691,8 +712,9 @@ async function generatePDF(contentElementId, title = 'Report') {
             y: 25
         });
         
-        // Save the PDF
-        doc.save(`${title.toLowerCase().replace(/ /g, '_')}.pdf`);
+        // Open the PDF in new tab for preview
+        const pdfUrl = doc.output('bloburl');
+        window.open(pdfUrl, '_blank');
         
         return true;
     } catch (error) {
@@ -735,23 +757,10 @@ function printReport() {
             </head>
             <body>
                 ${printContent.innerHTML}
-                <script>
-                    setTimeout(function() {
-                        window.print();
-                        window.close();
-                    }, 200);
-                </script>
             </body>
             </html>
         `);
         printWindow.document.close();
-        
-        // Focus the window (may not work on all mobile browsers)
-        setTimeout(() => {
-            if (printWindow) {
-                printWindow.focus();
-            }
-        }, 500);
     } catch (e) {
         console.error("Print error, falling back to PDF:", e);
         generatePDF('statementSection', 'Statement of Account');
@@ -791,23 +800,10 @@ function printPettyCashReport() {
             </head>
             <body>
                 ${printContent.innerHTML}
-                <script>
-                    setTimeout(function() {
-                        window.print();
-                        window.close();
-                    }, 200);
-                </script>
             </body>
             </html>
         `);
         printWindow.document.close();
-        
-        // Focus the window
-        setTimeout(() => {
-            if (printWindow) {
-                printWindow.focus();
-            }
-        }, 500);
     } catch (e) {
         console.error("Print error, falling back to PDF:", e);
         generatePDF('pettyCashSection', 'Petty Cash Summary');
@@ -990,12 +986,8 @@ function contactAboutMissingData() {
     const releaseDate = document.getElementById('releaseDateFilter').value;
     const activeFilter = document.querySelector('.filter-btn.active').textContent;
     
-    let message = `Hi, I couldn't find the data I was looking for in the Invoice Management System.\n\n`;
-    message += `*Search Details:*\n`;
-    message += `- Search Term: ${searchTerm || 'None'}\n`;
-    message += `- Release Date: ${releaseDate || 'None'}\n`;
-    message += `- Filter: ${activeFilter}\n\n`;
-    message += `Could you please help me locate this information?`;
+    let message = `Hi, Irwin.\n\n`;
+
     
     const encodedMessage = encodeURIComponent(message);
     const whatsappNumber = '+97450992023';
