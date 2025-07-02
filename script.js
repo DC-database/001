@@ -60,6 +60,48 @@ const dataCache = {
 let statusPieChart = null;
 let statusBarChart = null;
 
+// DOM Cache
+const domCache = {
+    mobileMenu: null,
+    siteSearchTerm: null,
+    searchTerm: null,
+    releaseDateFilter: null,
+    pettyCashSearchTerm: null,
+    reportSearchTerm: null,
+    reportType: null,
+    reportStatusFilter: null,
+    connectBtn: null,
+    statusIndicator: null,
+    connectionStatus: null,
+    fileInfo: null,
+    recordsTable: null,
+    siteRecordsTable: null,
+    reportTable: null,
+    pettyCashTable: null,
+    loadingOverlay: null
+};
+
+// Initialize DOM cache
+function cacheDOM() {
+    domCache.mobileMenu = document.getElementById('mobileMenu');
+    domCache.siteSearchTerm = document.getElementById('siteSearchTerm');
+    domCache.searchTerm = document.getElementById('searchTerm');
+    domCache.releaseDateFilter = document.getElementById('releaseDateFilter');
+    domCache.pettyCashSearchTerm = document.getElementById('pettyCashSearchTerm');
+    domCache.reportSearchTerm = document.getElementById('reportSearchTerm');
+    domCache.reportType = document.getElementById('reportType');
+    domCache.reportStatusFilter = document.getElementById('reportStatusFilter');
+    domCache.connectBtn = document.getElementById('connectBtn');
+    domCache.statusIndicator = document.getElementById('statusIndicator');
+    domCache.connectionStatus = document.getElementById('connectionStatus');
+    domCache.fileInfo = document.getElementById('fileInfo');
+    domCache.recordsTable = document.getElementById('recordsTable');
+    domCache.siteRecordsTable = document.getElementById('siteRecordsTable');
+    domCache.reportTable = document.getElementById('reportTable');
+    domCache.pettyCashTable = document.getElementById('pettyCashTable');
+    domCache.loadingOverlay = document.getElementById('loadingOverlay');
+}
+
 // Mobile detection
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -67,12 +109,7 @@ function isMobileDevice() {
 
 // Mobile menu functions
 function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (mobileMenu.classList.contains('show')) {
-        mobileMenu.classList.remove('show');
-    } else {
-        mobileMenu.classList.add('show');
-    }
+    domCache.mobileMenu.classList.toggle('show');
 }
 
 function showSection(sectionId) {
@@ -80,7 +117,7 @@ function showSection(sectionId) {
         section.classList.remove('active');
     });
     document.getElementById(sectionId).classList.add('active');
-    document.getElementById('mobileMenu').classList.remove('show');
+    domCache.mobileMenu.classList.remove('show');
     
     if (sectionId === 'pettyCashSection') {
         updateNoteSuggestions();
@@ -158,12 +195,12 @@ function viewSRV(fileName) {
 // Loading overlay functions
 function showLoading() {
     isLoading = true;
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    domCache.loadingOverlay.style.display = 'flex';
 }
 
 function hideLoading() {
     isLoading = false;
-    document.getElementById('loadingOverlay').style.display = 'none';
+    domCache.loadingOverlay.style.display = 'none';
 }
 
 // Status progress calculation
@@ -204,7 +241,6 @@ async function getGitHubFileLastUpdated(url) {
 
 async function updateFileInfo() {
     const url = GITHUB_CSV_URLS[currentYear];
-    const fileInfo = document.getElementById('fileInfo');
     
     try {
         const lastUpdated = await getGitHubFileLastUpdated(url);
@@ -222,7 +258,7 @@ async function updateFileInfo() {
         
         infoHTML += `<strong>Records Loaded:</strong> ${records.length}`;
         
-        fileInfo.innerHTML = infoHTML;
+        domCache.fileInfo.innerHTML = infoHTML;
     } catch (error) {
         console.error('Error updating file info:', error);
     }
@@ -241,19 +277,15 @@ function formatDateForDisplay(date) {
 
 // Connection status
 function updateConnectionStatus(connected) {
-    const indicator = document.getElementById('statusIndicator');
-    const statusText = document.getElementById('connectionStatus');
-    const connectBtn = document.getElementById('connectBtn');
-
     if (connected) {
-        indicator.className = 'status-indicator connected';
-        statusText.textContent = `Connected to: ${currentYear} CSV`;
-        connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Data Updated (${currentYear})`;
+        domCache.statusIndicator.className = 'status-indicator connected';
+        domCache.connectionStatus.textContent = `Connected to: ${currentYear} CSV`;
+        domCache.connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Data Updated (${currentYear})`;
         usingGitHub = true;
     } else {
-        indicator.className = 'status-indicator disconnected';
-        statusText.textContent = 'Not connected to data source';
-        connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Refresh Data`;
+        domCache.statusIndicator.className = 'status-indicator disconnected';
+        domCache.connectionStatus.textContent = 'Not connected to data source';
+        domCache.connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Refresh Data`;
         usingGitHub = false;
     }
     
@@ -381,7 +413,7 @@ function loadFromLocalStorage() {
             updateNoteSuggestions();
             updateVendorSuggestions();
             updateSiteSuggestions();
-            document.getElementById('recordsTable').style.display = 'none';
+            domCache.recordsTable.style.display = 'none';
             updateConnectionStatus(true);
             updateFileInfo();
             
@@ -428,14 +460,13 @@ function refreshTable(filteredRecords = null) {
     
     const displayRecords = filteredRecords || records;
     currentFilteredRecords = displayRecords;
-    const recordsTable = document.getElementById('recordsTable');
     
     if (displayRecords.length === 0) {
-        recordsTable.style.display = 'none';
+        domCache.recordsTable.style.display = 'none';
         return;
     }
     
-    recordsTable.style.display = 'table';
+    domCache.recordsTable.style.display = 'table';
     
     displayRecords.forEach((record, index) => {
         const percentage = getStatusPercentage(record.status);
@@ -579,7 +610,7 @@ function initializeCharts(filteredRecords = null) {
                 if (elements.length > 0) {
                     const clickedIndex = elements[0].index;
                     const status = statusLabels[clickedIndex];
-                    filterRecords(status);
+                    filterSiteRecords(status);
                 }
             }
         }
@@ -635,7 +666,7 @@ function initializeCharts(filteredRecords = null) {
                 if (elements.length > 0) {
                     const clickedIndex = elements[0].index;
                     const status = statusLabels[clickedIndex];
-                    filterRecords(status);
+                    filterSiteRecords(status);
                 }
             }
         }
@@ -643,7 +674,7 @@ function initializeCharts(filteredRecords = null) {
 }
 
 function searchSiteRecords() {
-    const term = document.getElementById('siteSearchTerm').value.toLowerCase();
+    const term = domCache.siteSearchTerm.value.toLowerCase();
     let filtered = records.filter(record => record.status !== 'With Accounts');
     
     if (term) {
@@ -652,8 +683,26 @@ function searchSiteRecords() {
         );
     }
     
+    currentFilteredRecords = filtered;
     refreshSiteTable(filtered);
     initializeCharts(filtered);
+}
+
+function filterSiteRecords(status) {
+    const term = domCache.siteSearchTerm.value.toLowerCase();
+    let filtered = records.filter(record => record.status !== 'With Accounts');
+    
+    if (term) {
+        filtered = filtered.filter(record => 
+            record.site && record.site.toLowerCase().includes(term)
+        );
+    }
+    
+    if (status !== 'all') {
+        filtered = filtered.filter(record => record.status === status);
+    }
+    
+    refreshSiteTable(filtered);
 }
 
 function refreshSiteTable(filteredRecords = null) {
@@ -662,14 +711,13 @@ function refreshSiteTable(filteredRecords = null) {
     
     const displayRecords = filteredRecords || records.filter(record => record.status !== 'With Accounts');
     currentFilteredRecords = displayRecords;
-    const siteRecordsTable = document.getElementById('siteRecordsTable');
     
     if (displayRecords.length === 0) {
-        siteRecordsTable.style.display = 'none';
+        domCache.siteRecordsTable.style.display = 'none';
         return;
     }
     
-    siteRecordsTable.style.display = 'table';
+    domCache.siteRecordsTable.style.display = 'table';
     
     displayRecords.forEach((record, index) => {
         const row = document.createElement('tr');
@@ -683,12 +731,85 @@ function refreshSiteTable(filteredRecords = null) {
             <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
             <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
         `;
+        
+        row.addEventListener('click', function() {
+            showDashboardRecordPreview(record);
+        });
+        
         tableBody.appendChild(row);
     });
 }
 
+function showDashboardRecordPreview(record) {
+    document.getElementById('dashboardPreviewPoNumber').textContent = record.poNumber || '-';
+    document.getElementById('dashboardPreviewInvoiceNumber').textContent = record.invoiceNumber || '-';
+    document.getElementById('dashboardPreviewAmount').textContent = record.value ? formatNumber(record.value) : '-';
+    document.getElementById('dashboardPreviewStatus').textContent = record.status || '-';
+    document.getElementById('dashboardPreviewNotes').textContent = record.note || '-';
+    
+    const statusSteps = {
+        'Open': 0,
+        'For SRV': 1,
+        'For IPC': 2,
+        'No Invoice': 2,
+        'Report': 2,
+        'Under Review': 3,
+        'CEO Approval': 4,
+        'With Accounts': 5
+    };
+    const currentStep = statusSteps[record.status] || 0;
+    
+    document.querySelectorAll('#dashboardPreviewModal .step').forEach((step, index) => {
+        step.classList.remove('current');
+        if (index < currentStep) {
+            step.classList.add('active');
+        } else {
+            step.classList.remove('active');
+        }
+    });
+    
+    if (currentStep > 0) {
+        const currentStepElement = document.querySelector(`#dashboardPreviewModal .step-${currentStep}`);
+        if (currentStepElement) {
+            currentStepElement.classList.add('current');
+        }
+    }
+    
+    document.querySelectorAll('#dashboardPreviewModal .step-connector').forEach((connector, index) => {
+        if (index < currentStep - 1) {
+            connector.classList.add('active');
+        } else {
+            connector.classList.remove('active');
+        }
+    });
+    
+    // Update WhatsApp button with site-specific number
+    const whatsappBtn = document.getElementById('dashboardWhatsappReminderBtn');
+    let whatsappNumber = '50992023'; // Default number
+    
+    // Extract site number from the record's site
+    if (record.site) {
+        for (const [sitePattern, number] of Object.entries(SITE_WHATSAPP_NUMBERS)) {
+            if (record.site.includes(sitePattern)) {
+                whatsappNumber = number;
+                break;
+            }
+        }
+    }
+    
+    whatsappBtn.onclick = function() {
+        sendWhatsAppReminder(record, whatsappNumber);
+    };
+    
+    document.getElementById('dashboardPreviewModal').style.display = 'block';
+}
+
+function closeDashboardPreview() {
+    document.getElementById('dashboardPreviewModal').style.display = 'none';
+}
+
 function clearSiteSearch() {
-    document.getElementById('siteSearchTerm').value = '';
+    domCache.siteSearchTerm.value = '';
     searchSiteRecords();
 }
 
@@ -719,8 +840,8 @@ function getStatusClass(status) {
 
 // Search and filter
 function searchRecords() {
-    const term = document.getElementById('searchTerm').value.toLowerCase();
-    const releaseDateInput = document.getElementById('releaseDateFilter').value;
+    const term = domCache.searchTerm.value.toLowerCase();
+    const releaseDateInput = domCache.releaseDateFilter.value;
     let filtered = records;
 
     if (term) {
@@ -773,8 +894,8 @@ function filterRecords(status) {
 }
 
 function clearSearch() {
-    document.getElementById('searchTerm').value = '';
-    document.getElementById('releaseDateFilter').value = '';
+    domCache.searchTerm.value = '';
+    domCache.releaseDateFilter.value = '';
     activeFilter = 'all';
     
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -788,16 +909,16 @@ function clearSearch() {
 }
 
 function clearDate() {
-    document.getElementById('releaseDateFilter').value = '';
+    domCache.releaseDateFilter.value = '';
     searchRecords();
 }
 
 function clearReportSearch() {
-    document.getElementById('reportSearchTerm').value = '';
-    document.getElementById('reportType').value = 'po';
-    document.getElementById('reportStatusFilter').value = 'all';
+    domCache.reportSearchTerm.value = '';
+    domCache.reportType.value = 'po';
+    domCache.reportStatusFilter.value = 'all';
     document.getElementById('reportHeader').innerHTML = '';
-    document.getElementById('reportTable').style.display = 'none';
+    domCache.reportTable.style.display = 'none';
     document.getElementById('poTotal').textContent = '0.00';
     document.getElementById('grandTotal').textContent = '0.00';
     document.getElementById('accountsTotal').textContent = '0.00';
@@ -806,19 +927,19 @@ function clearReportSearch() {
 }
 
 function clearPettyCashSearch() {
-    document.getElementById('pettyCashSearchTerm').value = '';
+    domCache.pettyCashSearchTerm.value = '';
     document.getElementById('pettyCashTotal').textContent = '0.00';
     document.getElementById('pettyCashCount').textContent = '0';
-    document.getElementById('pettyCashTable').style.display = 'none';
+    domCache.pettyCashTable.style.display = 'none';
     document.getElementById('pettyCashTableTotal').textContent = '0.00';
     document.querySelector('#pettyCashTable tbody').innerHTML = '';
 }
 
 // Report functions
 function generateReport() {
-    const reportType = document.getElementById('reportType').value;
-    const searchTerm = document.getElementById('reportSearchTerm').value.trim();
-    const statusFilter = document.getElementById('reportStatusFilter').value;
+    const reportType = domCache.reportType.value;
+    const searchTerm = domCache.reportSearchTerm.value.trim();
+    const statusFilter = domCache.reportStatusFilter.value;
     
     if (!searchTerm) {
         alert('Please enter a search term');
@@ -910,7 +1031,7 @@ function generateReport() {
     });
     
     document.getElementById('reportTotalAmount').textContent = formatNumber(invoiceTotal);
-    document.getElementById('reportTable').style.display = 'table';
+    domCache.reportTable.style.display = 'table';
 }
 
 // Enhanced print functions
@@ -1134,7 +1255,7 @@ function updateSiteSuggestions() {
 }
 
 function generatePettyCashReport() {
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value.trim();
+    const searchTerm = domCache.pettyCashSearchTerm.value.trim();
     
     if (!searchTerm) {
         alert('Please enter a search term for the notes field');
@@ -1173,7 +1294,7 @@ function generatePettyCashReport() {
     });
     
     document.getElementById('pettyCashTableTotal').textContent = formatNumber(totalValue);
-    document.getElementById('pettyCashTable').style.display = 'table';
+    domCache.pettyCashTable.style.display = 'table';
     
     if (window.innerWidth <= 768) {
         document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
@@ -1265,8 +1386,8 @@ function sendWhatsAppReminder(record, whatsappNumber) {
 
 // Contact function
 function contactAboutMissingData() {
-    const searchTerm = document.getElementById('searchTerm').value;
-    const releaseDate = document.getElementById('releaseDateFilter').value;
+    const searchTerm = domCache.searchTerm.value;
+    const releaseDate = domCache.releaseDateFilter.value;
     const activeFilter = document.querySelector('.filter-btn.active').textContent;
     
     let message = `Hi, Irwin.\n\n`;
@@ -1296,7 +1417,7 @@ function shareReportViaWhatsApp() {
 function sharePettyCashViaWhatsApp() {
     const totalAmount = document.getElementById('pettyCashTotal').textContent;
     const recordCount = document.getElementById('pettyCashCount').textContent;
-    const searchTerm = document.getElementById('pettyCashSearchTerm').value;
+    const searchTerm = domCache.pettyCashSearchTerm.value;
     
     let message = `*Petty Cash Summary*\n\n`;
     message += `Search Term: ${searchTerm}\n`;
@@ -1342,12 +1463,13 @@ function setupResponsiveElements() {
 
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
+    cacheDOM();
     detectDeviceType();
     updateConnectionStatus(false);
     
     window.addEventListener('resize', setupResponsiveElements);
     
-    document.getElementById('connectBtn').addEventListener('click', async function() {
+    domCache.connectBtn.addEventListener('click', async function() {
         const btn = this;
         const originalHTML = btn.innerHTML;
         
@@ -1368,11 +1490,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.mobile-menu input[name="dataSource"]').forEach(radio => {
         radio.addEventListener('change', async function() {
             currentYear = this.value;
-            const connectBtn = document.getElementById('connectBtn');
+            const connectBtn = domCache.connectBtn;
             const originalHTML = connectBtn.innerHTML;
             
             records = [];
-            document.getElementById('recordsTable').style.display = 'none';
+            domCache.recordsTable.style.display = 'none';
             connectBtn.disabled = true;
             connectBtn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading ${currentYear} Data...`;
             
@@ -1399,28 +1521,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    document.getElementById('searchTerm').addEventListener('keypress', function(e) {
+    domCache.searchTerm.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             searchRecords();
         }
     });
     
-    document.getElementById('reportSearchTerm').addEventListener('keypress', function(e) {
+    domCache.reportSearchTerm.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             generateReport();
         }
     });
     
-    document.getElementById('pettyCashSearchTerm').addEventListener('keypress', function(e) {
+    domCache.pettyCashSearchTerm.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             generatePettyCashReport();
         }
     });
     
-    document.getElementById('siteSearchTerm').addEventListener('keypress', function(e) {
+    domCache.siteSearchTerm.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             searchSiteRecords();
@@ -1441,7 +1563,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // Close modal when clicking outside of it
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('invoicePreviewModal');
+    const dashboardModal = document.getElementById('dashboardPreviewModal');
+    
     if (event.target === modal) {
         closeInvoicePreview();
+    }
+    
+    if (event.target === dashboardModal) {
+        closeDashboardPreview();
     }
 });
