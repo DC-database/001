@@ -21,10 +21,11 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
     background-color: #004987;
     margin: 0;
-    padding: 10px;
+    padding: 0;
     color: var(--dark);
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
 }
 
 .container {
@@ -36,6 +37,7 @@ body {
     padding: 15px;
     position: relative;
     overflow-x: hidden;
+    min-height: 100vh;
 }
 
 /* Mobile Menu Styles */
@@ -67,7 +69,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 250px;
+    width: 280px;
     height: 100%;
     background-color: white;
     z-index: 1000;
@@ -77,6 +79,8 @@ body {
     transition: transform 0.3s ease-out;
     display: flex;
     flex-direction: column;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mobile-menu.show {
@@ -92,6 +96,8 @@ body {
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
 }
 
 .menu-header h3 {
@@ -103,6 +109,7 @@ body {
     font-size: 24px;
     cursor: pointer;
     transition: transform 0.2s;
+    padding: 5px;
 }
 
 .close-menu:hover {
@@ -129,6 +136,13 @@ body {
     width: 20px;
     text-align: center;
     color: var(--primary);
+    flex-shrink: 0;
+}
+
+.menu-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .menu-item.active {
@@ -148,6 +162,8 @@ body {
     border-top: 1px solid #eee;
     margin-top: auto;
     flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
 }
 
 .menu-data-info .year-selector {
@@ -184,6 +200,7 @@ body {
 .menu-data-info .btn {
     width: 100%;
     margin-bottom: 10px;
+    min-height: 44px;
 }
 
 .menu-data-info .storage-info {
@@ -251,6 +268,7 @@ body {
     align-items: center;
     margin-bottom: 15px;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
 .section-header h1 {
@@ -265,6 +283,7 @@ body {
     padding: 8px 12px;
     min-height: auto;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .back-btn:hover {
@@ -289,17 +308,27 @@ h2, h3 {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .search-container input {
     flex: 1;
-    min-width: 100px;
-    padding: 10px;
+    min-width: 120px;
+    padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 16px;
     -webkit-appearance: none;
     transition: all 0.2s;
+    min-height: 44px;
+}
+
+.search-input {
+    flex: 1 1 200px;
+}
+
+.date-input {
+    flex: 0 1 150px;
 }
 
 .search-container input:focus {
@@ -319,10 +348,10 @@ h2, h3 {
 .filter-dropbtn {
     background-color: white;
     color: var(--dark);
-    padding: 10px;
-    font-size: 14px;
+    padding: 12px;
+    font-size: 16px;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     width: 100%;
     text-align: left;
@@ -330,10 +359,15 @@ h2, h3 {
     align-items: center;
     gap: 8px;
     transition: all 0.2s;
+    min-height: 44px;
 }
 
 .filter-dropbtn:hover {
     border-color: var(--primary);
+}
+
+.filter-text {
+    flex: 1;
 }
 
 .filter-dropdown-content {
@@ -343,7 +377,7 @@ h2, h3 {
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
-    border-radius: 4px;
+    border-radius: 6px;
     max-height: 300px;
     overflow-y: auto;
     width: 100%;
@@ -360,12 +394,12 @@ h2, h3 {
 }
 
 .filter-btn {
-    padding: 8px 12px;
+    padding: 12px;
     background: white;
     border: none;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 14px;
+    font-size: 16px;
     text-align: left;
     width: 100%;
 }
@@ -380,11 +414,11 @@ h2, h3 {
 }
 
 .btn {
-    padding: 10px 15px;
+    padding: 12px 15px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     transition: all 0.3s;
     color: white;
@@ -394,8 +428,9 @@ h2, h3 {
     justify-content: center;
     gap: 8px;
     flex: 1;
-    min-width: 100px;
+    min-width: 60px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+    touch-action: manipulation;
 }
 
 .btn:hover:not(:disabled) {
@@ -409,7 +444,11 @@ h2, h3 {
 }
 
 .btn i {
-    font-size: 16px;
+    font-size: 18px;
+}
+
+.search-btn, .generate-btn {
+    flex: 0 0 auto;
 }
 
 .btn-primary {
@@ -461,11 +500,12 @@ h2, h3 {
     box-shadow: none !important;
 }
 
-.clear-search-btn, .clear-date-btn {
+.clear-search-btn, .clear-date-btn, .help-btn {
     background-color: #c9cdd0;
     color: white;
-    min-width: auto;
-    padding: 10px;
+    min-width: 44px;
+    padding: 12px;
+    flex: 0 0 auto;
 }
 
 .clear-search-btn:hover, .clear-date-btn:hover {
@@ -481,7 +521,7 @@ table {
 }
 
 th, td {
-    padding: 10px 8px;
+    padding: 12px 8px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     word-break: break-word;
@@ -501,9 +541,9 @@ tr:hover {
 
 .status-badge {
     display: inline-block;
-    padding: 4px 8px;
+    padding: 6px 10px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
     transition: all 0.2s;
@@ -601,13 +641,22 @@ tr:hover {
 
 .report-controls select,
 .report-controls input {
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 16px;
     flex: 1;
     min-width: 120px;
     transition: all 0.2s;
+    min-height: 44px;
+}
+
+.report-select, .status-select {
+    flex: 1 1 150px;
+}
+
+.report-input {
+    flex: 2 1 200px;
 }
 
 .report-controls select:focus,
@@ -649,8 +698,8 @@ tr:hover {
     display: flex;
     flex-direction: column;
     background: white;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     transition: all 0.2s;
 }
@@ -661,14 +710,14 @@ tr:hover {
 }
 
 .financial-summary-label {
-    font-size: 12px;
+    font-size: 14px;
     color: #666;
     margin-bottom: 4px;
     font-weight: 500;
 }
 
 .financial-summary-value {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
 }
 
@@ -685,7 +734,7 @@ tr:hover {
 
 .compact-table th, 
 .compact-table td {
-    padding: 8px 10px;
+    padding: 10px;
     border: 1px solid #ddd;
     word-break: break-word;
 }
@@ -715,6 +764,7 @@ tr:hover {
     -webkit-overflow-scrolling: touch;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overscroll-behavior: contain;
 }
 
 .report-actions {
@@ -885,6 +935,8 @@ tr:hover {
     height: 100%;
     background-color: rgba(0,0,0,0.4);
     animation: fadeIn 0.3s ease-out;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-content {
@@ -899,7 +951,7 @@ tr:hover {
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .close-modal {
@@ -909,6 +961,7 @@ tr:hover {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
+    padding: 5px;
 }
 
 .close-modal:hover {
@@ -982,10 +1035,42 @@ tr:hover {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .container {
         padding: 10px;
+    }
+    
+    .search-container input,
+    .report-controls input,
+    .report-controls select {
+        min-width: 100px;
+    }
+    
+    .btn {
+        min-width: 80px;
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .btn i {
+        font-size: 16px;
+    }
+    
+    th, td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+    
+    .status-badge {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
         margin-top: 60px;
+        padding: 8px;
     }
     
     h1 {
@@ -1003,16 +1088,18 @@ tr:hover {
     .report-controls input,
     .report-controls select {
         min-width: 100px;
+        font-size: 14px;
+        padding: 10px;
     }
     
     .btn {
-        min-width: 80px;
-        padding: 8px 10px;
-        font-size: 12px;
+        min-width: 60px;
+        padding: 10px;
+        font-size: 14px;
     }
     
     .btn i {
-        font-size: 14px;
+        font-size: 16px;
     }
     
     .btn-text {
@@ -1029,8 +1116,8 @@ tr:hover {
     }
     
     .status-badge {
-        padding: 3px 6px;
-        font-size: 10px;
+        padding: 4px 6px;
+        font-size: 11px;
     }
     
     .step {
@@ -1056,7 +1143,7 @@ tr:hover {
     }
     
     .mobile-menu {
-        width: 80%;
+        width: 85%;
     }
     
     .report-actions {
@@ -1065,6 +1152,14 @@ tr:hover {
     
     .report-actions .btn {
         flex: 1 1 45%;
+    }
+
+    /* Main Dashboard Table adjustments */
+    #siteRecordsTable th:nth-child(2), 
+    #siteRecordsTable td:nth-child(2),
+    #siteRecordsTable th:nth-child(9), 
+    #siteRecordsTable td:nth-child(9) {
+        display: none;
     }
 
     /* Charts adjustments */
@@ -1112,6 +1207,10 @@ tr:hover {
 }
 
 @media (max-width: 480px) {
+    .mobile-menu {
+        width: 90%;
+    }
+    
     .year-selector {
         flex-direction: column;
     }
@@ -1125,7 +1224,7 @@ tr:hover {
     }
     
     .btn-text {
-        display: inline;
+        display: none;
     }
     
     .action-btns {
@@ -1133,8 +1232,8 @@ tr:hover {
     }
     
     .action-btns .btn {
-        min-width: 50px;
-        padding: 5px;
+        min-width: 44px;
+        padding: 8px;
     }
     
     #recordsTable th:nth-child(2), 
@@ -1147,9 +1246,15 @@ tr:hover {
     #recordsTable td:nth-child(8) {
         display: none;
     }
-    
-    .mobile-menu {
-        width: 85%;
+
+    /* Main Dashboard Table adjustments */
+    #siteRecordsTable th:nth-child(4), 
+    #siteRecordsTable td:nth-child(4),
+    #siteRecordsTable th:nth-child(5), 
+    #siteRecordsTable td:nth-child(5),
+    #siteRecordsTable th:nth-child(6), 
+    #siteRecordsTable td:nth-child(6) {
+        display: none;
     }
     
     .report-actions .btn {
@@ -1161,11 +1266,11 @@ tr:hover {
     }
     
     .financial-summary-label {
-        font-size: 10px;
+        font-size: 12px;
     }
     
     .financial-summary-value {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     /* Modal adjustments */

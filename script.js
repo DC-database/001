@@ -110,6 +110,7 @@ function isMobileDevice() {
 // Mobile menu functions
 function toggleMobileMenu() {
     domCache.mobileMenu.classList.toggle('show');
+    document.body.style.overflow = domCache.mobileMenu.classList.contains('show') ? 'hidden' : '';
 }
 
 function showSection(sectionId) {
@@ -118,6 +119,7 @@ function showSection(sectionId) {
     });
     document.getElementById(sectionId).classList.add('active');
     domCache.mobileMenu.classList.remove('show');
+    document.body.style.overflow = '';
     
     if (sectionId === 'pettyCashSection') {
         updateNoteSuggestions();
@@ -196,11 +198,13 @@ function viewSRV(fileName) {
 function showLoading() {
     isLoading = true;
     domCache.loadingOverlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 }
 
 function hideLoading() {
     isLoading = false;
     domCache.loadingOverlay.style.display = 'none';
+    document.body.style.overflow = '';
 }
 
 // Status progress calculation
@@ -280,12 +284,12 @@ function updateConnectionStatus(connected) {
     if (connected) {
         domCache.statusIndicator.className = 'status-indicator connected';
         domCache.connectionStatus.textContent = `Connected to: ${currentYear} CSV`;
-        domCache.connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Data Updated (${currentYear})`;
+        domCache.connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> <span class="btn-text">Data Updated (${currentYear})</span>`;
         usingGitHub = true;
     } else {
         domCache.statusIndicator.className = 'status-indicator disconnected';
         domCache.connectionStatus.textContent = 'Not connected to data source';
-        domCache.connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> Refresh Data`;
+        domCache.connectBtn.innerHTML = `<i class="fas fa-sync-alt"></i> <span class="btn-text">Refresh Data</span>`;
         usingGitHub = false;
     }
     
@@ -723,13 +727,14 @@ function refreshSiteTable(filteredRecords = null) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${formatDate(record.entryDate)}</td>
+            <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
             <td>${record.site || '-'}</td>
             <td>${record.poNumber || '-'}</td>
             <td>${record.vendor || '-'}</td>
             <td>${record.invoiceNumber || '-'}</td>
             <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
             <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+            <td>${record.note || '-'}</td>
         `;
         
         row.addEventListener('click', function() {
@@ -738,6 +743,8 @@ function refreshSiteTable(filteredRecords = null) {
         
         tableBody.appendChild(row);
     });
+    
+    setupResponsiveElements();
 }
 
 function showDashboardRecordPreview(record) {
@@ -802,10 +809,12 @@ function showDashboardRecordPreview(record) {
     };
     
     document.getElementById('dashboardPreviewModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
 function closeDashboardPreview() {
     document.getElementById('dashboardPreviewModal').style.display = 'none';
+    document.body.style.overflow = '';
 }
 
 function clearSiteSearch() {
@@ -1364,10 +1373,12 @@ function showInvoicePreview(record) {
     };
     
     document.getElementById('invoicePreviewModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
 function closeInvoicePreview() {
     document.getElementById('invoicePreviewModal').style.display = 'none';
+    document.body.style.overflow = '';
 }
 
 // WhatsApp reminder function
@@ -1436,12 +1447,12 @@ function setupResponsiveElements() {
     detectDeviceType();
     const screenWidth = window.innerWidth;
     
-    const allTh = document.querySelectorAll('#recordsTable th');
-    const allTd = document.querySelectorAll('#recordsTable td');
+    // Reset all hidden columns first
+    document.querySelectorAll('#recordsTable th, #recordsTable td, #siteRecordsTable th, #siteRecordsTable td').forEach(el => {
+        el.style.display = '';
+    });
     
-    allTh.forEach(th => th.style.display = '');
-    allTd.forEach(td => td.style.display = '');
-    
+    // Records table responsiveness
     if (screenWidth <= 400) {
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
@@ -1454,8 +1465,20 @@ function setupResponsiveElements() {
         document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
+        
+        // Site records table responsiveness
+        document.querySelectorAll('#siteRecordsTable th:nth-child(2), #siteRecordsTable td:nth-child(2), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
+            el.style.display = 'none';
+        });
     } else if (screenWidth <= 992) {
         document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+            el.style.display = 'none';
+        });
+    }
+    
+    // Extra small screens
+    if (screenWidth <= 480) {
+        document.querySelectorAll('#siteRecordsTable th:nth-child(4), #siteRecordsTable td:nth-child(4), #siteRecordsTable th:nth-child(5), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(6)').forEach(el => {
             el.style.display = 'none';
         });
     }

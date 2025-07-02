@@ -8,6 +8,7 @@
     <title>INVOICE MANAGEMENT SYSTEM</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="mobile-menu-btn" onclick="toggleMobileMenu()">
@@ -20,16 +21,16 @@
             <span class="close-menu" onclick="toggleMobileMenu()">&times;</span>
         </div>
         <div class="menu-item main-page active" onclick="showSection('mainPageSection')">
-            <i class="fas fa-home"></i> Main Dashboard
+            <i class="fas fa-home"></i> <span class="menu-text">Main Dashboard</span>
         </div>
         <div class="menu-item" onclick="showSection('invoiceSection')">
-            <i class="fas fa-file-invoice"></i> Invoice Management
+            <i class="fas fa-file-invoice"></i> <span class="menu-text">Invoice Status Tracker</span>
         </div>
         <div class="menu-item" onclick="showSection('statementSection')">
-            <i class="fas fa-file-alt"></i> Statement of Account
+            <i class="fas fa-file-alt"></i> <span class="menu-text">Statement of Account</span>
         </div>
         <div class="menu-item" onclick="showSection('pettyCashSection')">
-            <i class="fas fa-money-bill-wave"></i> Petty Cash/Summary
+            <i class="fas fa-money-bill-wave"></i> <span class="menu-text">Petty Cash/Summary</span>
         </div>
         
         <!-- Data Controls Section -->
@@ -62,16 +63,16 @@
     <div class="container">
         <!-- Main Dashboard Section -->
         <div id="mainPageSection" class="content-section active">
-            <h1>INVOICE TRACKING SYSTEM</h1>
+            <h1>INVOICE PROGRESSION (SITE & HO)</h1>
             
             <div class="search-container">
-                <input type="text" id="siteSearchTerm" placeholder="Search by site..." list="siteSuggestionsMain">
+                <input type="text" id="siteSearchTerm" placeholder="Search by site..." list="siteSuggestionsMain" class="search-input">
                 <datalist id="siteSuggestionsMain"></datalist>
-                <button class="btn btn-primary" onclick="searchSiteRecords()">
-                    <i class="fas fa-search"></i> Search
+                <button class="btn btn-primary search-btn" onclick="searchSiteRecords()">
+                    <i class="fas fa-search"></i> <span class="btn-text">Search</span>
                 </button>
                 <button class="btn clear-search-btn" onclick="clearSiteSearch()">
-                    <i class="fas fa-times"></i> Clear
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
             
@@ -89,13 +90,14 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Date</th>
+                            <th>Release Date</th>
                             <th>Site</th>
                             <th>PO</th>
                             <th>Vendor</th>
                             <th>Invoice</th>
                             <th>Amount</th>
                             <th>Status</th>
+                            <th>Note</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -105,29 +107,28 @@
 
         <!-- Invoice Management Section -->
         <div id="invoiceSection" class="content-section">
-            <h1>INVOICE MANAGEMENT SYSTEM</h1>
+            <h1>INVOICE STATUS TRACKER</h1>
             
             <div class="search-container">
-                <input type="text" id="searchTerm" placeholder="Search...">
-                <button class="btn btn-primary" onclick="searchRecords()">
-                    <i class="fas fa-search"></i> Search
+                <input type="text" id="searchTerm" placeholder="Search..." class="search-input">
+                <button class="btn btn-primary search-btn" onclick="searchRecords()">
+                    <i class="fas fa-search"></i> <span class="btn-text">Search</span>
                 </button>
                 <button class="btn clear-search-btn" onclick="clearSearch()">
-                    <i class="fas fa-times"></i> Clear
+                    <i class="fas fa-times"></i>
                 </button>
-                <input type="text" id="releaseDateFilter" placeholder="Date" onfocus="(this.type='date')" onblur="(this.type='text')">
+                <input type="text" id="releaseDateFilter" placeholder="Date" onfocus="(this.type='date')" onblur="(this.type='text')" class="date-input">
                 <button class="btn clear-date-btn" onclick="clearDate()">
-                    <i class="fas fa-times"></i> Clear
+                    <i class="fas fa-times"></i>
                 </button>
-                <button class="btn btn-success" onclick="contactAboutMissingData()">
+                <button class="btn btn-success help-btn" onclick="contactAboutMissingData()">
                     <i class="fab fa-whatsapp"></i>
-                    <span class="btn-text">Help</span>
                 </button>
             </div>
             
             <div class="filter-dropdown">
                 <button class="filter-dropbtn" onclick="toggleFilterDropdown()">
-                    <i class="fas fa-filter"></i> Filter
+                    <i class="fas fa-filter"></i> <span class="filter-text">Filter</span>
                 </button>
                 <div class="filter-dropdown-content" id="filterDropdown">
                     <div class="filter-btn active" onclick="filterRecords('all')">All</div>
@@ -169,20 +170,20 @@
             <div class="section-header">
                 <h1>Statement of Account</h1>
                 <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
-                    <i class="fas fa-arrow-left"></i> Back
+                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
                 </button>
             </div>
             
             <div class="report-controls">
-                <select id="reportType">
+                <select id="reportType" class="report-select">
                     <option value="po">PO Number</option>
                     <option value="vendor">Vendor</option>
                     <option value="site">Site</option>
                 </select>
-                <input type="text" id="reportSearchTerm" placeholder="Search term..." list="vendorSuggestions">
+                <input type="text" id="reportSearchTerm" placeholder="Search term..." list="vendorSuggestions" class="report-input">
                 <datalist id="vendorSuggestions"></datalist>
                 <datalist id="siteSuggestions"></datalist>
-                <select id="reportStatusFilter">
+                <select id="reportStatusFilter" class="status-select">
                     <option value="all">All Statuses</option>
                     <option value="Open">Open</option>
                     <option value="Pending">Pending</option>
@@ -194,13 +195,12 @@
                     <option value="CEO Approval">CEO</option>
                     <option value="With Accounts">Accounts</option>
                 </select>
-                <button class="btn btn-primary" onclick="generateReport()">
+                <button class="btn btn-primary generate-btn" onclick="generateReport()">
                     <i class="fas fa-calculator"></i>
-                    <span>Generate</span>
+                    <span class="btn-text">Generate</span>
                 </button>
                 <button class="btn clear-search-btn" onclick="clearReportSearch()">
                     <i class="fas fa-times"></i>
-                    <span>Clear</span>
                 </button>
             </div>
             
@@ -230,10 +230,10 @@
             
             <div class="report-actions">
                 <button class="btn btn-warning" onclick="printReport()">
-                    <i class="fas fa-print"></i> Print
+                    <i class="fas fa-print"></i> <span class="btn-text">Print</span>
                 </button>
                 <button class="btn btn-success" onclick="shareReportViaWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> Share
+                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
                 </button>
             </div>
             
@@ -267,21 +267,20 @@
             <div class="section-header">
                 <h1>Summary Statement</h1>
                 <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
-                    <i class="fas fa-arrow-left"></i> Back
+                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
                 </button>
             </div>
             
             <div class="report-controls">
                 <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes..." 
-                    list="noteSuggestions" autocomplete="off">
+                    list="noteSuggestions" autocomplete="off" class="search-input">
                 <datalist id="noteSuggestions"></datalist>
-                <button class="btn btn-primary" onclick="generatePettyCashReport()">
+                <button class="btn btn-primary generate-btn" onclick="generatePettyCashReport()">
                     <i class="fas fa-calculator"></i>
-                    <span>Generate</span>
+                    <span class="btn-text">Generate</span>
                 </button>
                 <button class="btn clear-search-btn" onclick="clearPettyCashSearch()">
                     <i class="fas fa-times"></i>
-                    <span>Clear</span>
                 </button>
             </div>
             
@@ -301,10 +300,10 @@
             
             <div class="report-actions">
                 <button class="btn btn-warning" onclick="printPettyCashReport()">
-                    <i class="fas fa-print"></i> Print
+                    <i class="fas fa-print"></i> <span class="btn-text">Print</span>
                 </button>
                 <button class="btn btn-success" onclick="sharePettyCashViaWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> Share
+                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
                 </button>
             </div>
             
@@ -404,7 +403,7 @@
             
             <div class="report-actions" style="margin-top: 20px;">
                 <button id="dashboardWhatsappReminderBtn" class="btn btn-success">
-                    <i class="fab fa-whatsapp"></i> Send WhatsApp Reminder
+                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Send WhatsApp Reminder</span>
                 </button>
             </div>
         </div>
@@ -477,7 +476,7 @@
             
             <div class="report-actions" style="margin-top: 20px;">
                 <button id="whatsappReminderBtn" class="btn btn-success">
-                    <i class="fab fa-whatsapp"></i> Send WhatsApp Reminder
+                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Send WhatsApp Reminder</span>
                 </button>
             </div>
         </div>
