@@ -1,578 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>INVOICE MANAGEMENT SYSTEM</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="manifest.json">
-</head>
-<body>
-    <!-- Body content will be inserted here -->
-<div class="mobile-menu-btn" onclick="toggleMobileMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-    
-    <div class="mobile-menu" id="mobileMenu">
-        <div class="menu-header">
-            <h3>Menu</h3>
-            <span class="close-menu" onclick="toggleMobileMenu()">&times;</span>
-        </div>
-        <div class="menu-item main-page active" onclick="showSection('mainPageSection')">
-            <i class="fas fa-home"></i> <span class="menu-text">Main Dashboard</span>
-        </div>
-        <div class="menu-item" onclick="showSection('invoiceSection')">
-            <i class="fas fa-file-invoice"></i> <span class="menu-text">Invoice Status Tracker</span>
-        </div>
-        <div class="menu-item" onclick="showSection('statementSection')">
-            <i class="fas fa-file-alt"></i> <span class="menu-text">Statement of Account</span>
-        </div>
-        <div class="menu-item" onclick="showSection('pettyCashSection')">
-            <i class="fas fa-money-bill-wave"></i> <span class="menu-text">Petty Cash/Summary</span>
-        </div>
-        <div class="menu-item admin" onclick="showSection('dataManagementSection')">
-            <i class="fas fa-database"></i> <span class="menu-text">Data Management</span>
-        </div>
-        
-        <!-- Data Controls Section -->
-        <div class="menu-data-info">
-            <div class="year-selector">
-                <label class="year-option">
-                    <input type="radio" name="dataSource" value="2025" checked>
-                    <span class="year-text">2025 Data</span>
-                </label>
-                <label class="year-option">
-                    <input type="radio" name="dataSource" value="2022-2024"> 
-                    <span class="year-text">2022-2024 Data</span>
-                </label>
-            </div>
-            
-            <button id="connectBtn" class="btn btn-primary">
-                <i class="fas fa-sync-alt"></i>
-                <span class="btn-text">Refresh Data</span>
-            </button>
-            
-            <div class="connection-status">
-                <span id="statusIndicator" class="status-indicator disconnected"></span>
-                <span id="connectionStatus">Not connected to data source</span>
-            </div>
-            
-            <div id="fileInfo" class="storage-info"></div>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- Login Section -->
-        <div id="loginSection" class="content-section active">
-            <h1>INVOICE MANAGEMENT SYSTEM</h1>
-            <div class="auth-container">
-                <h2>Firebase Authentication</h2>
-                <input type="email" id="emailInput" placeholder="Email" class="auth-input">
-                <input type="password" id="passwordInput" placeholder="Password" class="auth-input">
-                <button class="btn btn-primary" onclick="login()">Login</button>
-                <div id="authMessage" class="auth-message"></div>
-            </div>
-        </div>
-
-        <!-- Main Dashboard Section -->
-        <div id="mainPageSection" class="content-section">
-            <h1>INVOICE PROGRESSION (SITE & HO)</h1>
-            
-            <div class="search-container">
-                <input type="text" id="siteSearchTerm" placeholder="Search by site..." list="siteSuggestionsMain" class="search-input">
-                <datalist id="siteSuggestionsMain"></datalist>
-                <button class="btn btn-primary search-btn" onclick="searchSiteRecords()">
-                    <i class="fas fa-search"></i> <span class="btn-text">Search</span>
-                </button>
-                <button class="btn clear-search-btn" onclick="clearSiteSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="charts-container">
-                <div class="chart-box">
-                    <canvas id="statusPieChart"></canvas>
-                </div>
-                <div class="chart-box">
-                    <canvas id="statusBarChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="table-responsive">
-                <table id="siteRecordsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Release Date</th>
-                            <th>Site</th>
-                            <th>PO</th>
-                            <th>Vendor</th>
-                            <th>Invoice</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Note</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Invoice Management Section -->
-        <div id="invoiceSection" class="content-section">
-            <h1>INVOICE STATUS TRACKER</h1>
-            
-            <div class="search-container">
-                <input type="text" id="searchTerm" placeholder="Search..." class="search-input">
-                <button class="btn btn-primary search-btn" onclick="searchRecords()">
-                    <i class="fas fa-search"></i> <span class="btn-text">Search</span>
-                </button>
-                <button class="btn clear-search-btn" onclick="clearSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <input type="text" id="releaseDateFilter" placeholder="Date" onfocus="(this.type='date')" onblur="(this.type='text')" class="date-input">
-                <button class="btn clear-date-btn" onclick="clearDate()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button class="btn btn-success help-btn" onclick="contactAboutMissingData()">
-                    <i class="fab fa-whatsapp"></i>
-                </button>
-            </div>
-            
-            <div class="filter-dropdown">
-                <button class="filter-dropbtn" onclick="toggleFilterDropdown()">
-                    <i class="fas fa-filter"></i> <span class="filter-text">Filter</span>
-                </button>
-                <div class="filter-dropdown-content" id="filterDropdown">
-                    <div class="filter-btn active" onclick="filterRecords('all')">All</div>
-                    <div class="filter-btn" onclick="filterRecords('Open')">Open</div>
-                    <div class="filter-btn" onclick="filterRecords('Pending')">Pending</div>
-                    <div class="filter-btn" onclick="filterRecords('No Invoice')">No INV</div>
-                    <div class="filter-btn" onclick="filterRecords('For SRV')">SRV</div>
-                    <div class="filter-btn" onclick="filterRecords('For IPC')">IPC</div>
-                    <div class="filter-btn" onclick="filterRecords('Report')">Report</div>
-                    <div class="filter-btn" onclick="filterRecords('Under Review')">Review</div>
-                    <div class="filter-btn" onclick="filterRecords('CEO Approval')">CEO</div>
-                    <div class="filter-btn" onclick="filterRecords('With Accounts')">Accounts</div>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table id="recordsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Date</th>
-                            <th>Site</th>
-                            <th>PO</th>
-                            <th>Vendor</th>
-                            <th>Invoice</th>
-                            <th>Amount</th>
-                            <th>Release</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Statement of Account Section -->
-        <div id="statementSection" class="content-section">
-            <div class="section-header">
-                <h1>Statement of Account</h1>
-                <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
-                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
-                </button>
-            </div>
-            
-            <div class="report-controls">
-                <select id="reportType" class="report-select">
-                    <option value="po">PO Number</option>
-                    <option value="vendor">Vendor</option>
-                    <option value="site">Site</option>
-                </select>
-                <input type="text" id="reportSearchTerm" placeholder="Search term..." list="vendorSuggestions" class="report-input">
-                <datalist id="vendorSuggestions"></datalist>
-                <datalist id="siteSuggestions"></datalist>
-                <select id="reportStatusFilter" class="status-select">
-                    <option value="all">All Statuses</option>
-                    <option value="Open">Open</option>
-                    <option value="Pending">Pending</option>
-                    <option value="No Invoice">No INV</option>
-                    <option value="For SRV">SRV</option>
-                    <option value="For IPC">IPC</option>
-                    <option value="Report">Report</option>
-                    <option value="Under Review">Review</option>
-                    <option value="CEO Approval">CEO</option>
-                    <option value="With Accounts">Accounts</option>
-                </select>
-                <button class="btn btn-primary generate-btn" onclick="generateReport()">
-                    <i class="fas fa-calculator"></i>
-                    <span class="btn-text">Generate</span>
-                </button>
-                <button class="btn clear-search-btn" onclick="clearReportSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="report-header" id="reportHeader"></div>
-            
-            <div class="financial-summary">
-                <div class="financial-summary-header">
-                    <h3>Financial Summary</h3>
-                </div>
-                <div class="financial-summary-item" id="poTotalContainer">
-                    <span class="financial-summary-label">PO Value</span>
-                    <span class="financial-summary-value" id="poTotal">0.00</span>
-                </div>
-                <div class="financial-summary-item">
-                    <span class="financial-summary-label">Total Amount</span>
-                    <span class="financial-summary-value" id="grandTotal">0.00</span>
-                </div>
-                <div class="financial-summary-item">
-                    <span class="financial-summary-label">With Accounts</span>
-                    <span class="financial-summary-value" id="accountsTotal">0.00</span>
-                </div>
-                <div class="financial-summary-item">
-                    <span class="financial-summary-label">Balance</span>
-                    <span class="financial-summary-value balance" id="balanceTotal">0.00</span>
-                </div>
-            </div>
-            
-            <div class="report-actions">
-                <button class="btn btn-warning" onclick="printReport()">
-                    <i class="fas fa-print"></i> <span class="btn-text">Print</span>
-                </button>
-                <button class="btn btn-success" onclick="shareReportViaWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
-                </button>
-            </div>
-            
-            <div class="report-table-container">
-                <table id="reportTable" class="compact-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>PO Number</th>
-                            <th>Vendor</th>
-                            <th>Invoice</th>
-                            <th>Amount</th>
-                            <th>Release Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                    <tfoot>
-                        <tr class="total-row">
-                            <td colspan="4">Total Amount:</td>
-                            <td class="numeric" id="reportTotalAmount">0.00</td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Petty Cash Section -->
-        <div id="pettyCashSection" class="content-section">
-            <div class="section-header">
-                <h1>Summary Statement</h1>
-                <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
-                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
-                </button>
-            </div>
-            
-            <div class="report-controls">
-                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes..." 
-                    list="noteSuggestions" autocomplete="off" class="search-input">
-                <datalist id="noteSuggestions"></datalist>
-                <button class="btn btn-primary generate-btn" onclick="generatePettyCashReport()">
-                    <i class="fas fa-calculator"></i>
-                    <span class="btn-text">Generate</span>
-                </button>
-                <button class="btn clear-search-btn" onclick="clearPettyCashSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="financial-summary">
-                <div class="financial-summary-header">
-                    <h3>Summary Statement</h3>
-                </div>
-                <div class="financial-summary-item">
-                    <span class="financial-summary-label">Total Value</span>
-                    <span class="financial-summary-value" id="pettyCashTotal">0.00</span>
-                </div>
-                <div class="financial-summary-item">
-                    <span class="financial-summary-label">Records Found</span>
-                    <span class="financial-summary-value" id="pettyCashCount">0</span>
-                </div>
-            </div>
-            
-            <div class="report-actions">
-                <button class="btn btn-warning" onclick="printPettyCashReport()">
-                    <i class="fas fa-print"></i> <span class="btn-text">Print</span>
-                </button>
-                <button class="btn btn-success" onclick="sharePettyCashViaWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
-                </button>
-            </div>
-            
-            <div class="report-table-container">
-                <table id="pettyCashTable" class="compact-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>PO Number</th>
-                            <th>Site</th>
-                            <th>Vendor</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                    <tfoot>
-                        <tr class="total-row">
-                            <td colspan="4">Total Amount:</td>
-                            <td class="numeric" id="pettyCashTableTotal">0.00</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Data Management Section -->
-        <div id="dataManagementSection" class="content-section">
-            <div class="section-header">
-                <h1>Data Management</h1>
-                <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
-                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
-                </button>
-            </div>
-            
-            <div class="upload-container">
-                <h3>Upload CSV Data to Firebase</h3>
-                
-                <div class="form-group">
-                    <label for="uploadYear">Select Year:</label>
-                    <select id="uploadYear" class="upload-select">
-                        <option value="2025">2025</option>
-                        <option value="2022-2024">2022-2024</option>
-                    </select>
-                </div>
-                
-                <div class="file-input-container">
-                    <label class="file-input-label" for="csvFileInput">
-                        <i class="fas fa-cloud-upload-alt"></i> Choose CSV File
-                    </label>
-                    <input type="file" id="csvFileInput" accept=".csv" class="file-input">
-                </div>
-                
-                <button class="btn btn-admin" onclick="uploadCSV()">
-                    <i class="fas fa-upload"></i> Upload to Firebase
-                </button>
-                
-                <div class="upload-status" id="uploadStatus"></div>
-                
-                <a href="#" class="template-download" onclick="downloadTemplate()">
-                    <i class="fas fa-download"></i> Download CSV Template
-                </a>
-            </div>
-            
-            <div class="upload-container">
-                <h3>Manage Firebase Data</h3>
-                
-                <div class="form-group">
-                    <label for="manageYear">Select Year:</label>
-                    <select id="manageYear" class="upload-select">
-                        <option value="2025">2025</option>
-                        <option value="2022-2024">2022-2024</option>
-                    </select>
-                </div>
-                
-                <button class="btn btn-danger" onclick="clearFirebaseData()">
-                    <i class="fas fa-trash"></i> Clear Firebase Data
-                </button>
-                
-                <div class="upload-status" id="manageStatus"></div>
-            </div>
-        </div>
-        
-        <div class="data-source-info">
-            IBA Trading | Firebase Database
-        </div>
-    </div>
-
-    <!-- Main Dashboard Preview Modal -->
-    <div id="dashboardPreviewModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeDashboardPreview()">&times;</span>
-            <h3 style="margin-top: 0; color: var(--primary);">Invoice Details</h3>
-            
-            <div class="preview-details">
-                <div class="detail-row">
-                    <span class="detail-label">PO Number:</span>
-                    <span id="dashboardPreviewPoNumber" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Invoice Number:</span>
-                    <span id="dashboardPreviewInvoiceNumber" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Amount:</span>
-                    <span id="dashboardPreviewAmount" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Current Status:</span>
-                    <span id="dashboardPreviewStatus" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Notes:</span>
-                    <span id="dashboardPreviewNotes" class="detail-value">-</span>
-                </div>
-            </div>
-            
-            <div class="progress-legend">
-                <h4 style="margin-bottom: 15px; color: var(--primary);">Workflow Progress</h4>
-                
-                <div class="step-progress-container">
-                    <div class="step-progress">
-                        <div class="step step-1"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-2"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-3"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-4"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-5"></div>
-                    </div>
-                    <div class="step-labels">
-                        <span class="step-label">SRV</span>
-                        <span class="step-label">IPC/Report</span>
-                        <span class="step-label">Review</span>
-                        <span class="step-label">CEO</span>
-                        <span class="step-label">Accounts</span>
-                    </div>
-                </div>
-                
-                <div class="legend-description">
-                    <p>This visual shows the invoice workflow progression:</p>
-                    <ul>
-                        <li><strong>SRV</strong> - Initial stage when invoice is received</li>
-                        <li><strong>IPC/Report</strong> - Payment Certificate and Financial Report</li>
-                        <li><strong>Review</strong> - Under department review</li>
-                        <li><strong>CEO</strong> - Waiting for CEO approval</li>
-                        <li><strong>Accounts</strong> - Final stage with accounts department</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="report-actions" style="margin-top: 20px;">
-                <button id="dashboardWhatsappReminderBtn" class="btn btn-success">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Send WhatsApp Reminder</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Invoice Management Preview Modal -->
-    <div id="invoicePreviewModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeInvoicePreview()">&times;</span>
-            <h3 style="margin-top: 0; color: var(--primary);">Invoice Details</h3>
-            
-            <div class="preview-details">
-                <div class="detail-row">
-                    <span class="detail-label">PO Number:</span>
-                    <span id="previewPoNumber" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Invoice Number:</span>
-                    <span id="previewInvoiceNumber" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Amount:</span>
-                    <span id="previewAmount" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Current Status:</span>
-                    <span id="previewStatus" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Notes:</span>
-                    <span id="previewNotes" class="detail-value">-</span>
-                </div>
-            </div>
-            
-            <div class="progress-legend">
-                <h4 style="margin-bottom: 15px; color: var(--primary);">Workflow Progress</h4>
-                
-                <div class="step-progress-container">
-                    <div class="step-progress">
-                        <div class="step step-1"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-2"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-3"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-4"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-5"></div>
-                    </div>
-                    <div class="step-labels">
-                        <span class="step-label">SRV</span>
-                        <span class="step-label">IPC/Report</span>
-                        <span class="step-label">Review</span>
-                        <span class="step-label">CEO</span>
-                        <span class="step-label">Accounts</span>
-                    </div>
-                </div>
-                
-                <div class="legend-description">
-                    <p>This visual shows the invoice workflow progression:</p>
-                    <ul>
-                        <li><strong>SRV</strong> - Initial stage when invoice is received</li>
-                        <li><strong>IPC/Report</strong> - Payment Certificate and Financial Report</li>
-                        <li><strong>Review</strong> - Under department review</li>
-                        <li><strong>CEO</strong> - Waiting for CEO approval</li>
-                        <li><strong>Accounts</strong> - Final stage with accounts department</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="report-actions" style="margin-top: 20px;">
-                <button id="whatsappReminderBtn" class="btn btn-success">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Send WhatsApp Reminder</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="corporate-spinner"></div>
-            <p>Loading Data...</p>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-database-compat.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script>
-        // Firebase configuration - REPLACE WITH YOUR CONFIG
+// Firebase configuration - REPLACE WITH YOUR CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyC5zP-voHzrdOxhCzwxoRbUGjcRFNK5cFM",
   authDomain: "invoice-b736b.firebaseapp.com",
@@ -582,6 +8,7 @@ const firebaseConfig = {
   appId: "1:1020406824152:web:ef195ba58598b1a4d56bad",
   measurementId: "G-GGZWQQ55LD"
 };
+        
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
@@ -1718,12 +1145,448 @@ const firebaseConfig = {
                             }, 200);
                         }
                     </script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        
+        function printPettyCashReport() {
+            const contentElement = document.getElementById('pettyCashSection');
+            const printContent = contentElement.cloneNode(true);
+            
+            // Remove elements that shouldn't be printed
+            const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+            elementsToRemove.forEach(el => el.remove());
+            
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            
+            // Add CSS for printing
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Print Petty Cash Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { padding: 8px; border: 1px solid #ddd; }
+                        th { background-color: #4a6fa5 !important; color: white !important; -webkit-print-color-adjust: exact; }
+                        .total-row { font-weight: bold; background-color: #e9f7fe; }
+                        .numeric { text-align: right; }
+                        @page { size: auto; margin: 5mm; }
+                        @media print {
+                            body { padding: 0; margin: 0; }
+                            .financial-summary { page-break-inside: avoid; }
+                            table { page-break-inside: auto; }
+                            tr { page-break-inside: avoid; page-break-after: auto; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${printContent.innerHTML}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                window.close();
+                            }, 200);
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        
+        // NOTE SUGGESTIONS FUNCTIONALITY
+        function updateNoteSuggestions() {
+            try {
+                const noteSuggestions = document.getElementById('noteSuggestions');
+                if (!noteSuggestions) return;
+                
+                noteSuggestions.innerHTML = '';
+                
+                const allNotes = records
+                    .filter(record => record.note && record.note.trim() !== '')
+                    .map(record => record.note.trim());
+                
+                const uniqueNotes = [...new Set(allNotes)].sort();
+                
+                uniqueNotes.forEach(note => {
+                    const option = document.createElement('option');
+                    option.value = note;
+                    noteSuggestions.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error updating note suggestions:', error);
+            }
+        }
+        
+        // Vendor suggestions functionality
+        function updateVendorSuggestions() {
+            try {
+                const vendorSuggestions = document.getElementById('vendorSuggestions');
+                if (!vendorSuggestions) return;
+                
+                vendorSuggestions.innerHTML = '';
+                
+                const allVendors = records
+                    .filter(record => record.vendor && record.vendor.trim() !== '')
+                    .map(record => record.vendor.trim());
+                
+                const uniqueVendors = [...new Set(allVendors)].sort();
+                
+                uniqueVendors.forEach(vendor => {
+                    const option = document.createElement('option');
+                    option.value = vendor;
+                    vendorSuggestions.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error updating vendor suggestions:', error);
+            }
+        }
+        
+        // Site suggestions functionality
+        function updateSiteSuggestions() {
+            try {
+                const siteSuggestions = document.getElementById('siteSuggestions');
+                const siteSuggestionsMain = document.getElementById('siteSuggestionsMain');
+                if (!siteSuggestions || !siteSuggestionsMain) return;
+                
+                siteSuggestions.innerHTML = '';
+                siteSuggestionsMain.innerHTML = '';
+                
+                const allSites = records
+                    .filter(record => record.site && record.site.trim() !== '')
+                    .map(record => record.site.trim());
+                
+                const uniqueSites = [...new Set(allSites)].sort();
+                
+                uniqueSites.forEach(site => {
+                    const option = document.createElement('option');
+                    option.value = site;
+                    siteSuggestions.appendChild(option);
+                    siteSuggestionsMain.appendChild(option.cloneNode(true));
+                });
+            } catch (error) {
+                console.error('Error updating site suggestions:', error);
+            }
+        }
+        
+        function generatePettyCashReport() {
+            const searchTerm = domCache.pettyCashSearchTerm.value.trim();
+            
+            if (!searchTerm) {
+                alert('Please enter a search term for the notes field');
+                return;
+            }
+            
+            const filteredRecords = records.filter(record => 
+                record.note && record.note.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            if (filteredRecords.length === 0) {
+                alert('No petty cash records found matching your search criteria');
+                return;
+            }
+            
+            const totalValue = filteredRecords
+                .reduce((sum, record) => sum + (parseFloat(record.value) || 0), 0);
+            
+            document.getElementById('pettyCashTotal').textContent = formatNumber(totalValue);
+            document.getElementById('pettyCashCount').textContent = filteredRecords.length;
+            
+            const pettyCashTableBody = document.querySelector('#pettyCashTable tbody');
+            pettyCashTableBody.innerHTML = '';
+            
+            filteredRecords.forEach((record, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${record.poNumber || '-'}</td>
+                    <td>${record.site || '-'}</td>
+                    <td>${record.vendor || '-'}</td>
+                    <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+                    <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+                `;
+                pettyCashTableBody.appendChild(row);
+            });
+            
+            document.getElementById('pettyCashTableTotal').textContent = formatNumber(totalValue);
+            domCache.pettyCashTable.style.display = 'table';
+            
+            if (window.innerWidth <= 768) {
+                document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Invoice Preview Functions
+        function showInvoicePreview(record) {
+            document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
+            document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
+            document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
+            document.getElementById('previewStatus').textContent = record.status || '-';
+            document.getElementById('previewNotes').textContent = record.note || '-';
+            
+            const statusSteps = {
+                'Open': 0,
+                'For SRV': 1,
+                'For IPC': 2,
+                'No Invoice': 2,
+                'Report': 2,
+                'Under Review': 3,
+                'CEO Approval': 4,
+                'With Accounts': 5
+            };
+            const currentStep = statusSteps[record.status] || 0;
+            
+            document.querySelectorAll('#invoicePreviewModal .step').forEach((step, index) => {
+                step.classList.remove('current');
+                if (index < currentStep) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+            
+            if (currentStep > 0) {
+                const currentStepElement = document.querySelector(`#invoicePreviewModal .step-${currentStep}`);
+                if (currentStepElement) {
+                    currentStepElement.classList.add('current');
+                }
+            }
+            
+            document.querySelectorAll('#invoicePreviewModal .step-connector').forEach((connector, index) => {
+                if (index < currentStep - 1) {
+                    connector.classList.add('active');
+                } else {
+                    connector.classList.remove('active');
+                }
+            });
+            
+            // Update WhatsApp button with site-specific number
+            const whatsappBtn = document.getElementById('whatsappReminderBtn');
+            let whatsappNumber = '50992023'; // Default number
+            
+            // Extract site number from the record's site
+            if (record.site) {
+                for (const [sitePattern, number] of Object.entries(SITE_WHATSAPP_NUMBERS)) {
+                    if (record.site.includes(sitePattern)) {
+                        whatsappNumber = number;
+                        break;
+                    }
+                }
+            }
+            
+            whatsappBtn.onclick = function() {
+                sendWhatsAppReminder(record, whatsappNumber);
+            };
+            
+            document.getElementById('invoicePreviewModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeInvoicePreview() {
+            document.getElementById('invoicePreviewModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        
+        // WhatsApp reminder function
+        function sendWhatsAppReminder(record, whatsappNumber) {
+            let message = `*Invoice Reminder*\n\n`;
+            message += `PO: ${record.poNumber || 'N/A'}\n`;
+            message += `Invoice: ${record.invoiceNumber || 'N/A'}\n`;
+            message += `Vendor: ${record.vendor || 'N/A'}\n`;
+            message += `Amount: ${record.value ? formatNumber(record.value) : 'N/A'}\n`;
+            message += `Status: ${record.status || 'N/A'}\n\n`;
+            message += `Please provide an update on this invoice.`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        }
+        
+        // Contact function
+        function contactAboutMissingData() {
+            const searchTerm = domCache.searchTerm.value;
+            const releaseDate = domCache.releaseDateFilter.value;
+            const activeFilter = document.querySelector('.filter-btn.active').textContent;
+            
+            let message = `Hi, Irwin.\n\n`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappNumber = '+97450992023';
+            
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        }
+        
+        // Share functions
+        function shareReportViaWhatsApp() {
+            const reportHeader = document.getElementById('reportHeader').textContent;
+            const totalAmount = document.getElementById('grandTotal').textContent;
+            
+            let message = `*Report Summary*\n\n`;
+            message += `${reportHeader}\n\n`;
+            message += `*Total Amount:* ${totalAmount}\n\n`;
+            message += `Generated from IBA Trading Invoice Management System`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappNumber = '+97450992023';
+            
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        }
+        
+        function sharePettyCashViaWhatsApp() {
+            const totalAmount = document.getElementById('pettyCashTotal').textContent;
+            const recordCount = document.getElementById('pettyCashCount').textContent;
+            const searchTerm = domCache.pettyCashSearchTerm.value;
+            
+            let message = `*Petty Cash Summary*\n\n`;
+            message += `Search Term: ${searchTerm}\n`;
+            message += `Records Found: ${recordCount}\n`;
+            message += `Total Amount: ${totalAmount}\n\n`;
+            message += `Generated from IBA Trading Invoice Management System`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappNumber = '+97450992023';
+            
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        }
+        
+        // Responsive setup
+        function setupResponsiveElements() {
+            detectDeviceType();
+            const screenWidth = window.innerWidth;
+            
+            // Reset all hidden columns first
+            document.querySelectorAll('#recordsTable th, #recordsTable td, #siteRecordsTable th, #siteRecordsTable td').forEach(el => {
+                el.style.display = '';
+            });
+            
+            // Records table responsiveness
+            if (screenWidth <= 400) {
+                document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else if (screenWidth <= 576) {
+                document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else if (screenWidth <= 768) {
+                document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Site records table responsiveness
+                document.querySelectorAll('#siteRecordsTable th:nth-child(2), #siteRecordsTable td:nth-child(2), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else if (screenWidth <= 992) {
+                document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+            
+            // Extra small screens
+            if (screenWidth <= 480) {
+                document.querySelectorAll('#siteRecordsTable th:nth-child(4), #siteRecordsTable td:nth-child(4), #siteRecordsTable th:nth-child(5), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(6)').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        }
+        
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            cacheDOM();
+            detectDeviceType();
+            updateConnectionStatus(false);
+            
+            window.addEventListener('resize', setupResponsiveElements);
+            
+            domCache.connectBtn.addEventListener('click', async function() {
+                const btn = this;
+                const originalHTML = btn.innerHTML;
+                
+                btn.disabled = true;
+                btn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading...`;
+                
+                try {
+                    await loadFromFirebase();
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    updateConnectionStatus(false);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                }
+            });
+            
+            document.querySelectorAll('.mobile-menu input[name="dataSource"]').forEach(radio => {
+                radio.addEventListener('change', async function() {
+                    currentYear = this.value;
+                    const connectBtn = domCache.connectBtn;
+                    const originalHTML = connectBtn.innerHTML;
+                    
+                    records = [];
+                    domCache.recordsTable.style.display = 'none';
+                    connectBtn.disabled = true;
+                    connectBtn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading ${currentYear} Data...`;
+                    
+                    try {
+                        await loadFromFirebase();
+                        updateConnectionStatus(true);
+                    } catch (error) {
+                        console.error('Error loading data:', error);
+                        updateConnectionStatus(false);
+                    } finally {
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = originalHTML;
+                    }
+                });
+            });
+            
+            domCache.searchTerm.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchRecords();
+                }
+            });
+            
+            domCache.reportSearchTerm.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    generateReport();
+                }
+            });
+            
+            domCache.pettyCashSearchTerm.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    generatePettyCashReport();
+                }
+            });
+            
+            domCache.siteSearchTerm.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchSiteRecords();
+                }
+            });
+            
+            document.querySelector('input[value="2025"]').checked = true;
+        });
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('invoicePreviewModal');
+            const dashboardModal = document.getElementById('dashboardPreviewModal');
+            
+            if (event.target === modal) {
+                closeInvoicePreview();
+            }
+            
+            if (event.target === dashboardModal) {
+                closeDashboardPreview();
+            }
+        });
