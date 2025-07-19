@@ -519,18 +519,19 @@ function refreshTable(filteredRecords = null) {
                     <div class="status-tooltip">${record.status} - ${percentage}%</div>
                 </div>
             </td>
-            <td class="action-btns">
-                <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
-                  onclick="viewPDF('${record.fileName || ''}')" 
-                  ${!record.fileName ? 'disabled' : ''}>
-                  <i class="fas fa-file-pdf"></i>
-                </button>
-                <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
-                  onclick="viewSRV('${record.details || ''}')" 
-                  ${!record.details ? 'disabled' : ''}>
-                  <i class="fas fa-file-alt"></i>
-                </button>
-            </td>
+<td class="action-btns">
+  <button class="btn btn-inv ${!record.fileName ? 'disabled' : ''}" 
+    onclick="viewPDF('${record.fileName || ''}')" 
+    ${!record.fileName ? 'disabled' : ''}>
+    <i class="fas fa-file-pdf"></i> INV
+  </button>
+  <button class="btn btn-srv ${!record.details ? 'disabled' : ''}" 
+    onclick="viewSRV('${record.details || ''}')" 
+    ${!record.details ? 'disabled' : ''}>
+    <i class="fas fa-file-alt"></i> SRV
+  </button>
+</td>
+
         `;
         
         row.addEventListener('click', function(e) {
