@@ -1569,13 +1569,27 @@ document.addEventListener('DOMContentLoaded', function() {
     updateConnectionStatus(false);
     updateAuthUI(false);
     
-    // Check if user is already logged in
+    // Automatically load data on initial load
+    const connectBtn = domCache.connectBtn;
+    const originalHTML = connectBtn.innerHTML;
+    
+    connectBtn.disabled = true;
+    connectBtn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading...`;
+    
+    // Check if user is already logged in and load data
     auth.onAuthStateChanged((user) => {
         if (user) {
             updateAuthUI(true, user.email);
-            loadFromFirebase();
+            loadFromFirebase().finally(() => {
+                connectBtn.disabled = false;
+                connectBtn.innerHTML = originalHTML;
+            });
         } else {
             updateAuthUI(false);
+            loadFromFirebase().finally(() => {
+                connectBtn.disabled = false;
+                connectBtn.innerHTML = originalHTML;
+            });
         }
     });
     
