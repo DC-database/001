@@ -6,11 +6,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>INVOICE MANAGEMENT SYSTEM</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <!-- Mobile Menu -->
     <div class="mobile-menu-btn" onclick="toggleMobileMenu()">
         <i class="fas fa-bars"></i>
     </div>
@@ -31,6 +32,9 @@
         </div>
         <div class="menu-item" onclick="showSection('pettyCashSection')">
             <i class="fas fa-money-bill-wave"></i> <span class="menu-text">Petty Cash/Summary</span>
+        </div>
+        <div class="menu-item admin" onclick="showSection('dataManagementSection')">
+            <i class="fas fa-database"></i> <span class="menu-text">Data Management</span>
         </div>
         
         <!-- Data Controls Section -->
@@ -110,7 +114,7 @@
             <h1>INVOICE STATUS TRACKER</h1>
             
             <div class="search-container">
-                <input type="text" id="searchTerm" placeholder="Search..." class="search-input">
+                <input type="text" id="searchTerm" placeholder="Search..." class="search-input" required>
                 <button class="btn btn-primary search-btn" onclick="searchRecords()">
                     <i class="fas fa-search"></i> <span class="btn-text">Search</span>
                 </button>
@@ -145,7 +149,7 @@
             </div>
 
             <div class="table-responsive">
-                <table id="recordsTable">
+                <table id="recordsTable" style="display: none;">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -228,56 +232,54 @@
                 </div>
             </div>
             
+            <div class="table-responsive">
+                <table id="reportTable" class="compact-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>PO</th>
+                            <th>Vendor</th>
+                            <th>Invoice</th>
+                            <th>Amount</th>
+                            <th>Release</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="total-row">Total</td>
+                            <td class="total-row numeric" id="reportTotalAmount">0.00</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
             <div class="report-actions">
-                <button class="btn btn-warning" onclick="printReport()">
+                <button class="btn btn-primary" onclick="printReport()">
                     <i class="fas fa-print"></i> <span class="btn-text">Print</span>
                 </button>
                 <button class="btn btn-success" onclick="shareReportViaWhatsApp()">
                     <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
                 </button>
             </div>
-            
-            <div class="report-table-container">
-                <table id="reportTable" class="compact-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>PO Number</th>
-                            <th>Vendor</th>
-                            <th>Invoice</th>
-                            <th>Amount</th>
-                            <th>Release Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                    <tfoot>
-                        <tr class="total-row">
-                            <td colspan="4">Total Amount:</td>
-                            <td class="numeric" id="reportTotalAmount">0.00</td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
         </div>
         
         <!-- Petty Cash Section -->
         <div id="pettyCashSection" class="content-section">
             <div class="section-header">
-                <h1>Summary Statement</h1>
+                <h1>Petty Cash Summary</h1>
                 <button class="btn btn-primary back-btn" onclick="showSection('invoiceSection')">
                     <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
                 </button>
             </div>
             
-            <div class="report-controls">
-                <input type="text" id="pettyCashSearchTerm" placeholder="Search in notes..." 
-                    list="noteSuggestions" autocomplete="off" class="search-input">
+            <div class="search-container">
+                <input type="text" id="pettyCashSearchTerm" placeholder="Search by note..." list="noteSuggestions" class="search-input">
                 <datalist id="noteSuggestions"></datalist>
-                <button class="btn btn-primary generate-btn" onclick="generatePettyCashReport()">
-                    <i class="fas fa-calculator"></i>
-                    <span class="btn-text">Generate</span>
+                <button class="btn btn-primary search-btn" onclick="generatePettyCashReport()">
+                    <i class="fas fa-search"></i> <span class="btn-text">Search</span>
                 </button>
                 <button class="btn clear-search-btn" onclick="clearPettyCashSearch()">
                     <i class="fas fa-times"></i>
@@ -286,33 +288,24 @@
             
             <div class="financial-summary">
                 <div class="financial-summary-header">
-                    <h3>Summary Statement</h3>
+                    <h3>Summary</h3>
                 </div>
                 <div class="financial-summary-item">
-                    <span class="financial-summary-label">Total Value</span>
+                    <span class="financial-summary-label">Total Amount</span>
                     <span class="financial-summary-value" id="pettyCashTotal">0.00</span>
                 </div>
                 <div class="financial-summary-item">
-                    <span class="financial-summary-label">Records Found</span>
+                    <span class="financial-summary-label">Records</span>
                     <span class="financial-summary-value" id="pettyCashCount">0</span>
                 </div>
             </div>
             
-            <div class="report-actions">
-                <button class="btn btn-warning" onclick="printPettyCashReport()">
-                    <i class="fas fa-print"></i> <span class="btn-text">Print</span>
-                </button>
-                <button class="btn btn-success" onclick="sharePettyCashViaWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
-                </button>
-            </div>
-            
-            <div class="report-table-container">
+            <div class="table-responsive">
                 <table id="pettyCashTable" class="compact-table">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>PO Number</th>
+                            <th>PO</th>
                             <th>Site</th>
                             <th>Vendor</th>
                             <th>Amount</th>
@@ -321,179 +314,261 @@
                     </thead>
                     <tbody></tbody>
                     <tfoot>
-                        <tr class="total-row">
-                            <td colspan="4">Total Amount:</td>
-                            <td class="numeric" id="pettyCashTableTotal">0.00</td>
+                        <tr>
+                            <td colspan="4" class="total-row">Total</td>
+                            <td class="total-row numeric" id="pettyCashTableTotal">0.00</td>
                             <td></td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-        </div>
-        
-        <div class="data-source-info">
-            IBA Trading
-        </div>
-    </div>
-
-    <!-- Main Dashboard Preview Modal -->
-    <div id="dashboardPreviewModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeDashboardPreview()">&times;</span>
-            <h3 style="margin-top: 0; color: var(--primary);">Invoice Details</h3>
             
-            <div class="preview-details">
-                <div class="detail-row">
-                    <span class="detail-label">PO Number:</span>
-                    <span id="dashboardPreviewPoNumber" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Invoice Number:</span>
-                    <span id="dashboardPreviewInvoiceNumber" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Amount:</span>
-                    <span id="dashboardPreviewAmount" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Current Status:</span>
-                    <span id="dashboardPreviewStatus" class="detail-value">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Notes:</span>
-                    <span id="dashboardPreviewNotes" class="detail-value">-</span>
-                </div>
-            </div>
-            
-            <div class="progress-legend">
-                <h4 style="margin-bottom: 15px; color: var(--primary);">Workflow Progress</h4>
-                
-                <div class="step-progress-container">
-                    <div class="step-progress">
-                        <div class="step step-1"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-2"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-3"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-4"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-5"></div>
-                    </div>
-                    <div class="step-labels">
-                        <span class="step-label">SRV</span>
-                        <span class="step-label">IPC/Report</span>
-                        <span class="step-label">Review</span>
-                        <span class="step-label">CEO</span>
-                        <span class="step-label">Accounts</span>
-                    </div>
-                </div>
-                
-                <div class="legend-description">
-                    <p>This visual shows the invoice workflow progression:</p>
-                    <ul>
-                        <li><strong>SRV</strong> - Initial stage when invoice is received</li>
-                        <li><strong>IPC/Report</strong> - Payment Certificate and Financial Report</li>
-                        <li><strong>Review</strong> - Under department review</li>
-                        <li><strong>CEO</strong> - Waiting for CEO approval</li>
-                        <li><strong>Accounts</strong> - Final stage with accounts department</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="report-actions" style="margin-top: 20px;">
-                <button id="dashboardWhatsappReminderBtn" class="btn btn-success">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Send WhatsApp Reminder</span>
+            <div class="report-actions">
+                <button class="btn btn-primary" onclick="printPettyCashReport()">
+                    <i class="fas fa-print"></i> <span class="btn-text">Print</span>
+                </button>
+                <button class="btn btn-success" onclick="sharePettyCashViaWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Share</span>
                 </button>
             </div>
         </div>
+        
+        <!-- Data Management Section -->
+        <div id="dataManagementSection" class="content-section">
+            <div class="section-header">
+                <h1>Data Management</h1>
+                <button class="btn btn-primary back-btn" onclick="showSection('mainPageSection')">
+                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
+                </button>
+            </div>
+            
+            <div class="data-management-grid">
+                <!-- Admin Authentication Section -->
+                <div class="management-card">
+                    <h2>Admin Authentication</h2>
+                    <div id="loginInfo" class="login-info">
+                        <strong id="loggedInAs">Not logged in</strong>
+                    </div>
+                    
+                    <input type="email" id="emailInput" placeholder="Admin Email" class="auth-input">
+                    <input type="password" id="passwordInput" placeholder="Password" class="auth-input">
+                    <button class="btn btn-primary" onclick="login()" id="loginBtn">Login</button>
+                    <button class="btn btn-danger" onclick="logout()" id="logoutBtn" style="display: none;">Logout</button>
+                    <div id="authMessage" class="auth-message"></div>
+                </div>
+                
+                <!-- Upload CSV Data -->
+                <div class="management-card">
+                    <h2>Upload CSV Data</h2>
+                    
+                    <div class="year-selector">
+                        <label class="year-option">
+                            <input type="radio" name="uploadYear" value="2025" checked>
+                            <span class="year-text">2025 Data</span>
+                        </label>
+                        <label class="year-option">
+                            <input type="radio" name="uploadYear" value="2022-2024"> 
+                            <span class="year-text">2022-2024 Data</span>
+                        </label>
+                    </div>
+                    
+                    <div class="file-input-container">
+                        <label for="csvFileInput" class="file-input-label">
+                            <i class="fas fa-file-csv"></i> Choose CSV File
+                        </label>
+                        <input type="file" id="csvFileInput" accept=".csv" class="file-input">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="uploadCSV()" id="uploadBtn" disabled>
+                        <i class="fas fa-upload"></i> Upload CSV
+                    </button>
+                    
+                    <div id="uploadStatus" class="upload-status"></div>
+                    
+                    <a href="#" class="template-download" onclick="downloadTemplate()">
+                        <i class="fas fa-download"></i> Download CSV Template
+                    </a>
+                </div>
+                
+                <!-- Manage Data -->
+                <div class="management-card">
+                    <h2>Manage Data</h2>
+                    
+                    <div class="year-selector">
+                        <label class="year-option">
+                            <input type="radio" name="manageYear" value="2025" checked>
+                            <span class="year-text">2025 Data</span>
+                        </label>
+                        <label class="year-option">
+                            <input type="radio" name="manageYear" value="2022-2024"> 
+                            <span class="year-text">2022-2024 Data</span>
+                        </label>
+                    </div>
+                    
+                    <button class="btn btn-danger" onclick="clearFirebaseData()" id="clearDataBtn" disabled>
+                        <i class="fas fa-trash"></i> Clear Data
+                    </button>
+                    
+                    <div id="manageStatus" class="upload-status"></div>
+                </div>
+            </div>
+            
+            <div class="current-data-info">
+                <h2>Current Data Information</h2>
+                <div id="currentDataInfo" class="storage-info">
+                    <strong>Current Year:</strong> <span id="currentYearDisplay">2025</span><br>
+                    <strong>Record Count:</strong> <span id="recordCount">0</span><br>
+                    <strong>Last Updated:</strong> <span id="lastUpdated">Never</span>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Invoice Management Preview Modal -->
+    
+    <!-- Invoice Preview Modal -->
     <div id="invoicePreviewModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeInvoicePreview()">&times;</span>
-            <h3 style="margin-top: 0; color: var(--primary);">Invoice Details</h3>
+            <h2>Invoice Details</h2>
             
             <div class="preview-details">
                 <div class="detail-row">
                     <span class="detail-label">PO Number:</span>
-                    <span id="previewPoNumber" class="detail-value">-</span>
+                    <span class="detail-value" id="previewPoNumber"></span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Invoice Number:</span>
-                    <span id="previewInvoiceNumber" class="detail-value">-</span>
+                    <span class="detail-value" id="previewInvoiceNumber"></span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Amount:</span>
-                    <span id="previewAmount" class="detail-value">-</span>
+                    <span class="detail-value" id="previewAmount"></span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Current Status:</span>
-                    <span id="previewStatus" class="detail-value">-</span>
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" id="previewStatus"></span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Notes:</span>
-                    <span id="previewNotes" class="detail-value">-</span>
+                    <span class="detail-value" id="previewNotes"></span>
+                </div>
+            </div>
+            
+            <div class="step-progress-container">
+                <div class="step-progress">
+                    <div class="step step-1"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-2"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-3"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-4"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-5"></div>
+                </div>
+                <div class="step-labels">
+                    <span class="step-label">SRV</span>
+                    <span class="step-label">IPC/Report</span>
+                    <span class="step-label">Review</span>
+                    <span class="step-label">CEO</span>
+                    <span class="step-label">Accounts</span>
                 </div>
             </div>
             
             <div class="progress-legend">
-                <h4 style="margin-bottom: 15px; color: var(--primary);">Workflow Progress</h4>
-                
-                <div class="step-progress-container">
-                    <div class="step-progress">
-                        <div class="step step-1"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-2"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-3"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-4"></div>
-                        <div class="step-connector"></div>
-                        <div class="step step-5"></div>
-                    </div>
-                    <div class="step-labels">
-                        <span class="step-label">SRV</span>
-                        <span class="step-label">IPC/Report</span>
-                        <span class="step-label">Review</span>
-                        <span class="step-label">CEO</span>
-                        <span class="step-label">Accounts</span>
-                    </div>
-                </div>
-                
                 <div class="legend-description">
-                    <p>This visual shows the invoice workflow progression:</p>
+                    <p><strong>Invoice Progress Legend:</strong></p>
                     <ul>
-                        <li><strong>SRV</strong> - Initial stage when invoice is received</li>
-                        <li><strong>IPC/Report</strong> - Payment Certificate and Financial Report</li>
-                        <li><strong>Review</strong> - Under department review</li>
-                        <li><strong>CEO</strong> - Waiting for CEO approval</li>
-                        <li><strong>Accounts</strong> - Final stage with accounts department</li>
+                        <li><strong>SRV:</strong> Service Receipt Verification</li>
+                        <li><strong>IPC/Report:</strong> Invoice Processing or Report Generation</li>
+                        <li><strong>Review:</strong> Under Management Review</li>
+                        <li><strong>CEO:</strong> Awaiting CEO Approval</li>
+                        <li><strong>Accounts:</strong> Processed by Accounts Department</li>
                     </ul>
                 </div>
             </div>
             
-            <div class="report-actions" style="margin-top: 20px;">
+            <div class="action-btns" style="margin-top: 20px; justify-content: center;">
                 <button id="whatsappReminderBtn" class="btn btn-success">
-                    <i class="fab fa-whatsapp"></i> <span class="btn-text">Send WhatsApp Reminder</span>
+                    <i class="fab fa-whatsapp"></i> Send Reminder
                 </button>
             </div>
         </div>
     </div>
-
+    
+    <!-- Dashboard Preview Modal -->
+    <div id="dashboardPreviewModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeDashboardPreview()">&times;</span>
+            <h2>Invoice Details</h2>
+            
+            <div class="preview-details">
+                <div class="detail-row">
+                    <span class="detail-label">PO Number:</span>
+                    <span class="detail-value" id="dashboardPreviewPoNumber"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Invoice Number:</span>
+                    <span class="detail-value" id="dashboardPreviewInvoiceNumber"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Amount:</span>
+                    <span class="detail-value" id="dashboardPreviewAmount"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" id="dashboardPreviewStatus"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Notes:</span>
+                    <span class="detail-value" id="dashboardPreviewNotes"></span>
+                </div>
+            </div>
+            
+            <div class="step-progress-container">
+                <div class="step-progress">
+                    <div class="step step-1"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-2"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-3"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-4"></div>
+                    <div class="step-connector"></div>
+                    <div class="step step-5"></div>
+                </div>
+                <div class="step-labels">
+                    <span class="step-label">SRV</span>
+                    <span class="step-label">IPC/Report</span>
+                    <span class="step-label">Review</span>
+                    <span class="step-label">CEO</span>
+                    <span class="step-label">Accounts</span>
+                </div>
+            </div>
+            
+            <div class="action-btns" style="margin-top: 20px; justify-content: center;">
+                <button id="dashboardWhatsappReminderBtn" class="btn btn-success">
+                    <i class="fab fa-whatsapp"></i> Send Reminder
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="corporate-spinner"></div>
-            <p>Loading Data...</p>
+            <h3>Loading Data...</h3>
+            <p>Please wait while we process your request</p>
         </div>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
