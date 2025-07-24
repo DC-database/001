@@ -94,7 +94,8 @@ const domCache = {
     loggedInAs: null,
     currentYearDisplay: null,
     recordCount: null,
-    lastUpdated: null
+    lastUpdated: null,
+    includeNotes: null
 };
 
 // Initialize DOM cache
@@ -129,6 +130,7 @@ function cacheDOM() {
     domCache.currentYearDisplay = document.getElementById('currentYearDisplay');
     domCache.recordCount = document.getElementById('recordCount');
     domCache.lastUpdated = document.getElementById('lastUpdated');
+    domCache.includeNotes = document.getElementById('includeNotes');
 }
 
 // Mobile detection
@@ -326,8 +328,8 @@ function logout() {
         updateAuthUI(false);
         records = [];
         updateUI();
-    checkOverdueProgression();
-}).catch((error) => {
+        checkOverdueProgression();
+    }).catch((error) => {
         console.error('Logout error:', error);
     });
 }
@@ -366,7 +368,7 @@ function loadFromFirebase() {
                 updateSiteSuggestions();
                 updateUI();
                 checkOverdueProgression();
-updateConnectionStatus(true);
+                updateConnectionStatus(true);
                 
                 // Update data info
                 domCache.currentYearDisplay.textContent = currentYear;
@@ -503,8 +505,8 @@ function clearFirebaseData() {
             if (currentYear === year) {
                 records = [];
                 updateUI();
-            checkOverdueProgression();
-}
+                checkOverdueProgression();
+            }
         })
         .catch((error) => {
             domCache.manageStatus.textContent = `Error clearing data: ${error.message}`;
@@ -526,8 +528,6 @@ function updateFileInfo() {
 function updateUI() {
     updateConnectionStatus(true);
     updateFileInfo();
-    // Don't automatically search records anymore
-    // searchRecords();
 }
 
 // Table functions
@@ -1053,6 +1053,7 @@ function generateReport() {
     const reportType = domCache.reportType.value;
     const searchTerm = domCache.reportSearchTerm.value.trim();
     const statusFilter = domCache.reportStatusFilter.value;
+    const includeNotes = domCache.includeNotes.checked;
     
     if (!searchTerm) {
         alert('Please enter a search term');
@@ -1139,8 +1140,14 @@ function generateReport() {
             <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
             <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
             <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+            <td class="notes-column">${includeNotes ? (record.note || '-') : ''}</td>
         `;
         reportTableBody.appendChild(row);
+    });
+    
+    // Show/hide notes column based on checkbox
+    document.querySelectorAll('#reportTable .notes-column').forEach(col => {
+        col.style.display = includeNotes ? '' : 'none';
     });
     
     document.getElementById('reportTotalAmount').textContent = formatNumber(invoiceTotal);
@@ -1691,6 +1698,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    domCache.includeNotes.addEventListener('change', function() {
+        // When the checkbox changes, regenerate the report if one is already displayed
+        if (document.querySelector('#reportTable tbody').children.length > 0) {
+            generateReport();
+        }
+    });
+    
     document.querySelector('input[value="2025"]').checked = true;
 });
 
@@ -1730,21 +1744,7 @@ function checkOverdueProgression() {
         }
     });
 
-    renderNotification(overdueSRV.length, overdueIPC.length);
-}
-
-function renderNotification(countSRV, countIPC) {
-    const notificationContainer = document.createElement('div');
-    notificationContainer.className = 'mobile-notification';
-    notificationContainer.innerHTML = `
-        <div class="notification-card">
-            <div class="notification-icon"><i class="fas fa-bell"></i></div>
-            <div class="notification-content">
-                <div><strong>Overdue (7+ days)</strong></div>
-                <div>SRV Pending: <strong>${countSRV}</strong></div>
-                <div>IPC Pending: <strong>${countIPC}</strong></div>
-            </div>
-        </div>
-    `;
-    document.querySelector('#mainPageSection').prepend(notificationContainer);
+    // Update the overdue cards
+    document.getElementById('overdueSRVCount').textContent = overdueSRV.length;
+    document.getElementById('overdueIPCCount').textContent = overdueIPC.length;
 }

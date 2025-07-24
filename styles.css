@@ -1692,3 +1692,138 @@ tr:hover {
 .notification-icon i {
     font-size: 20px;
 }
+/* Add these new styles to your existing styles.css */
+
+/* Overdue Cards */
+.overdue-cards-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.overdue-card {
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.overdue-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.overdue-card.srv {
+    border-left: 4px solid #4e73df;
+}
+
+.overdue-card.ipc {
+    border-left: 4px solid #1cc88a;
+}
+
+.overdue-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.overdue-card.srv .overdue-icon {
+    background-color: #4e73df;
+}
+
+.overdue-card.ipc .overdue-icon {
+    background-color: #1cc88a;
+}
+
+.overdue-content {
+    flex: 1;
+}
+
+.overdue-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #555;
+}
+
+.overdue-count {
+    font-weight: bold;
+    font-size: 24px;
+    margin: 5px 0;
+}
+
+.overdue-card.srv .overdue-count {
+    color: #4e73df;
+}
+
+.overdue-card.ipc .overdue-count {
+    color: #1cc88a;
+}
+
+.overdue-subtitle {
+    font-size: 12px;
+    color: #777;
+}
+
+/* Notes Checkbox */
+.notes-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.notes-checkbox input {
+    margin: 0;
+}
+
+.notes-checkbox label {
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+/* Responsive adjustments for overdue cards */
+@media (max-width: 768px) {
+    .overdue-cards-container {
+        flex-direction: column;
+    }
+    
+    .overdue-card {
+        min-width: 100%;
+    }
+}
+
+/* Notes column in report table */
+.notes-column {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Add this to your existing print styles */
+@media print {
+    .notes-column {
+        display: none !important;
+    }
+    
+    .overdue-cards-container {
+        display: none !important;
+    }
+}
