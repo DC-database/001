@@ -3,7 +3,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDtEp9HL7MfOlnrCI-MWuTY4k6vuGTMCIs",
   authDomain: "invoice-ac1bc.firebaseapp.com",
   projectId: "invoice-ac1bc",
-  storageBucket: "invoice-ac1bc.firebasestorage.app",
+  storageBucket: "invoice-ac1bc.appspot.com",
   messagingSenderId: "345752448964",
   appId: "1:345752448964:web:e57f43e36ad3aa11efbe91",
   measurementId: "G-H23T739E19"
@@ -326,7 +326,8 @@ function logout() {
         updateAuthUI(false);
         records = [];
         updateUI();
-    }).catch((error) => {
+    checkOverdueProgression();
+}).catch((error) => {
         console.error('Logout error:', error);
     });
 }
@@ -364,7 +365,8 @@ function loadFromFirebase() {
                 updateVendorSuggestions();
                 updateSiteSuggestions();
                 updateUI();
-                updateConnectionStatus(true);
+                checkOverdueProgression();
+updateConnectionStatus(true);
                 
                 // Update data info
                 domCache.currentYearDisplay.textContent = currentYear;
@@ -501,7 +503,8 @@ function clearFirebaseData() {
             if (currentYear === year) {
                 records = [];
                 updateUI();
-            }
+            checkOverdueProgression();
+}
         })
         .catch((error) => {
             domCache.manageStatus.textContent = `Error clearing data: ${error.message}`;
@@ -832,7 +835,7 @@ function initializeCharts(filteredRecords = null) {
 
 function searchSiteRecords() {
     const term = domCache.siteSearchTerm.value.toLowerCase();
-    let filtered = records.filter(record => record.status !== 'With Accounts');
+    let filtered = records.filter(record => record.status !== 'With Accounts' && record.status !== 'Closed' && record.status !== 'Cancelled');
     
     if (term) {
         filtered = filtered.filter(record => 
@@ -890,9 +893,7 @@ function refreshSiteTable(filteredRecords = null) {
             <td>${record.note || '-'}</td>
         `;
         
-        row.addEventListener('click', function() {
-            showDashboardRecordPreview(record);
-        });
+        row.addEventListener('click', function() { handleSiteTableClick(record); });
         
         tableBody.appendChild(row);
     });
@@ -961,8 +962,33 @@ function showDashboardRecordPreview(record) {
         sendWhatsAppReminder(record, whatsappNumber);
     };
     
+    // Add the new "View in Tracker" button functionality
+    const viewInTrackerBtn = document.getElementById('dashboardViewInTrackerBtn');
+    if (record.poNumber) {
+        viewInTrackerBtn.style.display = 'inline-block';
+        viewInTrackerBtn.onclick = function() {
+            viewInInvoiceTracker(record.poNumber);
+        };
+    } else {
+        viewInTrackerBtn.style.display = 'none';
+    }
+    
     document.getElementById('dashboardPreviewModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
+}
+
+function viewInInvoiceTracker(poNumber) {
+    // Switch to invoice section
+    showSection('invoiceSection');
+    
+    // Set the search term to the PO number
+    domCache.searchTerm.value = poNumber;
+    
+    // Trigger the search
+    searchRecords();
+    
+    // Close the preview modal
+    closeDashboardPreview();
 }
 
 function closeDashboardPreview() {
@@ -1681,3 +1707,44 @@ window.addEventListener('click', function(event) {
         closeDashboardPreview();
     }
 });
+
+function handleSiteTableClick(record) {
+    if (record.status === 'Closed' || record.status === 'Cancelled') return;
+    showSection('invoiceSection');
+    domCache.searchTerm.value = record.poNumber || '';
+    searchRecords();
+}
+
+function checkOverdueProgression() {
+    const overdueSRV = [];
+    const overdueIPC = [];
+    const today = new Date();
+
+    records.forEach(record => {
+        if (!record.releaseDate || record.status === 'With Accounts' || record.status === 'Closed' || record.status === 'Cancelled') return;
+        const release = new Date(record.releaseDate);
+        const daysPassed = (today - release) / (1000 * 60 * 60 * 24);
+        if (daysPassed > 7) {
+            if (record.status === 'For SRV') overdueSRV.push(record);
+            if (record.status === 'For IPC') overdueIPC.push(record);
+        }
+    });
+
+    renderNotification(overdueSRV.length, overdueIPC.length);
+}
+
+function renderNotification(countSRV, countIPC) {
+    const notificationContainer = document.createElement('div');
+    notificationContainer.className = 'mobile-notification';
+    notificationContainer.innerHTML = `
+        <div class="notification-card">
+            <div class="notification-icon"><i class="fas fa-bell"></i></div>
+            <div class="notification-content">
+                <div><strong>Overdue (7+ days)</strong></div>
+                <div>SRV Pending: <strong>${countSRV}</strong></div>
+                <div>IPC Pending: <strong>${countIPC}</strong></div>
+            </div>
+        </div>
+    `;
+    document.querySelector('#mainPageSection').prepend(notificationContainer);
+}

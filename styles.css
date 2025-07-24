@@ -678,8 +678,25 @@ tr:hover {
 
 .action-btns {
     display: flex;
-    gap: 5px;
+    gap: 10px;
     flex-wrap: wrap;
+    justify-content: center;
+}
+
+@media (max-width: 480px) {
+    .action-btns {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-btns .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .action-btns .btn:last-child {
+        margin-bottom: 0;
+    }
 }
 
 .numeric {
@@ -1654,4 +1671,24 @@ tr:hover {
     .year-selector {
         flex-direction: column;
     }
+}
+
+.mobile-notification {
+    margin: 10px auto;
+    max-width: 500px;
+    padding: 10px;
+}
+.notification-card {
+    display: flex;
+    align-items: center;
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px 15px;
+    border-left: 6px solid #ffc107;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    gap: 12px;
+}
+.notification-icon i {
+    font-size: 20px;
 }

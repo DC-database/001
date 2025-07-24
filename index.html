@@ -111,7 +111,13 @@
 
         <!-- Invoice Management Section -->
         <div id="invoiceSection" class="content-section">
-            <h1>INVOICE STATUS TRACKER</h1>
+	    <div class="section-header">
+                <h1>INVOICE STATUS TRACKER</h1>
+                <button class="btn btn-primary back-btn" onclick="showSection('mainPageSection')">
+                    <i class="fas fa-arrow-left"></i> <span class="btn-text">Back</span>
+                </button>
+            </div>
+            
             
             <div class="search-container">
                 <input type="text" id="searchTerm" placeholder="Search..." class="search-input" required>
@@ -546,6 +552,9 @@
             </div>
             
             <div class="action-btns" style="margin-top: 20px; justify-content: center;">
+                <button id="dashboardViewInTrackerBtn" class="btn btn-primary" style="margin-right: 10px;">
+                    <i class="fas fa-search"></i> View in Tracker
+                </button>
                 <button id="dashboardWhatsappReminderBtn" class="btn btn-success">
                     <i class="fab fa-whatsapp"></i> Send Reminder
                 </button>
