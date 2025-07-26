@@ -1827,3 +1827,16 @@ tr:hover {
         display: none !important;
     }
 }
+/* Add this to your styles.css */
+.chart-box.full-width {
+    max-width: 100%;
+    grid-column: 1 / -1;
+}
+
+/* Update the charts container to use grid layout */
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}

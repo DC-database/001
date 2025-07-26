@@ -62,6 +62,7 @@ let currentFilteredRecords = null;
 // Chart instances
 let statusPieChart = null;
 let statusBarChart = null;
+let overdueBarChart = null;
 
 // DOM Cache
 const domCache = {
@@ -95,7 +96,11 @@ const domCache = {
     currentYearDisplay: null,
     recordCount: null,
     lastUpdated: null,
-    includeNotes: null
+    includeNotes: null,
+    overdueSRVCard: null,
+    overdueIPCCard: null,
+    statusPieChartContainer: null,
+    statusBarChartContainer: null
 };
 
 // Initialize DOM cache
@@ -131,6 +136,10 @@ function cacheDOM() {
     domCache.recordCount = document.getElementById('recordCount');
     domCache.lastUpdated = document.getElementById('lastUpdated');
     domCache.includeNotes = document.getElementById('includeNotes');
+    domCache.overdueSRVCard = document.querySelector('.overdue-card.srv');
+    domCache.overdueIPCCard = document.querySelector('.overdue-card.ipc');
+    domCache.statusPieChartContainer = document.getElementById('statusPieChart').parentElement;
+    domCache.statusBarChartContainer = document.getElementById('statusBarChart').parentElement;
 }
 
 // Mobile detection
@@ -357,7 +366,7 @@ function loadFromFirebase() {
     
     const recordsRef = database.ref(`records/${currentYear}`);
     
-    recordsRef.once('value')
+    return recordsRef.once('value')
         .then((snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -374,6 +383,11 @@ function loadFromFirebase() {
                 domCache.currentYearDisplay.textContent = currentYear;
                 domCache.recordCount.textContent = records.length;
                 domCache.lastUpdated.textContent = new Date().toLocaleString();
+                
+                // Initialize charts only, don't show table
+                initializeCharts();
+                initializeOverdueChart();
+                domCache.siteRecordsTable.style.display = 'none';
             } else {
                 records = [];
                 updateConnectionStatus(false);
@@ -382,6 +396,12 @@ function loadFromFirebase() {
                 domCache.currentYearDisplay.textContent = currentYear;
                 domCache.recordCount.textContent = '0';
                 domCache.lastUpdated.textContent = 'Never';
+                
+                // Clear charts and table
+                if (statusPieChart) statusPieChart.destroy();
+                if (statusBarChart) statusBarChart.destroy();
+                if (overdueBarChart) overdueBarChart.destroy();
+                domCache.siteRecordsTable.style.display = 'none';
             }
             hideLoading();
         })
@@ -389,6 +409,7 @@ function loadFromFirebase() {
             console.error('Error loading data from Firebase:', error);
             updateConnectionStatus(false);
             hideLoading();
+            throw error;
         });
 }
 
@@ -703,6 +724,10 @@ function clearDate() {
 
 // Main Dashboard Functions
 function initializeCharts(filteredRecords = null) {
+    // Show status charts
+    domCache.statusPieChartContainer.style.display = 'block';
+    domCache.statusBarChartContainer.style.display = 'block';
+    
     const displayRecords = filteredRecords || records.filter(record => record.status !== 'With Accounts');
     
     // Prepare data for charts
@@ -833,6 +858,172 @@ function initializeCharts(filteredRecords = null) {
     });
 }
 
+function initializeOverdueChart(filteredRecords = null) {
+    const displayRecords = filteredRecords || records;
+    
+    // Filter only overdue SRV and IPC records
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const overdueRecords = displayRecords.filter(record => {
+        if (!record.releaseDate || !['For SRV', 'For IPC'].includes(record.status)) return false;
+        
+        try {
+            const releaseDate = new Date(record.releaseDate);
+            const workingDaysPassed = getWorkingDays(releaseDate, today);
+            return workingDaysPassed >= 7;
+        } catch (e) {
+            console.error('Error processing record:', record, e);
+            return false;
+        }
+    });
+    
+    // Group by site and calculate overdue days
+    const siteOverdueData = {};
+    
+    overdueRecords.forEach(record => {
+        if (!record.site) return;
+        
+        const releaseDate = new Date(record.releaseDate);
+        const workingDaysPassed = getWorkingDays(releaseDate, today);
+        
+        if (!siteOverdueData[record.site]) {
+            siteOverdueData[record.site] = {
+                srvCount: 0,
+                ipcCount: 0,
+                maxDays: 0,
+                totalDays: 0,
+                recordCount: 0
+            };
+        }
+        
+        if (record.status === 'For SRV') {
+            siteOverdueData[record.site].srvCount++;
+        } else if (record.status === 'For IPC') {
+            siteOverdueData[record.site].ipcCount++;
+        }
+        
+        siteOverdueData[record.site].totalDays += workingDaysPassed;
+        siteOverdueData[record.site].recordCount++;
+        if (workingDaysPassed > siteOverdueData[record.site].maxDays) {
+            siteOverdueData[record.site].maxDays = workingDaysPassed;
+        }
+    });
+    
+    // Prepare data for chart
+    const sites = Object.keys(siteOverdueData).sort();
+    const srvData = sites.map(site => siteOverdueData[site].srvCount);
+    const ipcData = sites.map(site => siteOverdueData[site].ipcCount);
+    const avgDaysData = sites.map(site => 
+        Math.round(siteOverdueData[site].totalDays / siteOverdueData[site].recordCount)
+    );
+    
+    // Create or update chart
+    const ctx = document.getElementById('overdueBarChart').getContext('2d');
+    
+    if (overdueBarChart) {
+        overdueBarChart.data.labels = sites;
+        overdueBarChart.data.datasets[0].data = srvData;
+        overdueBarChart.data.datasets[1].data = ipcData;
+        overdueBarChart.data.datasets[2].data = avgDaysData;
+        overdueBarChart.update();
+        return;
+    }
+    
+    overdueBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sites,
+            datasets: [
+                {
+                    label: 'Overdue SRV',
+                    data: srvData,
+                    backgroundColor: '#4e73df',
+                    borderColor: '#4e73df',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Overdue IPC',
+                    data: ipcData,
+                    backgroundColor: '#1cc88a',
+                    borderColor: '#1cc88a',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Avg Days Overdue',
+                    data: avgDaysData,
+                    backgroundColor: '#f6c23e',
+                    borderColor: '#f6c23e',
+                    borderWidth: 1,
+                    type: 'line',
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Overdue Items'
+                    }
+                },
+                y1: {
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Average Days Overdue'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Overdue Items by Site',
+                    font: {
+                        size: 16
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(context) {
+                            const site = context[0].label;
+                            const data = siteOverdueData[site];
+                            return [
+                                `Max Days Overdue: ${data.maxDays}`,
+                                `Avg Days Overdue: ${Math.round(data.totalDays / data.recordCount)}`
+                            ];
+                        }
+                    }
+                }
+            },
+            onClick: function(evt, elements) {
+                if (elements.length > 0) {
+                    const clickedIndex = elements[0].index;
+                    const site = this.data.labels[clickedIndex];
+                    const datasetIndex = elements[0].datasetIndex;
+                    const status = datasetIndex === 0 ? 'For SRV' : datasetIndex === 1 ? 'For IPC' : null;
+                    
+                    if (status) {
+                        domCache.siteSearchTerm.value = site;
+                        filterSiteRecords(status, true);
+                    } else {
+                        domCache.siteSearchTerm.value = site;
+                        searchSiteRecords();
+                    }
+                }
+            }
+        }
+    });
+}
+
 function searchSiteRecords() {
     const term = domCache.siteSearchTerm.value.toLowerCase();
     let filtered = records.filter(record => record.status !== 'With Accounts' && record.status !== 'Closed' && record.status !== 'Cancelled');
@@ -846,11 +1037,13 @@ function searchSiteRecords() {
     currentFilteredRecords = filtered;
     refreshSiteTable(filtered);
     initializeCharts(filtered);
+    initializeOverdueChart(filtered);
+    domCache.siteRecordsTable.style.display = term ? 'table' : 'none';
 }
 
-function filterSiteRecords(status) {
+function filterSiteRecords(status, fromOverdue = false) {
     const term = domCache.siteSearchTerm.value.toLowerCase();
-    let filtered = records.filter(record => record.status !== 'With Accounts');
+    let filtered = records.filter(record => record.status !== 'With Accounts' && record.status !== 'Closed' && record.status !== 'Cancelled');
     
     if (term) {
         filtered = filtered.filter(record => 
@@ -860,9 +1053,62 @@ function filterSiteRecords(status) {
     
     if (status !== 'all') {
         filtered = filtered.filter(record => record.status === status);
+        
+        // Special handling for overdue filters
+        if (status === 'For SRV' || status === 'For IPC') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            filtered = filtered.filter(record => {
+                if (!record.releaseDate) return false;
+                
+                try {
+                    const releaseDate = new Date(record.releaseDate);
+                    const workingDaysPassed = getWorkingDays(releaseDate, today);
+                    return workingDaysPassed >= 7;
+                } catch (e) {
+                    console.error('Error processing record:', record, e);
+                    return false;
+                }
+            });
+        }
     }
     
+    // Hide status charts when filtering from overdue cards or chart
+    if (fromOverdue) {
+        domCache.statusPieChartContainer.style.display = 'none';
+        domCache.statusBarChartContainer.style.display = 'none';
+    } else {
+        domCache.statusPieChartContainer.style.display = 'block';
+        domCache.statusBarChartContainer.style.display = 'block';
+    }
+    
+    currentFilteredRecords = filtered;
     refreshSiteTable(filtered);
+    initializeCharts(filtered);
+    initializeOverdueChart(filtered);
+    domCache.siteRecordsTable.style.display = filtered.length > 0 ? 'table' : 'none';
+}
+
+function getWorkingDays(startDate, endDate) {
+    let count = 0;
+    const current = new Date(startDate);
+    current.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    
+    if (current.getTime() === end.getTime()) {
+        return 0;
+    }
+    
+    while (current < end) {
+        const day = current.getDay();
+        if (day !== 5) { // Skip Friday (Qatar weekend)
+            count++;
+        }
+        current.setDate(current.getDate() + 1);
+    }
+    return count;
 }
 
 function refreshSiteTable(filteredRecords = null) {
@@ -999,6 +1245,9 @@ function closeDashboardPreview() {
 function clearSiteSearch() {
     domCache.siteSearchTerm.value = '';
     searchSiteRecords();
+    // Show status charts when clearing search
+    domCache.statusPieChartContainer.style.display = 'block';
+    domCache.statusBarChartContainer.style.display = 'block';
 }
 
 // Utility functions
@@ -1020,7 +1269,7 @@ function getStatusClass(status) {
         'With Accounts': 'status-accounts',
         'CEO Approval': 'status-process',
         'For IPC': 'status-ipc',
-        'NO Invoice': 'status-Invoice',
+        'No Invoice': 'status-Invoice',
         'Open': 'status-Open'
     };
     return statusClasses[status] || '';
@@ -1152,151 +1401,6 @@ function generateReport() {
     
     document.getElementById('reportTotalAmount').textContent = formatNumber(invoiceTotal);
     domCache.reportTable.style.display = 'table';
-}
-
-// Enhanced print functions
-function handleMobilePrint() {
-    if (isMobileDevice()) {
-        return true;
-    }
-    return false;
-}
-
-async function generatePDF(contentElementId, title = 'Report') {
-    try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // Add title
-        doc.setFontSize(18);
-        doc.text(title, 105, 15, { align: 'center' });
-        
-        // Get the HTML content
-        const contentElement = document.getElementById(contentElementId);
-        const printContent = contentElement.cloneNode(true);
-        
-        // Remove elements that shouldn't be printed
-        const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
-        elementsToRemove.forEach(el => el.remove());
-        
-        // Add content to PDF
-        await doc.html(printContent, {
-            margin: [20, 15, 20, 15],
-            width: 170,
-            windowWidth: 800,
-            autoPaging: 'text',
-            x: 20,
-            y: 25
-        });
-        
-        // Open the PDF in new tab for preview
-        const pdfUrl = doc.output('bloburl');
-        window.open(pdfUrl, '_blank');
-        
-        return true;
-    } catch (error) {
-        console.error('PDF generation error:', error);
-        alert('Failed to generate PDF. Please try again or use the print option.');
-        return false;
-    }
-}
-
-function printReport() {
-    const contentElement = document.getElementById('statementSection');
-    const printContent = contentElement.cloneNode(true);
-    
-    // Remove elements that shouldn't be printed
-    const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
-    elementsToRemove.forEach(el => el.remove());
-    
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
-    // Add CSS for printing
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Print Report</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { padding: 8px; border: 1px solid #ddd; }
-                th { background-color: #4a6fa5 !important; color: white !important; -webkit-print-color-adjust: exact; }
-                .total-row { font-weight: bold; background-color: #e9f7fe; }
-                .numeric { text-align: right; }
-                @page { size: auto; margin: 5mm; }
-                @media print {
-                    body { padding: 0; margin: 0; }
-                    .financial-summary { page-break-inside: avoid; }
-                    table { page-break-inside: auto; }
-                    tr { page-break-inside: avoid; page-break-after: auto; }
-                }
-            </style>
-        </head>
-        <body>
-            ${printContent.innerHTML}
-            <script>
-                window.onload = function() {
-                    setTimeout(function() {
-                        window.print();
-                        window.close();
-                    }, 200);
-                }
-            </script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-}
-
-function printPettyCashReport() {
-    const contentElement = document.getElementById('pettyCashSection');
-    const printContent = contentElement.cloneNode(true);
-    
-    // Remove elements that shouldn't be printed
-    const elementsToRemove = printContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
-    elementsToRemove.forEach(el => el.remove());
-    
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
-    // Add CSS for printing
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Print Petty Cash Report</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 15px; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { padding: 8px; border: 1px solid #ddd; }
-                th { background-color: #4a6fa5 !important; color: white !important; -webkit-print-color-adjust: exact; }
-                .total-row { font-weight: bold; background-color: #e9f7fe; }
-                .numeric { text-align: right; }
-                @page { size: auto; margin: 5mm; }
-                @media print {
-                    body { padding: 0; margin: 0; }
-                    .financial-summary { page-break-inside: avoid; }
-                    table { page-break-inside: auto; }
-                    tr { page-break-inside: avoid; page-break-after: auto; }
-                }
-            </style>
-        </head>
-        <body>
-            ${printContent.innerHTML}
-            <script>
-                window.onload = function() {
-                    setTimeout(function() {
-                        window.print();
-                        window.close();
-                    }, 200);
-                }
-            </script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
 }
 
 // NOTE SUGGESTIONS FUNCTIONALITY
@@ -1595,6 +1699,38 @@ function setupResponsiveElements() {
     }
 }
 
+// Overdue progression check
+function checkOverdueProgression() {
+    const overdueSRV = [];
+    const overdueIPC = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    records.forEach(record => {
+        if (!record.releaseDate || 
+            record.status === 'With Accounts' || 
+            record.status === 'Closed' || 
+            record.status === 'Cancelled') return;
+        
+        try {
+            const releaseDate = new Date(record.releaseDate);
+            const workingDaysPassed = getWorkingDays(releaseDate, today);
+            
+            if (record.status === 'For SRV' && workingDaysPassed >= 7) {
+                overdueSRV.push(record);
+            }
+            if (record.status === 'For IPC' && workingDaysPassed >= 7) {
+                overdueIPC.push(record);
+            }
+        } catch (e) {
+            console.error('Error processing record:', record, e);
+        }
+    });
+
+    document.getElementById('overdueSRVCount').textContent = overdueSRV.length;
+    document.getElementById('overdueIPCCount').textContent = overdueIPC.length;
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
     cacheDOM();
@@ -1646,6 +1782,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Add click handlers for overdue cards
+    domCache.overdueSRVCard.addEventListener('click', function() {
+        filterSiteRecords('For SRV', true);
+    });
+    
+    domCache.overdueIPCCard.addEventListener('click', function() {
+        filterSiteRecords('For IPC', true);
+    });
+    
     document.querySelectorAll('.mobile-menu input[name="dataSource"], input[name="uploadYear"], input[name="manageYear"]').forEach(radio => {
         radio.addEventListener('change', async function() {
             currentYear = this.value;
@@ -1654,12 +1799,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             records = [];
             domCache.recordsTable.style.display = 'none';
+            domCache.siteRecordsTable.style.display = 'none';
             connectBtn.disabled = true;
             connectBtn.innerHTML = `<div class="corporate-spinner" style="width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></div> Loading ${currentYear} Data...`;
             
             try {
                 await loadFromFirebase();
-                updateConnectionStatus(true);
             } catch (error) {
                 console.error('Error loading data:', error);
                 updateConnectionStatus(false);
@@ -1704,8 +1849,6 @@ document.addEventListener('DOMContentLoaded', function() {
             generateReport();
         }
     });
-    
-    document.querySelector('input[value="2025"]').checked = true;
 });
 
 // Close modal when clicking outside of it
@@ -1727,24 +1870,4 @@ function handleSiteTableClick(record) {
     showSection('invoiceSection');
     domCache.searchTerm.value = record.poNumber || '';
     searchRecords();
-}
-
-function checkOverdueProgression() {
-    const overdueSRV = [];
-    const overdueIPC = [];
-    const today = new Date();
-
-    records.forEach(record => {
-        if (!record.releaseDate || record.status === 'With Accounts' || record.status === 'Closed' || record.status === 'Cancelled') return;
-        const release = new Date(record.releaseDate);
-        const daysPassed = (today - release) / (1000 * 60 * 60 * 24);
-        if (daysPassed > 7) {
-            if (record.status === 'For SRV') overdueSRV.push(record);
-            if (record.status === 'For IPC') overdueIPC.push(record);
-        }
-    });
-
-    // Update the overdue cards
-    document.getElementById('overdueSRVCount').textContent = overdueSRV.length;
-    document.getElementById('overdueIPCCount').textContent = overdueIPC.length;
 }
