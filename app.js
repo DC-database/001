@@ -723,139 +723,205 @@ function clearDate() {
 }
 
 // Main Dashboard Functions
+// In app.js, replace the initializeCharts function with this:
+
 function initializeCharts(filteredRecords = null) {
-    // Show status charts
-    domCache.statusPieChartContainer.style.display = 'block';
-    domCache.statusBarChartContainer.style.display = 'block';
+    // Always use all records for the charts, excluding specific statuses
+    const excludedStatuses = ['With Accounts', 'Closed', 'Cancelled', 'No Invoice'];
+    const chartRecords = records.filter(record => !excludedStatuses.includes(record.status));
     
-    const displayRecords = filteredRecords || records.filter(record => record.status !== 'With Accounts');
-    
-    // Prepare data for charts
-    const statusCounts = {};
-    displayRecords.forEach(record => {
-        statusCounts[record.status] = (statusCounts[record.status] || 0) + 1;
-    });
-    
-    const statusLabels = Object.keys(statusCounts);
-    const statusData = Object.values(statusCounts);
-    const backgroundColors = statusLabels.map(status => {
-        const statusColors = {
-            'For SRV': '#4e73df',
-            'For IPC': '#1cc88a',
-            'Under Review': '#36b9cc',
-            'CEO Approval': '#f6c23e',
-            'Open': '#e74a3b',
-            'Pending': '#858796',
-            'Report': '#5a5c69',
-            'No Invoice': '#2c3e50'
-        };
-        return statusColors[status] || '#cccccc';
-    });
-    
-    // Pie Chart
-    const pieCtx = document.getElementById('statusPieChart').getContext('2d');
-    if (statusPieChart) statusPieChart.destroy();
-    statusPieChart = new Chart(pieCtx, {
-        type: 'pie',
-        data: {
-            labels: statusLabels,
-            datasets: [{
-                data: statusData,
-                backgroundColor: backgroundColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                },
-                title: {
-                    display: true,
-                    text: 'Invoice Status Distribution',
+    // Only initialize charts if their containers are visible
+    if (domCache.statusPieChartContainer.style.display !== 'none') {
+        // Prepare data for pie chart
+        const statusCounts = {};
+        chartRecords.forEach(record => {
+            statusCounts[record.status] = (statusCounts[record.status] || 0) + 1;
+        });
+        
+        const statusLabels = Object.keys(statusCounts);
+        const statusData = Object.values(statusCounts);
+        const total = statusData.reduce((a, b) => a + b, 0);
+        const backgroundColors = statusLabels.map(status => {
+            const statusColors = {
+                'For SRV': '#4e73df',
+                'For IPC': '#1cc88a',
+                'Under Review': '#36b9cc',
+                'CEO Approval': '#f6c23e',
+                'Open': '#e74a3b',
+                'Pending': '#858796',
+                'Report': '#5a5c69'
+            };
+            return statusColors[status] || '#cccccc';
+        });
+
+// Pie Chart
+const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+if (statusPieChart) statusPieChart.destroy();
+statusPieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            data: statusData,
+            backgroundColor: backgroundColors,
+            borderWidth: 1,
+            borderColor: '#fff' // Add white border for better separation
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right', // Move legend to the right
+                labels: {
+                    padding: 20,
+                    boxWidth: 15,
                     font: {
-                        size: 16
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
+                        size: 12
                     }
                 }
             },
-            onClick: function(evt, elements) {
-                if (elements.length > 0) {
-                    const clickedIndex = elements[0].index;
-                    const status = statusLabels[clickedIndex];
-                    filterSiteRecords(status);
+            title: {
+                display: true,
+                text: 'Invoice Status Distribution',
+                font: {
+                    size: 16
+                },
+                padding: {
+                    bottom: 20
                 }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            },
+            datalabels: {
+                formatter: (value, ctx) => {
+                    const percentage = ((value / total) * 100).toFixed(1) + '%';
+                    return percentage;
+                },
+                color: '#fff',
+                font: {
+                    weight: 'bold',
+                    size: 12
+                },
+                anchor: 'center',
+                align: 'center',
+                display: function(context) {
+                    // Only show labels for slices that are large enough
+                    const dataset = context.dataset;
+                    const value = dataset.data[context.dataIndex];
+                    return value > total * 0.05; // Only show if >5% of total
+                },
+                textShadowBlur: 10,
+                textShadowColor: 'rgba(0,0,0,0.5)'
+            }
+        },
+        cutout: '50%', // Make a donut chart instead of pie
+        animation: {
+            animateScale: true,
+            animateRotate: true
+        },
+        onClick: function(evt, elements) {
+            if (elements.length > 0) {
+                const clickedIndex = elements[0].index;
+                const status = statusLabels[clickedIndex];
+                // Only filter the table, not the charts
+                filterSiteRecords(status);
             }
         }
-    });
+    },
+    plugins: [ChartDataLabels]
+});
+    }
+
     
-    // Bar Chart
-    const barCtx = document.getElementById('statusBarChart').getContext('2d');
-    if (statusBarChart) statusBarChart.destroy();
-    statusBarChart = new Chart(barCtx, {
-        type: 'bar',
-        data: {
-            labels: statusLabels,
-            datasets: [{
-                label: 'Count',
-                data: statusData,
-                backgroundColor: backgroundColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
+    if (domCache.statusBarChartContainer.style.display !== 'none') {
+        // Prepare data for bar chart
+        const statusCounts = {};
+        chartRecords.forEach(record => {
+            statusCounts[record.status] = (statusCounts[record.status] || 0) + 1;
+        });
+        
+        const statusLabels = Object.keys(statusCounts);
+        const statusData = Object.values(statusCounts);
+        const backgroundColors = statusLabels.map(status => {
+            const statusColors = {
+                'For SRV': '#4e73df',
+                'For IPC': '#1cc88a',
+                'Under Review': '#36b9cc',
+                'CEO Approval': '#f6c23e',
+                'Open': '#e74a3b',
+                'Pending': '#858796',
+                'Report': '#5a5c69'
+            };
+            return statusColors[status] || '#cccccc';
+        });
+        
+        // Bar Chart
+        const barCtx = document.getElementById('statusBarChart').getContext('2d');
+        if (statusBarChart) statusBarChart.destroy();
+        statusBarChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    label: 'Count',
+                    data: statusData,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1
+                }]
             },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: 'Invoice Status Count',
-                    font: {
-                        size: 16
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label || '';
-                            const value = context.raw || 0;
-                            return `${label}: ${value}`;
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
                         }
                     }
-                }
-            },
-            onClick: function(evt, elements) {
-                if (elements.length > 0) {
-                    const clickedIndex = elements[0].index;
-                    const status = statusLabels[clickedIndex];
-                    filterSiteRecords(status);
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Invoice Status Count',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    }
+                },
+                onClick: function(evt, elements) {
+                    if (elements.length > 0) {
+                        const clickedIndex = elements[0].index;
+                        const status = statusLabels[clickedIndex];
+                        // Only filter the table, not the charts
+                        filterSiteRecords(status);
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 function initializeOverdueChart(filteredRecords = null) {
@@ -1034,6 +1100,11 @@ function searchSiteRecords() {
         );
     }
     
+    // Show all charts for general search
+    domCache.statusPieChartContainer.style.display = 'block';
+    domCache.statusBarChartContainer.style.display = 'block';
+    document.getElementById('overdueBarChart').parentElement.style.display = 'block';
+    
     currentFilteredRecords = filtered;
     refreshSiteTable(filtered);
     initializeCharts(filtered);
@@ -1054,14 +1125,12 @@ function filterSiteRecords(status, fromOverdue = false) {
     if (status !== 'all') {
         filtered = filtered.filter(record => record.status === status);
         
-        // Special handling for overdue filters
         if (status === 'For SRV' || status === 'For IPC') {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             filtered = filtered.filter(record => {
                 if (!record.releaseDate) return false;
-                
                 try {
                     const releaseDate = new Date(record.releaseDate);
                     const workingDaysPassed = getWorkingDays(releaseDate, today);
@@ -1074,13 +1143,19 @@ function filterSiteRecords(status, fromOverdue = false) {
         }
     }
     
-    // Hide status charts when filtering from overdue cards or chart
-    if (fromOverdue) {
+    // Control chart visibility
+    if (fromOverdue || (status === 'For SRV' || status === 'For IPC')) {
+        // Hide status charts when viewing overdue items
         domCache.statusPieChartContainer.style.display = 'none';
         domCache.statusBarChartContainer.style.display = 'none';
+        // Show overdue chart
+        document.getElementById('overdueBarChart').parentElement.style.display = 'block';
     } else {
+        // Show status charts for other cases
         domCache.statusPieChartContainer.style.display = 'block';
         domCache.statusBarChartContainer.style.display = 'block';
+        // Hide overdue chart if not viewing overdue items
+        document.getElementById('overdueBarChart').parentElement.style.display = 'none';
     }
     
     currentFilteredRecords = filtered;
@@ -1244,10 +1319,11 @@ function closeDashboardPreview() {
 
 function clearSiteSearch() {
     domCache.siteSearchTerm.value = '';
-    searchSiteRecords();
-    // Show status charts when clearing search
+    // Show all charts when clearing search
     domCache.statusPieChartContainer.style.display = 'block';
     domCache.statusBarChartContainer.style.display = 'block';
+    document.getElementById('overdueBarChart').parentElement.style.display = 'block';
+    searchSiteRecords();
 }
 
 // Utility functions

@@ -1840,3 +1840,18 @@ tr:hover {
     gap: 20px;
     margin: 20px 0;
 }
+
+/* Add to your styles.css */
+.chartjs-plugin-datalabels {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+.chart-box {
+    min-height: 400px; /* Increase minimum height */
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .chart-box {
+        min-height: 350px;
+    }
+}
