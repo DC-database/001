@@ -1542,6 +1542,56 @@ tr:hover {
 
 /* Print styles */
 @media print {
+    /* Remove duplicate titles in print */
+    .report-section h1,
+    #pettyCashSection h1 {
+        display: none !important;
+    }
+    
+    /* Fix status column visibility */
+    .compact-table .status-badge {
+        display: inline-block !important;
+        visibility: visible !important;
+        color: white !important;
+        padding: 2px 5px !important;
+        font-size: 10px !important;
+    }
+    
+    /* Remove search controls from print */
+    .search-container,
+    .report-controls {
+        display: none !important;
+    }
+    
+    /* Ensure all table cells are visible */
+    .compact-table th,
+    .compact-table td {
+        display: table-cell !important;
+        visibility: visible !important;
+    }
+    
+    /* Adjust financial summary layout for print */
+    .financial-summary {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 5px !important;
+        padding: 10px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .financial-summary-header {
+        grid-column: 1 / -1 !important;
+        padding-bottom: 5px !important;
+        margin-bottom: 5px !important;
+    }
+    
+    .financial-summary-label {
+        font-size: 10px !important;
+    }
+    
+    .financial-summary-value {
+        font-size: 12px !important;
+    }
+    
     body * {
         visibility: hidden;
     }
@@ -1560,37 +1610,12 @@ tr:hover {
         background: white;
         border: none;
     }
-    .report-controls,
-    .search-container {
-        display: none !important;
-    }
-    .financial-summary {
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 5px !important;
-        padding: 10px !important;
-        margin-bottom: 10px !important;
-    }
-    .financial-summary-header {
-        grid-column: 1 / -1 !important;
-        padding-bottom: 5px !important;
-        margin-bottom: 5px !important;
-    }
-    .financial-summary-label {
-        font-size: 10px !important;
-    }
-    .financial-summary-value {
-        font-size: 12px !important;
-    }
     .compact-table {
         font-size: 10px !important;
     }
     .compact-table th, 
     .compact-table td {
         padding: 5px 6px !important;
-    }
-    .status-badge {
-        padding: 2px 5px !important;
-        font-size: 10px !important;
     }
     .report-header {
         padding: 5px !important;
@@ -1601,13 +1626,6 @@ tr:hover {
     .compact-table tfoot td {
         padding: 5px 6px !important;
         font-size: 11px !important;
-    }
-    #pettyCashSection .search-container,
-    #pettyCashSection .report-actions {
-        display: none !important;
-    }
-    #pettyCashSection .financial-summary {
-        grid-template-columns: repeat(2, 1fr) !important;
     }
     #pettyCashTable {
         page-break-inside: avoid;
