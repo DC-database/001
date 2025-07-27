@@ -64,6 +64,27 @@ let statusPieChart = null;
 let statusBarChart = null;
 let overdueBarChart = null;
 
+function isDarkColor(color) {
+    // Convert hex to RGB
+    let r, g, b;
+    if (color.match(/^rgb/)) {
+        const rgb = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+        r = rgb[1];
+        g = rgb[2];
+        b = rgb[3];
+    } else {
+        // Hex to RGB conversion
+        const hex = color.replace('#', '');
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+    }
+    
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5; // Returns true for dark colors
+}
+
 // DOM Cache
 const domCache = {
     mobileMenu: null,
@@ -723,8 +744,6 @@ function clearDate() {
 }
 
 // Main Dashboard Functions
-// In app.js, replace the initializeCharts function with this:
-
 function initializeCharts(filteredRecords = null) {
     // Always use all records for the charts, excluding specific statuses
     const excludedStatuses = ['With Accounts', 'Closed', 'Cancelled', 'No Invoice'];
@@ -741,110 +760,112 @@ function initializeCharts(filteredRecords = null) {
         const statusLabels = Object.keys(statusCounts);
         const statusData = Object.values(statusCounts);
         const total = statusData.reduce((a, b) => a + b, 0);
+        
+        // Vibrant unique colors for each status
         const backgroundColors = statusLabels.map(status => {
             const statusColors = {
-                'For SRV': '#4e73df',
-                'For IPC': '#1cc88a',
-                'Under Review': '#36b9cc',
-                'CEO Approval': '#f6c23e',
-                'Open': '#e74a3b',
-                'Pending': '#858796',
-                'Report': '#5a5c69'
+                'For SRV': '#4E79A7', // Blue
+                'For IPC': '#F28E2B', // Orange
+                'Under Review': '#E15759', // Red
+                'CEO Approval': '#76B7B2', // Teal
+                'Open': '#59A14F', // Green
+                'Pending': '#EDC948', // Yellow
+                'Report': '#B07AA1', // Purple
+                'No Invoice': '#FF9DA7', // Pink
+                'With Accounts': '#9C755F' // Brown
             };
-            return statusColors[status] || '#cccccc';
+            return statusColors[status] || '#BAB0AC'; // Default color
         });
 
-// Pie Chart
-const pieCtx = document.getElementById('statusPieChart').getContext('2d');
-if (statusPieChart) statusPieChart.destroy();
-statusPieChart = new Chart(pieCtx, {
-    type: 'pie',
-    data: {
-        labels: statusLabels,
-        datasets: [{
-            data: statusData,
-            backgroundColor: backgroundColors,
-            borderWidth: 1,
-            borderColor: '#fff' // Add white border for better separation
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'right', // Move legend to the right
-                labels: {
-                    padding: 20,
-                    boxWidth: 15,
-                    font: {
-                        size: 12
+        // Pie Chart
+        const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+        if (statusPieChart) statusPieChart.destroy();
+        statusPieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 20,
+                            boxWidth: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Invoice Status Distribution',
+                        font: {
+                            size: 16
+                        },
+                        padding: {
+                            bottom: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            const percentage = ((value / total) * 100).toFixed(1) + '%';
+                            return percentage;
+                        },
+                        color: function(context) {
+                            const bgColor = context.dataset.backgroundColor[context.dataIndex];
+                            return isDarkColor(bgColor) ? '#fff' : '#333';
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        anchor: 'center',
+                        align: 'center',
+                        display: function(context) {
+                            return true; // Always show labels
+                        },
+                        textShadowBlur: 3,
+                        textShadowColor: 'rgba(0,0,0,0.5)'
+                    }
+                },
+                cutout: '50%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                },
+                onClick: function(evt, elements) {
+                    if (elements.length > 0) {
+                        const clickedIndex = elements[0].index;
+                        const status = statusLabels[clickedIndex];
+                        filterSiteRecords(status);
                     }
                 }
             },
-            title: {
-                display: true,
-                text: 'Invoice Status Distribution',
-                font: {
-                    size: 16
-                },
-                padding: {
-                    bottom: 20
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const label = context.label || '';
-                        const value = context.raw || 0;
-                        const percentage = ((value / total) * 100).toFixed(1);
-                        return `${label}: ${value} (${percentage}%)`;
-                    }
-                }
-            },
-            datalabels: {
-                formatter: (value, ctx) => {
-                    const percentage = ((value / total) * 100).toFixed(1) + '%';
-                    return percentage;
-                },
-                color: '#fff',
-                font: {
-                    weight: 'bold',
-                    size: 12
-                },
-                anchor: 'center',
-                align: 'center',
-                display: function(context) {
-                    // Only show labels for slices that are large enough
-                    const dataset = context.dataset;
-                    const value = dataset.data[context.dataIndex];
-                    return value > total * 0.05; // Only show if >5% of total
-                },
-                textShadowBlur: 10,
-                textShadowColor: 'rgba(0,0,0,0.5)'
-            }
-        },
-        cutout: '50%', // Make a donut chart instead of pie
-        animation: {
-            animateScale: true,
-            animateRotate: true
-        },
-        onClick: function(evt, elements) {
-            if (elements.length > 0) {
-                const clickedIndex = elements[0].index;
-                const status = statusLabels[clickedIndex];
-                // Only filter the table, not the charts
-                filterSiteRecords(status);
-            }
-        }
-    },
-    plugins: [ChartDataLabels]
-});
+            plugins: [ChartDataLabels]
+        });
     }
-
     
     if (domCache.statusBarChartContainer.style.display !== 'none') {
-        // Prepare data for bar chart
+        // Prepare data for horizontal bar chart
         const statusCounts = {};
         chartRecords.forEach(record => {
             statusCounts[record.status] = (statusCounts[record.status] || 0) + 1;
@@ -852,20 +873,24 @@ statusPieChart = new Chart(pieCtx, {
         
         const statusLabels = Object.keys(statusCounts);
         const statusData = Object.values(statusCounts);
+        
+        // Same vibrant colors as pie chart for consistency
         const backgroundColors = statusLabels.map(status => {
             const statusColors = {
-                'For SRV': '#4e73df',
-                'For IPC': '#1cc88a',
-                'Under Review': '#36b9cc',
-                'CEO Approval': '#f6c23e',
-                'Open': '#e74a3b',
-                'Pending': '#858796',
-                'Report': '#5a5c69'
+                'For SRV': '#4E79A7',
+                'For IPC': '#F28E2B',
+                'Under Review': '#E15759',
+                'CEO Approval': '#76B7B2',
+                'Open': '#59A14F',
+                'Pending': '#EDC948',
+                'Report': '#B07AA1',
+                'No Invoice': '#FF9DA7',
+                'With Accounts': '#9C755F'
             };
-            return statusColors[status] || '#cccccc';
+            return statusColors[status] || '#BAB0AC';
         });
         
-        // Bar Chart
+        // Horizontal Bar Chart
         const barCtx = document.getElementById('statusBarChart').getContext('2d');
         if (statusBarChart) statusBarChart.destroy();
         statusBarChart = new Chart(barCtx, {
@@ -880,10 +905,11 @@ statusPieChart = new Chart(pieCtx, {
                 }]
             },
             options: {
+                indexAxis: 'y', // This makes the bar chart horizontal
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true,
                         ticks: {
                             stepSize: 1
@@ -896,7 +922,7 @@ statusPieChart = new Chart(pieCtx, {
                     },
                     title: {
                         display: true,
-                        text: 'Invoice Status Count',
+                        text: 'Invoice Count by Status',
                         font: {
                             size: 16
                         }
@@ -915,7 +941,6 @@ statusPieChart = new Chart(pieCtx, {
                     if (elements.length > 0) {
                         const clickedIndex = elements[0].index;
                         const status = statusLabels[clickedIndex];
-                        // Only filter the table, not the charts
                         filterSiteRecords(status);
                     }
                 }
@@ -1052,7 +1077,7 @@ function initializeOverdueChart(filteredRecords = null) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Overdue Items by Site',
+                    text: 'Overdue Invoice by Site',
                     font: {
                         size: 16
                     }
@@ -1079,7 +1104,7 @@ function initializeOverdueChart(filteredRecords = null) {
                     
                     if (status) {
                         domCache.siteSearchTerm.value = site;
-                        filterSiteRecords(status, true);
+                        filterSiteTableOnly(site, status);
                     } else {
                         domCache.siteSearchTerm.value = site;
                         searchSiteRecords();
@@ -1088,6 +1113,45 @@ function initializeOverdueChart(filteredRecords = null) {
             }
         }
     });
+}
+
+function filterSiteTableOnly(site, status) {
+    let filtered = records.filter(record => 
+        record.status !== 'With Accounts' && 
+        record.status !== 'Closed' && 
+        record.status !== 'Cancelled'
+    );
+    
+    if (site) {
+        filtered = filtered.filter(record => 
+            record.site && record.site.toLowerCase().includes(site.toLowerCase())
+        );
+    }
+    
+    if (status) {
+        filtered = filtered.filter(record => record.status === status);
+        
+        if (status === 'For SRV' || status === 'For IPC') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            filtered = filtered.filter(record => {
+                if (!record.releaseDate) return false;
+                try {
+                    const releaseDate = new Date(record.releaseDate);
+                    const workingDaysPassed = getWorkingDays(releaseDate, today);
+                    return workingDaysPassed >= 7;
+                } catch (e) {
+                    console.error('Error processing record:', record, e);
+                    return false;
+                }
+            });
+        }
+    }
+    
+    currentFilteredRecords = filtered;
+    refreshSiteTable(filtered);
+    domCache.siteRecordsTable.style.display = filtered.length > 0 ? 'table' : 'none';
 }
 
 function searchSiteRecords() {
@@ -1143,19 +1207,18 @@ function filterSiteRecords(status, fromOverdue = false) {
         }
     }
     
-    // Control chart visibility
-    if (fromOverdue || (status === 'For SRV' || status === 'For IPC')) {
-        // Hide status charts when viewing overdue items
+    // Control chart visibility based on whether it's from overdue cards
+    if (fromOverdue) {
+        // Hide status charts when viewing overdue items from cards
         domCache.statusPieChartContainer.style.display = 'none';
         domCache.statusBarChartContainer.style.display = 'none';
         // Show overdue chart
         document.getElementById('overdueBarChart').parentElement.style.display = 'block';
     } else {
-        // Show status charts for other cases
+        // Show all charts for other cases
         domCache.statusPieChartContainer.style.display = 'block';
         domCache.statusBarChartContainer.style.display = 'block';
-        // Hide overdue chart if not viewing overdue items
-        document.getElementById('overdueBarChart').parentElement.style.display = 'none';
+        document.getElementById('overdueBarChart').parentElement.style.display = 'block';
     }
     
     currentFilteredRecords = filtered;
@@ -1164,7 +1227,6 @@ function filterSiteRecords(status, fromOverdue = false) {
     initializeOverdueChart(filtered);
     domCache.siteRecordsTable.style.display = filtered.length > 0 ? 'table' : 'none';
 }
-
 function getWorkingDays(startDate, endDate) {
     let count = 0;
     const current = new Date(startDate);
@@ -1467,6 +1529,16 @@ function generateReport() {
             <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
             <td class="notes-column">${includeNotes ? (record.note || '-') : ''}</td>
         `;
+        
+        // Add click handler to navigate to invoice tracker
+        row.addEventListener('click', function() {
+            if (record.poNumber) {
+                showSection('invoiceSection');
+                domCache.searchTerm.value = record.poNumber;
+                searchRecords();
+            }
+        });
+        
         reportTableBody.appendChild(row);
     });
     
@@ -1590,6 +1662,16 @@ function generatePettyCashReport() {
             <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
             <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
         `;
+        
+        // Add click handler to navigate to invoice tracker
+        row.addEventListener('click', function() {
+            if (record.poNumber) {
+                showSection('invoiceSection');
+                domCache.searchTerm.value = record.poNumber;
+                searchRecords();
+            }
+        });
+        
         pettyCashTableBody.appendChild(row);
     });
     
@@ -1599,6 +1681,127 @@ function generatePettyCashReport() {
     if (window.innerWidth <= 768) {
         document.getElementById('pettyCashSection').scrollIntoView({ behavior: 'smooth' });
     }
+}
+
+// Print functions
+function printReport() {
+    // Create a print window
+    const printWindow = window.open('', '_blank');
+    
+    // Get the report content
+    const reportSection = document.getElementById('statementSection');
+    const reportContent = reportSection.cloneNode(true);
+    
+    // Remove elements we don't want to print
+    const elementsToRemove = reportContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Create print styles
+    const printStyles = `
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .numeric { text-align: right; }
+            .status-badge { padding: 4px 8px; border-radius: 4px; color: white; }
+            .financial-summary { margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
+            .financial-summary div { margin-bottom: 10px; }
+            @page { size: auto; margin: 10mm; }
+            @media print {
+                body { padding: 0; margin: 0; }
+                .financial-summary { page-break-inside: avoid; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+            }
+        </style>
+    `;
+    
+    // Write the content to the print window
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Statement of Account</title>
+                ${printStyles}
+            </head>
+            <body>
+                <h2 style="text-align: center;">Statement of Account</h2>
+                <p style="text-align: center; margin-bottom: 20px;">Generated on: ${new Date().toLocaleString()}</p>
+                ${reportContent.innerHTML}
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 200);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+function printPettyCashReport() {
+    // Create a print window
+    const printWindow = window.open('', '_blank');
+    
+    // Get the petty cash content
+    const pettyCashSection = document.getElementById('pettyCashSection');
+    const pettyCashContent = pettyCashSection.cloneNode(true);
+    
+    // Remove elements we don't want to print
+    const elementsToRemove = pettyCashContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Create print styles
+    const printStyles = `
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .numeric { text-align: right; }
+            .status-badge { padding: 4px 8px; border-radius: 4px; color: white; }
+            .financial-summary { margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
+            .financial-summary div { margin-bottom: 10px; }
+            @page { size: auto; margin: 10mm; }
+            @media print {
+                body { padding: 0; margin: 0; }
+                .financial-summary { page-break-inside: avoid; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+            }
+        </style>
+    `;
+    
+    // Get the search term for the report title
+    const searchTerm = domCache.pettyCashSearchTerm.value;
+    const title = searchTerm ? `Petty Cash Report - Search: "${searchTerm}"` : 'Petty Cash Report';
+    
+    // Write the content to the print window
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>${title}</title>
+                ${printStyles}
+            </head>
+            <body>
+                <h2 style="text-align: center;">${title}</h2>
+                <p style="text-align: center; margin-bottom: 20px;">Generated on: ${new Date().toLocaleString()}</p>
+                ${pettyCashContent.innerHTML}
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 200);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 // Invoice Preview Functions
