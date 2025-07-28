@@ -45,9 +45,9 @@ const SITE_WHATSAPP_NUMBERS = {
     '100': '50992023',
     '173': '39937600',
     'M28': '50485111',
-    '180': '50999203',
+    '180': '50992079',
     '144': '50485111',
-    '129': '50992083',
+    '129': '50992079',
     '137.19': '50485111',
     '122': '50707183'
 };
@@ -1742,240 +1742,44 @@ function printReport() {
     printWindow.document.close();
 }
 
+// Fix for Petty Cash Summary Print Issue
 function printPettyCashReport() {
-    // Create a print window
     const printWindow = window.open('', '_blank');
-    
-    // Get the petty cash content
-    const pettyCashSection = document.getElementById('pettyCashSection');
-    const pettyCashContent = pettyCashSection.cloneNode(true);
-    
-    // Remove elements we don't want to print
-    const elementsToRemove = pettyCashContent.querySelectorAll('.report-controls, .report-actions, .back-btn');
-    elementsToRemove.forEach(el => el.remove());
-    
-    // Create print styles
-    const printStyles = `
+    const doc = printWindow.document;
+
+    // Clone the table only
+    const table = document.getElementById('pettyCashTable').cloneNode(true);
+
+    // Create a basic style to hide controls and show status properly
+    const style = `
         <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .numeric { text-align: right; }
-            .status-badge { padding: 4px 8px; border-radius: 4px; color: white; }
-            .financial-summary { margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
-            .financial-summary div { margin-bottom: 10px; }
-            @page { size: auto; margin: 10mm; }
-            @media print {
-                body { padding: 0; margin: 0; }
-                .financial-summary { page-break-inside: avoid; }
-                table { page-break-inside: auto; }
-                tr { page-break-inside: avoid; page-break-after: auto; }
-            }
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { text-align: center; color: #004987; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #004987; color: white; }
+            tfoot { font-weight: bold; background-color: #f2f2f2; }
         </style>
     `;
-    
-    // Get the search term for the report title
-    const searchTerm = domCache.pettyCashSearchTerm.value;
-    const title = searchTerm ? `Petty Cash Report - Search: "${searchTerm}"` : 'Petty Cash Report';
-    
-    // Write the content to the print window
-    printWindow.document.write(`
+
+    const title = `<h1>Petty Cash Summary Report</h1>`;
+
+    doc.write(`<!DOCTYPE html>
         <html>
-            <head>
-                <title>${title}</title>
-                ${printStyles}
-            </head>
-            <body>
-                <h2 style="text-align: center;">${title}</h2>
-                <p style="text-align: center; margin-bottom: 20px;">Generated on: ${new Date().toLocaleString()}</p>
-                ${pettyCashContent.innerHTML}
-                <script>
-                    window.onload = function() {
-                        setTimeout(function() {
-                            window.print();
-                            window.close();
-                        }, 200);
-                    }
-                </script>
-            </body>
-        </html>
-    `);
-    printWindow.document.close();
-}
+        <head>
+            <title>Petty Cash Report</title>
+            ${style}
+        </head>
+        <body>
+            ${title}
+            ${table.outerHTML}
+        </body>
+        </html>`);
 
-// Invoice Preview Functions
-function showInvoicePreview(record) {
-    document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
-    document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
-    document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
-    document.getElementById('previewStatus').textContent = record.status || '-';
-    document.getElementById('previewNotes').textContent = record.note || '-';
-    
-    const statusSteps = {
-        'Open': 0,
-        'For SRV': 1,
-        'For IPC': 2,
-        'No Invoice': 2,
-        'Report': 2,
-        'Under Review': 3,
-        'CEO Approval': 4,
-        'With Accounts': 5
-    };
-    const currentStep = statusSteps[record.status] || 0;
-    
-    document.querySelectorAll('#invoicePreviewModal .step').forEach((step, index) => {
-        step.classList.remove('current');
-        if (index < currentStep) {
-            step.classList.add('active');
-        } else {
-            step.classList.remove('active');
-        }
-    });
-    
-    if (currentStep > 0) {
-        const currentStepElement = document.querySelector(`#invoicePreviewModal .step-${currentStep}`);
-        if (currentStepElement) {
-            currentStepElement.classList.add('current');
-        }
-    }
-    
-    document.querySelectorAll('#invoicePreviewModal .step-connector').forEach((connector, index) => {
-        if (index < currentStep - 1) {
-            connector.classList.add('active');
-        } else {
-            connector.classList.remove('active');
-        }
-    });
-    
-    // Update WhatsApp button with site-specific number
-    const whatsappBtn = document.getElementById('whatsappReminderBtn');
-    let whatsappNumber = '50992023'; // Default number
-    
-    // Extract site number from the record's site
-    if (record.site) {
-        for (const [sitePattern, number] of Object.entries(SITE_WHATSAPP_NUMBERS)) {
-            if (record.site.includes(sitePattern)) {
-                whatsappNumber = number;
-                break;
-            }
-        }
-    }
-    
-    whatsappBtn.onclick = function() {
-        sendWhatsAppReminder(record, whatsappNumber);
-    };
-    
-    document.getElementById('invoicePreviewModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeInvoicePreview() {
-    document.getElementById('invoicePreviewModal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-
-// WhatsApp reminder function
-function sendWhatsAppReminder(record, whatsappNumber) {
-    let message = `*Invoice Reminder*\n\n`;
-    message += `PO: ${record.poNumber || 'N/A'}\n`;
-    message += `Invoice: ${record.invoiceNumber || 'N/A'}\n`;
-    message += `Vendor: ${record.vendor || 'N/A'}\n`;
-    message += `Amount: ${record.value ? formatNumber(record.value) : 'N/A'}\n`;
-    message += `Status: ${record.status || 'N/A'}\n\n`;
-    message += `Please provide an update on this invoice.`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
-}
-
-// Contact function
-function contactAboutMissingData() {
-    const searchTerm = domCache.searchTerm.value;
-    const releaseDate = domCache.releaseDateFilter.value;
-    const activeFilter = document.querySelector('.filter-btn.active').textContent;
-    
-    let message = `Hi, Irwin.\n\n`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = '+97450992023';
-    
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
-}
-
-// Share functions
-function shareReportViaWhatsApp() {
-    const reportHeader = document.getElementById('reportHeader').textContent;
-    const totalAmount = document.getElementById('grandTotal').textContent;
-    
-    let message = `*Report Summary*\n\n`;
-    message += `${reportHeader}\n\n`;
-    message += `*Total Amount:* ${totalAmount}\n\n`;
-    message += `Generated from IBA Trading Invoice Management System`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = '+97450992023';
-    
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
-}
-
-function sharePettyCashViaWhatsApp() {
-    const totalAmount = document.getElementById('pettyCashTotal').textContent;
-    const recordCount = document.getElementById('pettyCashCount').textContent;
-    const searchTerm = domCache.pettyCashSearchTerm.value;
-    
-    let message = `*Petty Cash Summary*\n\n`;
-    message += `Search Term: ${searchTerm}\n`;
-    message += `Records Found: ${recordCount}\n`;
-    message += `Total Amount: ${totalAmount}\n\n`;
-    message += `Generated from IBA Trading Invoice Management System`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = '+97450992023';
-    
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
-}
-
-// Responsive setup
-function setupResponsiveElements() {
-    detectDeviceType();
-    const screenWidth = window.innerWidth;
-    
-    // Reset all hidden columns first
-    document.querySelectorAll('#recordsTable th, #recordsTable td, #siteRecordsTable th, #siteRecordsTable td').forEach(el => {
-        el.style.display = '';
-    });
-    
-    // Records table responsiveness
-    if (screenWidth <= 400) {
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-    } else if (screenWidth <= 576) {
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-    } else if (screenWidth <= 768) {
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-        
-        // Site records table responsiveness
-        document.querySelectorAll('#siteRecordsTable th:nth-child(2), #siteRecordsTable td:nth-child(2), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
-            el.style.display = 'none';
-        });
-    } else if (screenWidth <= 992) {
-        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
-            el.style.display = 'none';
-        });
-    }
-    
-    // Extra small screens
-    if (screenWidth <= 480) {
-        document.querySelectorAll('#siteRecordsTable th:nth-child(4), #siteRecordsTable td:nth-child(4), #siteRecordsTable th:nth-child(5), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(6)').forEach(el => {
-            el.style.display = 'none';
-        });
-    }
+    doc.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
 }
 
 // Overdue progression check
