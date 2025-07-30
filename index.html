@@ -462,11 +462,15 @@
     <div id="invoicePreviewModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeInvoicePreview()">&times;</span>
-            <h2>Invoice Details</h2>
+            <h2 id="invoiceModalTitle">Invoice Details</h2>
             
             <div class="preview-details">
                 <div class="detail-row">
-                    <span class="detail-label">PO Number:</span>
+                    <span class="detail-label">Vendor:</span>
+                <span class="detail-value" id="previewVendor"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">PO Number:</span>
                     <span class="detail-value" id="previewPoNumber"></span>
                 </div>
                 <div class="detail-row">
@@ -533,11 +537,15 @@
     <div id="dashboardPreviewModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeDashboardPreview()">&times;</span>
-            <h2>Invoice Details</h2>
+            <h2 id="invoiceModalTitle">Invoice Details</h2>
             
             <div class="preview-details">
                 <div class="detail-row">
-                    <span class="detail-label">PO Number:</span>
+                    <span class="detail-label">Vendor:</span>
+                <span class="detail-value" id="previewVendor"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">PO Number:</span>
                     <span class="detail-value" id="dashboardPreviewPoNumber"></span>
                 </div>
                 <div class="detail-row">
@@ -608,5 +616,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>    
 <script src="app.js"></script>
+
+<!-- Updated snippet only -->
+<h2 id="invoiceDetailsTitle" style="text-align:center; color:var(--primary); margin: 20px 0;"></h2>
+
 </body>
 </html>

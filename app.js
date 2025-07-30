@@ -1285,7 +1285,8 @@ function refreshSiteTable(filteredRecords = null) {
 }
 
 function showDashboardRecordPreview(record) {
-    document.getElementById('dashboardPreviewPoNumber').textContent = record.poNumber || '-';
+document.getElementById('dashboardPreviewVendor').textContent = record.vendor || '-';    
+document.getElementById('dashboardPreviewPoNumber').textContent = record.poNumber || '-';
     document.getElementById('dashboardPreviewInvoiceNumber').textContent = record.invoiceNumber || '-';
     document.getElementById('dashboardPreviewAmount').textContent = record.value ? formatNumber(record.value) : '-';
     document.getElementById('dashboardPreviewStatus').textContent = record.status || '-';
@@ -1806,7 +1807,8 @@ function printPettyCashReport() {
 
 // Invoice Preview Functions
 function showInvoicePreview(record) {
-    document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
+document.getElementById('previewVendor').textContent = record.vendor || '-';    
+document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
     document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
     document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
     document.getElementById('previewStatus').textContent = record.status || '-';
