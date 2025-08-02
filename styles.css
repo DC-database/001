@@ -2056,3 +2056,197 @@ tr:hover {
         display: none !important;
     }
 }
+/* Toast message styles */
+.toast-message {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    max-width: 80%;
+    text-align: center;
+}
+
+.toast-message.show {
+    opacity: 1;
+}
+
+/* Collection modal styles */
+.collection-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+#collectionTable {
+    width: 100%;
+    margin-top: 15px;
+}
+
+#collectionTable th {
+    background-color: var(--primary);
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+#collectionTable tfoot {
+    font-weight: bold;
+    background-color: #f5f5f5;
+}
+
+#collectionTable tfoot td {
+    border-top: 2px solid var(--primary);
+}
+
+/* Selected row styling */
+#recordsTable tbody tr.selected-row {
+    background-color: rgba(74, 111, 165, 0.2) !important;
+    outline: 2px solid var(--primary);
+}
+
+/* Section actions styling */
+.section-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .section-actions .btn-text {
+        display: none;
+    }
+}
+
+/* Update the collection modal styles */
+#collectionModal .modal-content {
+    max-width: 90%;
+    width: 900px;
+    padding: 30px;
+}
+
+#collectionModal .collection-info {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 25px;
+    justify-content: center;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+#collectionModal .info-item {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 200px;
+}
+
+#collectionModal .info-label {
+    font-weight: bold;
+    color: var(--primary);
+    font-size: 16px;
+}
+
+#collectionModal .info-value {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+#collectionModal .collection-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    justify-content: center;
+}
+
+#collectionModal .collection-actions .btn {
+    min-width: 200px;
+    padding: 12px;
+}
+
+#collectionTable {
+    width: 100%;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+#collectionTable th {
+    padding: 12px;
+    background-color: var(--primary);
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+#collectionTable td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+#collectionTable tr:hover {
+    background-color: rgba(74, 111, 165, 0.1);
+}
+
+.po-header-row {
+    background-color: #f5f5f5 !important;
+    font-weight: bold;
+    position: sticky;
+    top: 45px;
+    z-index: 1;
+}
+
+.po-header-row:hover {
+    background-color: #f5f5f5 !important;
+}
+
+
+
+/* Improve spacing and layout for the invoice preview modal */
+.invoice-preview-modal {
+    padding: 25px;
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    line-height: 1.6;
+    overflow-y: auto;
+}
+
+.invoice-preview-modal h2, 
+.invoice-preview-modal h3 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.invoice-preview-modal .preview-field {
+    margin-bottom: 12px;
+}
+
+.invoice-preview-modal .preview-label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    color: var(--primary);
+}
+
+.invoice-preview-modal .preview-value {
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    white-space: pre-wrap;
+}

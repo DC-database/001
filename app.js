@@ -661,7 +661,20 @@ function refreshTable(filteredRecords = null) {
             </td>
         `;
         
+        // Add click handler for row selection
         row.addEventListener('click', function(e) {
+            // Don't trigger selection when clicking on action buttons
+            if (!e.target.closest('.action-btns')) {
+                // Toggle selection
+                this.classList.toggle('selected-row');
+                
+                // Prevent triggering the preview if we're just selecting
+                e.stopPropagation();
+            }
+        });
+        
+        // Add double click handler for preview (existing functionality)
+        row.addEventListener('dblclick', function(e) {
             if (!e.target.closest('.action-btns')) {
                 showInvoicePreview(record);
             }
@@ -671,6 +684,21 @@ function refreshTable(filteredRecords = null) {
     });
     
     setupResponsiveElements();
+}
+
+// Helper function to get selected records from tracker
+function getSelectedTrackerRecords() {
+    const selectedRows = document.querySelectorAll('#recordsTable tbody tr.selected-row');
+    const selectedRecords = [];
+    
+    selectedRows.forEach(row => {
+        const rowIndex = Array.from(row.parentNode.children).indexOf(row);
+        if (currentFilteredRecords && rowIndex < currentFilteredRecords.length) {
+            selectedRecords.push(currentFilteredRecords[rowIndex]);
+        }
+    });
+    
+    return selectedRecords;
 }
 
 // Search and filter
@@ -740,13 +768,12 @@ function filterRecords(status) {
 }
 
 function clearSearch() {
-    isViewingSelected = false;
-    selectedRecords = [];
-    document.getElementById('selectedLabel').style.display = 'none';
+    // Clear search inputs
     domCache.searchTerm.value = '';
     domCache.releaseDateFilter.value = '';
-    activeFilter = 'all';
     
+    // Reset filter to 'All'
+    activeFilter = 'all';
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.textContent === 'All') {
@@ -754,8 +781,22 @@ function clearSearch() {
         }
     });
     
+    // Clear table display
     domCache.recordsTable.style.display = 'none';
     document.querySelector('#recordsTable tbody').innerHTML = '';
+    
+    // Reset selection states
+    isViewingSelected = false;
+    selectedRecords = [];
+    currentFilteredRecords = null;
+    
+    // Clear any selected rows
+    document.querySelectorAll('#recordsTable tbody tr.selected-row').forEach(row => {
+        row.classList.remove('selected-row');
+    });
+    
+    // Show toast message
+    showToast('Search cleared');
 }
 
 function clearDate() {
@@ -2438,4 +2479,282 @@ function viewSelectedInTracker() {
     if (window.innerWidth <= 768) {
         domCache.recordsTable.scrollIntoView({ behavior: 'smooth' });
     }
+}
+// Collection functionality
+let invoiceCollection = [];
+
+function addToCollection() {
+    const selectedRecords = getSelectedRecords();
+    
+    if (selectedRecords.length === 0) {
+        alert('Please select at least one record to add to collection');
+        return;
+    }
+    
+    // Add only records that aren't already in the collection
+    selectedRecords.forEach(record => {
+        if (!invoiceCollection.some(item => item.poNumber === record.poNumber && 
+                                          item.invoiceNumber === record.invoiceNumber)) {
+            invoiceCollection.push(record);
+        }
+    });
+    
+    // Show success message
+    showToast(`${selectedRecords.length} item(s) added to collection. Total: ${invoiceCollection.length}`);
+}
+
+// Update viewCollection to handle both sources
+function viewCollection() {
+    if (invoiceCollection.length === 0) {
+        alert('Your collection is empty. Please add some items first.');
+        return;
+    }
+
+    // Update the collection table
+    const tableBody = document.querySelector('#collectionTable tbody');
+    tableBody.innerHTML = '';
+    
+    let totalAmount = 0;
+    
+    // Group by PO number for better organization
+    const poGroups = {};
+    invoiceCollection.forEach(record => {
+        const poKey = record.poNumber || 'No PO';
+        if (!poGroups[poKey]) {
+            poGroups[poKey] = [];
+        }
+        poGroups[poKey].push(record);
+    });
+    
+    let rowIndex = 1;
+    
+    // Sort PO groups alphabetically
+    const sortedPoKeys = Object.keys(poGroups).sort();
+    
+    sortedPoKeys.forEach(poKey => {
+        // Add PO header row if it's not "No PO"
+        if (poKey !== 'No PO') {
+            const headerRow = document.createElement('tr');
+            headerRow.className = 'po-header-row';
+            headerRow.innerHTML = `
+                <td colspan="9">
+                    <strong>PO: ${poKey}</strong>
+                </td>
+            `;
+            tableBody.appendChild(headerRow);
+        }
+        
+        // Add records for this PO
+        poGroups[poKey].forEach(record => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${rowIndex++}</td>
+                <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
+                <td>${record.site || '-'}</td>
+                <td>${record.poNumber || '-'}</td>
+                <td>${record.vendor || '-'}</td>
+                <td>${record.invoiceNumber || '-'}</td>
+                <td class="numeric">${record.value ? formatNumber(record.value) : '-'}</td>
+                <td><span class="status-badge ${getStatusClass(record.status)}">${record.status}</span></td>
+                <td>${record.note || '-'}</td>
+            `;
+            
+            row.addEventListener('click', function() {
+                showInvoicePreview(record);
+            });
+            
+            tableBody.appendChild(row);
+            
+            // Calculate total amount
+            totalAmount += parseFloat(record.value) || 0;
+        });
+    });
+    
+    // Update collection info
+    document.getElementById('collectionCount').textContent = invoiceCollection.length;
+    document.getElementById('collectionTotalAmount').textContent = formatNumber(totalAmount);
+    
+    // Show the modal
+    document.getElementById('collectionModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Scroll to top of the table
+    document.querySelector('.table-responsive').scrollTop = 0;
+}
+
+function closeCollectionModal() {
+    document.getElementById('collectionModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function clearCollection() {
+    if (confirm('Are you sure you want to clear your collection? This cannot be undone.')) {
+        invoiceCollection = [];
+        closeCollectionModal();
+        showToast('Collection cleared successfully');
+    }
+}
+
+function printCollection() {
+    if (invoiceCollection.length === 0) {
+        alert('Your collection is empty. Nothing to print.');
+        return;
+    }
+    
+    // Create a print window
+    const printWindow = window.open('', '_blank');
+    
+    // Create the table HTML
+    let tableHTML = `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">ID</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Release Date</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Site</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">PO</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Vendor</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Invoice</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white; text-align: right;">Amount</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Status</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Note</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    // Calculate total amount
+    let totalAmount = 0;
+    
+    // Add rows for collection items
+    invoiceCollection.forEach((record, index) => {
+        tableHTML += `
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.site || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.poNumber || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.vendor || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.invoiceNumber || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${record.value ? formatNumber(record.value) : '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.status || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.note || '-'}</td>
+            </tr>`;
+        
+        totalAmount += parseFloat(record.value) || 0;
+    });
+    
+    tableHTML += `</tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" style="padding: 8px; border: 1px solid #ddd; font-weight: bold; text-align: right;">Total</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; text-align: right;">${formatNumber(totalAmount)}</td>
+                <td colspan="2" style="padding: 8px; border: 1px solid #ddd;"></td>
+            </tr>
+        </tfoot>
+    </table>`;
+    
+    // Write the content to the print window
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Invoice Collection Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #4a6fa5; text-align: center; }
+                    h2 { color: #4a6fa5; text-align: center; margin-top: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { padding: 8px; border: 1px solid #ddd; }
+                    th { background-color: #4a6fa5; color: white; }
+                    .numeric { text-align: right; }
+                    @page { size: auto; margin: 10mm; }
+                    @media print {
+                        body { padding: 0; margin: 0; }
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Invoice Collection Report</h1>
+                <p style="text-align: center; margin-bottom: 5px;">Generated on: ${new Date().toLocaleString()}</p>
+                <p style="text-align: center; margin-bottom: 20px; font-weight: bold;">Total Items: ${invoiceCollection.length}</p>
+                ${tableHTML}
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 200);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+// Helper function to show toast messages
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, 3000);
+}
+
+// Get selected records from the tracker table
+function getSelectedTrackerRecords() {
+    const rows = document.querySelectorAll('#recordsTable tbody tr');
+    const selectedRecords = [];
+    
+    rows.forEach((row, index) => {
+        // We'll use visual selection (highlighted row) for tracker selection
+        if (row.classList.contains('selected-row')) {
+            if (currentFilteredRecords && index < currentFilteredRecords.length) {
+                selectedRecords.push(currentFilteredRecords[index]);
+            }
+        }
+    });
+    
+    return selectedRecords;
+}
+
+// Add to collection from tracker
+function addToCollectionFromTracker() {
+    const selectedRows = document.querySelectorAll('#recordsTable tbody tr.selected-row');
+    const selectedRecords = [];
+    
+    selectedRows.forEach(row => {
+        const rowIndex = Array.from(row.parentNode.children).indexOf(row);
+        if (currentFilteredRecords && rowIndex < currentFilteredRecords.length) {
+            selectedRecords.push(currentFilteredRecords[rowIndex]);
+        }
+    });
+    
+    if (selectedRecords.length === 0) {
+        alert('Please select at least one record (click on a row) to add to collection');
+        return;
+    }
+    
+    // Add only records that aren't already in the collection
+    selectedRecords.forEach(record => {
+        if (!invoiceCollection.some(item => 
+            item.poNumber === record.poNumber && 
+            item.invoiceNumber === record.invoiceNumber)) {
+            invoiceCollection.push(record);
+        }
+    });
+    
+    // Show success message
+    showToast(`${selectedRecords.length} item(s) added to collection. Total: ${invoiceCollection.length}`);
 }
