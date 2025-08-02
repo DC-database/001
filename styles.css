@@ -1866,6 +1866,7 @@ tr:hover {
         display: none !important;
     }
 }
+
 /* Add this to your existing styles.css */
 #pettyCashTable tbody tr,
 #reportTable tbody tr {
@@ -1883,6 +1884,7 @@ tr:hover {
 .touch-device #reportTable tbody tr:active {
     background-color: rgba(79, 195, 247, 0.2);
 }
+
 /* Enhanced modern step progress style */
 .step-progress-container {
     position: relative;
@@ -1914,8 +1916,6 @@ tr:hover {
     background-color: var(--primary);
 }
 
-
-
 .step-connector.active {
     background-color: var(--primary);
 }
@@ -1935,4 +1935,124 @@ tr:hover {
     color: #555;
     margin-top: 3px;
     text-align: center;
+}
+
+/* Dashboard Print Styles */
+.dashboard-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+@media print {
+    /* Ensure all table columns are visible when printing */
+    #siteRecordsTable th,
+    #siteRecordsTable td {
+        display: table-cell !important;
+        visibility: visible !important;
+    }
+    
+    /* Hide elements we don't want to print */
+    .search-container,
+    .dashboard-actions,
+    .overdue-cards-container,
+    .charts-container {
+        display: none !important;
+    }
+    
+    /* Print-specific styling */
+    body * {
+        visibility: hidden;
+    }
+    
+    #mainPageSection, #mainPageSection * {
+        visibility: visible;
+    }
+    
+    #mainPageSection {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: white;
+        border: none;
+    }
+    
+    #siteRecordsTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    
+    #siteRecordsTable th {
+        background-color: var(--primary) !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    #siteRecordsTable th, 
+    #siteRecordsTable td {
+        padding: 8px;
+        border: 1px solid #ddd;
+    }
+    
+    #siteRecordsTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    @page {
+        size: auto;
+        margin: 10mm;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-actions {
+        justify-content: center;
+    }
+    
+    .dashboard-actions .btn-text {
+        display: none;
+    }
+}
+/* Checkbox styles for dashboard table */
+#siteRecordsTable th:first-child,
+#siteRecordsTable td:first-child {
+    width: 30px;
+    text-align: center;
+}
+
+#siteRecordsTable input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Move dashboard actions below charts */
+.dashboard-actions {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 10px;
+}
+
+/* Adjust print styles to show "Report" status */
+@media print {
+    #siteRecordsTable .status-badge {
+        display: inline-block !important;
+        visibility: visible !important;
+        color: white !important;
+        padding: 2px 5px !important;
+        font-size: 10px !important;
+    }
+    
+    /* Hide the checkbox column in print */
+    #siteRecordsTable th:first-child,
+    #siteRecordsTable td:first-child {
+        display: none !important;
+    }
 }

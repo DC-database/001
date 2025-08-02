@@ -1,3 +1,4 @@
+let currentSearchedSite = '';
 // Firebase configuration - REPLACE WITH YOUR CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyDtEp9HL7MfOlnrCI-MWuTY4k6vuGTMCIs",
@@ -58,6 +59,8 @@ let activeFilter = 'all';
 let isLoading = false;
 let currentYear = '2025';
 let currentFilteredRecords = null;
+let isViewingSelected = false;
+let selectedRecords = [];
 
 // Chart instances
 let statusPieChart = null;
@@ -189,6 +192,13 @@ function showSection(sectionId) {
     if (sectionId === 'statementSection') {
         updateVendorSuggestions();
         updateSiteSuggestions();
+    }
+    
+    // Clear filters when switching to invoice section
+    if (sectionId === 'invoiceSection') {
+        domCache.searchTerm.value = '';
+        domCache.releaseDateFilter.value = '';
+        activeFilter = 'all';
     }
     
     if (sectionId === 'mainPageSection') {
@@ -580,7 +590,10 @@ function refreshTable(filteredRecords = null) {
     const displayRecords = filteredRecords || [];
     currentFilteredRecords = displayRecords;
     
-    if (displayRecords.length === 0) {
+    // Show the table if we have records, regardless of search term
+    if (displayRecords.length > 0) {
+        domCache.recordsTable.style.display = 'table';
+    } else {
         domCache.recordsTable.style.display = 'none';
         return;
     }
@@ -662,6 +675,10 @@ function refreshTable(filteredRecords = null) {
 
 // Search and filter
 function searchRecords() {
+    if (isViewingSelected && selectedRecords.length > 0) {
+        renderTable(selectedRecords);
+        return;
+    }
     const term = domCache.searchTerm.value.toLowerCase();
     const releaseDateInput = domCache.releaseDateFilter.value;
     
@@ -723,6 +740,9 @@ function filterRecords(status) {
 }
 
 function clearSearch() {
+    isViewingSelected = false;
+    selectedRecords = [];
+    document.getElementById('selectedLabel').style.display = 'none';
     domCache.searchTerm.value = '';
     domCache.releaseDateFilter.value = '';
     activeFilter = 'all';
@@ -853,12 +873,12 @@ function initializeCharts(filteredRecords = null) {
                     animateRotate: true
                 },
                 onClick: function(evt, elements) {
-                    if (elements.length > 0) {
-                        const clickedIndex = elements[0].index;
-                        const status = statusLabels[clickedIndex];
-                        filterSiteRecords(status);
-                    }
-                }
+        if (elements.length > 0) {
+            const clickedIndex = elements[0].index;
+            const status = statusLabels[clickedIndex];
+            filterRecordsByStatus(status);
+        }
+    }
             },
             plugins: [ChartDataLabels]
         });
@@ -938,12 +958,12 @@ function initializeCharts(filteredRecords = null) {
                     }
                 },
                 onClick: function(evt, elements) {
-                    if (elements.length > 0) {
-                        const clickedIndex = elements[0].index;
-                        const status = statusLabels[clickedIndex];
-                        filterSiteRecords(status);
-                    }
-                }
+        if (elements.length > 0) {
+            const clickedIndex = elements[0].index;
+            const status = statusLabels[clickedIndex];
+            filterRecordsByStatus(status);
+        }
+    }
             }
         });
     }
@@ -1155,6 +1175,7 @@ function filterSiteTableOnly(site, status) {
 }
 
 function searchSiteRecords() {
+    currentSearchedSite = domCache.siteSearchTerm.value.trim();
     const term = domCache.siteSearchTerm.value.toLowerCase();
     let filtered = records.filter(record => record.status !== 'With Accounts' && record.status !== 'Closed' && record.status !== 'Cancelled');
     
@@ -1265,6 +1286,7 @@ function refreshSiteTable(filteredRecords = null) {
     displayRecords.forEach((record, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
+            <td><input type="checkbox"></td>
             <td>${index + 1}</td>
             <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
             <td>${record.site || '-'}</td>
@@ -1276,7 +1298,12 @@ function refreshSiteTable(filteredRecords = null) {
             <td>${record.note || '-'}</td>
         `;
         
-        row.addEventListener('click', function() { handleSiteTableClick(record); });
+        row.addEventListener('click', function(e) {
+            // Don't trigger row click when clicking on checkbox
+            if (!e.target.matches('input[type="checkbox"]')) {
+                handleSiteTableClick(record);
+            }
+        });
         
         tableBody.appendChild(row);
     });
@@ -1743,6 +1770,131 @@ function printReport() {
     printWindow.document.close();
 }
 
+// Add these new functions to your app.js
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('#siteRecordsTable tbody input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+}
+
+function getSelectedRecords() {
+    const checkboxes = document.querySelectorAll('#siteRecordsTable tbody input[type="checkbox"]:checked');
+    const selectedRecords = [];
+    checkboxes.forEach(cb => {
+        const row = cb.closest('tr');
+        const recordIndex = parseInt(row.cells[1].textContent) - 1; // Get ID from the second cell (index 1)
+        if (currentFilteredRecords && recordIndex >= 0 && recordIndex < currentFilteredRecords.length) {
+            selectedRecords.push(currentFilteredRecords[recordIndex]);
+        }
+    });
+    return selectedRecords;
+}
+
+function printSelectedDashboardResults() {
+    const selectedRecords = getSelectedRecords();
+    
+    if (selectedRecords.length === 0) {
+        alert('Please select at least one record to print');
+        return;
+    }
+    
+    // Get the most common status from selected records
+    const statusCounts = {};
+    selectedRecords.forEach(record => {
+        statusCounts[record.status] = (statusCounts[record.status] || 0) + 1;
+    });
+    const mostCommonStatus = Object.keys(statusCounts).reduce((a, b) => 
+        statusCounts[a] > statusCounts[b] ? a : b
+    );
+
+    // Create a print window
+    const printWindow = window.open('', '_blank');
+    
+    // Create the table HTML
+    let tableHTML = `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">ID</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Release Date</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Site</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">PO</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Vendor</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Invoice</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white; text-align: right;">Amount</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Status</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Note</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    // Add rows for selected records
+    selectedRecords.forEach((record, index) => {
+        tableHTML += `
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.site || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.poNumber || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.vendor || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.invoiceNumber || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${record.value ? formatNumber(record.value) : '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.status || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.note || '-'}</td>
+            </tr>`;
+    });
+    
+    tableHTML += `</tbody></table>`;
+    
+    // Get the search term for the title
+    const searchTerm = domCache.siteSearchTerm.value;
+    const title = searchTerm ? `Invoice Dashboard Results - Search: "${searchTerm}"` : 'Invoice Dashboard Results';
+    
+    // Write the content to the print window
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>${title}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #4a6fa5; text-align: center; }
+                    h2 { color: #4a6fa5; text-align: center; margin-top: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { padding: 8px; border: 1px solid #ddd; }
+                    th { background-color: #4a6fa5; color: white; }
+                    .numeric { text-align: right; }
+                    @page { size: auto; margin: 10mm; }
+                    @media print {
+                        body { padding: 0; margin: 0; }
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${title}</h1>
+                <p style="text-align: center; margin-bottom: 5px;">Generated on: ${new Date().toLocaleString()}</p>
+                <h2>Selected Records For: ${mostCommonStatus}</h2>
+                <p style="text-align: center; margin-bottom: 20px; font-weight: bold;">Records: ${selectedRecords.length}</p>
+                ${tableHTML}
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 200);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+
+
 function printPettyCashReport() {
     // Create a print window
     const printWindow = window.open('', '_blank');
@@ -2012,6 +2164,107 @@ function checkOverdueProgression() {
     document.getElementById('overdueIPCCount').textContent = overdueIPC.length;
 }
 
+// Dashboard Print Function
+function printDashboardResults() {
+    // Create a print window
+    const printWindow = window.open('', '_blank');
+    
+    // Get the current filtered records or all records if no filter is applied
+    const displayRecords = currentFilteredRecords || records.filter(record => record.status !== 'With Accounts');
+    
+    if (displayRecords.length === 0) {
+        alert('No records to print');
+        return;
+    }
+    
+    // Determine the status filter being applied
+    let statusFilter = 'All Statuses';
+    const activeFilterBtn = document.querySelector('.filter-btn.active');
+    if (activeFilterBtn && activeFilterBtn.textContent !== 'All') {
+        statusFilter = activeFilterBtn.textContent;
+    }
+    
+    // Create the table HTML
+    let tableHTML = `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">ID</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Release Date</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Site</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">PO</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Vendor</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Invoice</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white; text-align: right;">Amount</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Status</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; background-color: #4a6fa5; color: white;">Note</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    // Add rows
+    displayRecords.forEach((record, index) => {
+        tableHTML += `
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.site || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.poNumber || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.vendor || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.invoiceNumber || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${record.value ? formatNumber(record.value) : '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.status || '-'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${record.note || '-'}</td>
+            </tr>`;
+    });
+    
+    tableHTML += `</tbody></table>`;
+    
+    // Get the search term for the title
+    const searchTerm = domCache.siteSearchTerm.value;
+    const title = searchTerm ? `Invoice Dashboard Results - Search: "${searchTerm}"` : 'Invoice Dashboard Results';
+    
+    // Write the content to the print window
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>${title}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #4a6fa5; text-align: center; }
+                    h2 { color: #4a6fa5; text-align: center; margin-top: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { padding: 8px; border: 1px solid #ddd; }
+                    th { background-color: #4a6fa5; color: white; }
+                    .numeric { text-align: right; }
+                    @page { size: auto; margin: 10mm; }
+                    @media print {
+                        body { padding: 0; margin: 0; }
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${title}</h1>
+                <p style="text-align: center; margin-bottom: 5px;">Generated on: ${new Date().toLocaleString()}</p>
+                <h2>Selected Records For: ${statusFilter}</h2>
+                <p style="text-align: center; margin-bottom: 20px;">Records: ${displayRecords.length}</p>
+                ${tableHTML}
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 200);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
     cacheDOM();
@@ -2151,4 +2404,38 @@ function handleSiteTableClick(record) {
     showSection('invoiceSection');
     domCache.searchTerm.value = record.poNumber || '';
     searchRecords();
+}
+
+function filterRecordsByStatus(status) {
+    let site = currentSearchedSite.toLowerCase();
+    const filtered = records.filter(r =>
+        r.status === status &&
+        r.site.toLowerCase().includes(site)
+    );
+    refreshSiteTable(filtered);
+}
+function viewSelectedInTracker() {
+    const selectedRecords = getSelectedRecords();
+    
+    if (selectedRecords.length === 0) {
+        alert('Please select at least one record to view');
+        return;
+    }
+    
+    // Switch to invoice section
+    showSection('invoiceSection');
+    
+    // Clear any existing search/filter
+    domCache.searchTerm.value = '';
+    domCache.releaseDateFilter.value = '';
+    activeFilter = 'all';
+    
+    // Update the UI to show selected records
+    currentFilteredRecords = selectedRecords;
+    refreshTable(selectedRecords);
+    
+    // Scroll to the table if on mobile
+    if (window.innerWidth <= 768) {
+        domCache.recordsTable.scrollIntoView({ behavior: 'smooth' });
+    }
 }

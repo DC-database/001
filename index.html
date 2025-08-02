@@ -106,17 +106,25 @@
                 <div class="chart-box">
                     <canvas id="statusBarChart"></canvas>
                 </div>
-
-<div class="chart-box full-width">
-    <canvas id="overdueBarChart"></canvas>
-</div>
+                <div class="chart-box full-width">
+                    <canvas id="overdueBarChart"></canvas>
+                </div>
             </div>
             
-
+<div class="dashboard-actions">
+    <button class="btn btn-primary" onclick="printSelectedDashboardResults()">
+        <i class="fas fa-print"></i> <span class="btn-text">Print Selected</span>
+    </button>
+    <button class="btn btn-primary" onclick="viewSelectedInTracker()">
+        <i class="fas fa-eye"></i> <span class="btn-text">View Selected</span>
+    </button>
+</div>
+            
             <div class="table-responsive">
                 <table id="siteRecordsTable">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"></th>
                             <th>ID</th>
                             <th>Release Date</th>
                             <th>Site</th>
@@ -467,10 +475,10 @@
             <div class="preview-details">
                 <div class="detail-row">
                     <span class="detail-label">Vendor:</span>
-                <span class="detail-value" id="previewVendor"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">PO Number:</span>
+                    <span class="detail-value" id="previewVendor"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">PO Number:</span>
                     <span class="detail-value" id="previewPoNumber"></span>
                 </div>
                 <div class="detail-row">
@@ -542,10 +550,10 @@
             <div class="preview-details">
                 <div class="detail-row">
                     <span class="detail-label">Vendor:</span>
-                <span class="detail-value" id="previewVendor"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">PO Number:</span>
+                    <span class="detail-value" id="dashboardPreviewVendor"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">PO Number:</span>
                     <span class="detail-value" id="dashboardPreviewPoNumber"></span>
                 </div>
                 <div class="detail-row">
@@ -614,11 +622,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>    
-<script src="app.js"></script>
-
-<!-- Updated snippet only -->
-<h2 id="invoiceDetailsTitle" style="text-align:center; color:var(--primary); margin: 20px 0;"></h2>
-
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>    
+    <script src="app.js"></script>
 </body>
 </html>
