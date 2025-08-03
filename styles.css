@@ -2250,3 +2250,9 @@ tr:hover {
     border: 1px solid #ddd;
     white-space: pre-wrap;
 }
+/* Add touch feedback for mobile */
+.touch-device #recordsTable tbody tr:active,
+.touch-device #siteRecordsTable tbody tr:active {
+    background-color: rgba(74, 111, 165, 0.2) !important;
+    transition: background-color 0.1s;
+}

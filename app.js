@@ -168,7 +168,10 @@ function cacheDOM() {
 
 // Mobile detection
 function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return (('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints > 0)) &&
+        window.innerWidth <= 768;
 }
 
 // Mobile menu functions
@@ -590,7 +593,6 @@ function refreshTable(filteredRecords = null) {
     const displayRecords = filteredRecords || [];
     currentFilteredRecords = displayRecords;
     
-    // Show the table if we have records, regardless of search term
     if (displayRecords.length > 0) {
         domCache.recordsTable.style.display = 'table';
     } else {
@@ -665,20 +667,25 @@ function refreshTable(filteredRecords = null) {
         row.addEventListener('click', function(e) {
             // Don't trigger selection when clicking on action buttons
             if (!e.target.closest('.action-btns')) {
-                // Toggle selection
-                this.classList.toggle('selected-row');
-                
-                // Prevent triggering the preview if we're just selecting
+                // On mobile, show preview immediately
+                if (isMobileDevice()) {
+                    showInvoicePreview(record);
+                } else {
+                    // On desktop, toggle selection
+                    this.classList.toggle('selected-row');
+                }
                 e.stopPropagation();
             }
         });
         
-        // Add double click handler for preview (existing functionality)
-        row.addEventListener('dblclick', function(e) {
-            if (!e.target.closest('.action-btns')) {
-                showInvoicePreview(record);
-            }
-        });
+        // Add double click handler for preview (desktop only)
+        if (!isMobileDevice()) {
+            row.addEventListener('dblclick', function(e) {
+                if (!e.target.closest('.action-btns')) {
+                    showInvoicePreview(record);
+                }
+            });
+        }
         
         tableBody.appendChild(row);
     });
@@ -1339,12 +1346,23 @@ function refreshSiteTable(filteredRecords = null) {
             <td>${record.note || '-'}</td>
         `;
         
+        // Handle both mobile and desktop interactions
         row.addEventListener('click', function(e) {
-            // Don't trigger row click when clicking on checkbox
             if (!e.target.matches('input[type="checkbox"]')) {
-                handleSiteTableClick(record);
+                if (isMobileDevice()) {
+                    showDashboardRecordPreview(record);
+                }
+                e.stopPropagation();
             }
         });
+        
+        if (!isMobileDevice()) {
+            row.addEventListener('dblclick', function(e) {
+                if (!e.target.matches('input[type="checkbox"]')) {
+                    showDashboardRecordPreview(record);
+                }
+            });
+        }
         
         tableBody.appendChild(row);
     });
