@@ -1370,8 +1370,15 @@ function refreshSiteTable(filteredRecords = null) {
     
     displayRecords.forEach((record, index) => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="checkbox"></td>
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'row-checkbox';
+        
+        const firstCell = document.createElement('td');
+        firstCell.appendChild(checkbox);
+        
+        row.appendChild(firstCell);
+        row.innerHTML += `
             <td>${index + 1}</td>
             <td>${record.releaseDate ? formatDate(record.releaseDate) : '-'}</td>
             <td>${record.site || '-'}</td>
@@ -1383,49 +1390,63 @@ function refreshSiteTable(filteredRecords = null) {
             <td>${record.note || '-'}</td>
         `;
         
-        // Add touch event handlers for mobile
-        let touchTimer;
-        
-        row.addEventListener('touchstart', function(e) {
-            if (isMobileDevice()) {
-                touchTimer = setTimeout(() => {
+        // Mobile-specific touch handling
+        if (isMobileDevice()) {
+            let touchStartTime;
+            let touchMoved = false;
+            
+            // Handle checkbox touch specifically
+            checkbox.addEventListener('touchstart', function(e) {
+                e.stopPropagation(); // Prevent row touch handlers
+                touchMoved = false;
+                touchStartTime = Date.now();
+            });
+            
+            checkbox.addEventListener('touchmove', function() {
+                touchMoved = true;
+            });
+            
+            checkbox.addEventListener('touchend', function(e) {
+                if (!touchMoved && (Date.now() - touchStartTime) < 200) {
+                    // Simple tap - toggle checkbox
+                    this.checked = !this.checked;
+                    e.preventDefault(); // Prevent double-tap zoom
+                }
+            });
+            
+            // For row touches (non-checkbox areas)
+            row.addEventListener('touchstart', function(e) {
+                if (!e.target.closest('input[type="checkbox"]')) {
+                    touchStartTime = Date.now();
+                    touchMoved = false;
+                }
+            });
+            
+            row.addEventListener('touchmove', function(e) {
+                if (!e.target.closest('input[type="checkbox"]')) {
+                    touchMoved = true;
+                }
+            });
+            
+            row.addEventListener('touchend', function(e) {
+                if (!e.target.closest('input[type="checkbox"]') && 
+                    !touchMoved && 
+                    (Date.now() - touchStartTime) < 200) {
+                    // Simple tap on row - show preview
                     showDashboardRecordPreview(record);
-                    touchTimer = null;
-                }, 500); // 500ms press for long touch
-                e.preventDefault();
-            }
-        });
-        
-        row.addEventListener('touchend', function(e) {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
-            }
-        });
-        
-        row.addEventListener('touchmove', function(e) {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
-            }
-        });
-        
-        // Keep double click for desktop
-        if (!isMobileDevice()) {
-            row.addEventListener('dblclick', function(e) {
-                if (!e.target.matches('input[type="checkbox"]')) {
-                    showDashboardRecordPreview(record);
+                    e.preventDefault();
                 }
             });
         }
         
-        // Keep single click for selection
-        row.addEventListener('click', function(e) {
-            if (!isMobileDevice() && !e.target.matches('input[type="checkbox"]')) {
-                if (isMobileDevice()) {
+        // Keep desktop double-click behavior
+        if (!isMobileDevice()) {
+            row.addEventListener('dblclick', function(e) {
+                if (!e.target.closest('input[type="checkbox"]')) {
                     showDashboardRecordPreview(record);
                 }
-                e.stopPropagation();
-            }
-        });
+            });
+        }
         
         tableBody.appendChild(row);
     });
