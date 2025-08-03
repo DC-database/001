@@ -2094,8 +2094,8 @@ function printPettyCashReport() {
 
 // Invoice Preview Functions
 function showInvoicePreview(record) {
-document.getElementById('previewVendor').textContent = record.vendor || '-';    
-document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
+    document.getElementById('previewVendor').textContent = record.vendor || '-';    
+    document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
     document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
     document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
     document.getElementById('previewStatus').textContent = record.status || '-';
@@ -2137,15 +2137,17 @@ document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
         }
     });
     
-    // Update WhatsApp button with site-specific number
+    // Update WhatsApp buttons
     const whatsappBtn = document.getElementById('whatsappReminderBtn');
-    let whatsappNumber = '50992023'; // Default number
+    const whatsappSiteBtn = document.getElementById('whatsappSiteReminderBtn');
+    let whatsappNumber = '50992023'; // Default HO number
     
     // Extract site number from the record's site
+    let siteWhatsappNumber = '50992023'; // Default if no site match
     if (record.site) {
         for (const [sitePattern, number] of Object.entries(SITE_WHATSAPP_NUMBERS)) {
             if (record.site.includes(sitePattern)) {
-                whatsappNumber = number;
+                siteWhatsappNumber = number;
                 break;
             }
         }
@@ -2153,6 +2155,10 @@ document.getElementById('previewPoNumber').textContent = record.poNumber || '-';
     
     whatsappBtn.onclick = function() {
         sendWhatsAppReminder(record, whatsappNumber);
+    };
+    
+    whatsappSiteBtn.onclick = function() {
+        sendWhatsAppReminder(record, siteWhatsappNumber);
     };
     
     document.getElementById('invoicePreviewModal').style.display = 'block';
@@ -2165,18 +2171,27 @@ function closeInvoicePreview() {
 }
 
 // WhatsApp reminder function
+// WhatsApp reminder function
 function sendWhatsAppReminder(record, whatsappNumber) {
     let message = `*Invoice Reminder*\n\n`;
     message += `PO: ${record.poNumber || 'N/A'}\n`;
     message += `Invoice: ${record.invoiceNumber || 'N/A'}\n`;
     message += `Vendor: ${record.vendor || 'N/A'}\n`;
     message += `Amount: ${record.value ? formatNumber(record.value) : 'N/A'}\n`;
-    message += `Status: ${record.status || 'N/A'}\n\n`;
-    message += `Please provide an update on this invoice.`;
+    message += `Status: ${record.status || 'N/A'}\n`;
+    
+    // Add PDF link if available
+    if (record.fileName) {
+        const pdfUrl = `${PDF_BASE_PATH}${encodeURIComponent(record.fileName)}`;
+        message += `\nPDF Link: ${pdfUrl}\n`;
+    }
+    
+    message += `\nPlease provide an update on this invoice.`;
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
 }
+
 
 // Contact function
 function contactAboutMissingData() {
@@ -2851,4 +2866,19 @@ function addToCollectionFromTracker() {
     
     // Show success message
     showToast(`${selectedRecords.length} item(s) added to collection. Total: ${invoiceCollection.length}`);
+}
+
+
+function sendSiteReminder() {
+  const message = "Reminder for invoice available for site. Please review.";
+  const phone = "insert-site-number-here"; // Replace if needed
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+function sendHOReminder() {
+  const message = "Reminder for invoice available. Please review at IBA.";
+  const phone = "50992023";
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
 }
