@@ -663,22 +663,32 @@ function refreshTable(filteredRecords = null) {
             </td>
         `;
         
-        // Add click handler for row selection
-        row.addEventListener('click', function(e) {
-            // Don't trigger selection when clicking on action buttons
-            if (!e.target.closest('.action-btns')) {
-                // On mobile, show preview immediately
-                if (isMobileDevice()) {
+        // Add touch event handlers for mobile
+        let touchTimer;
+        
+        row.addEventListener('touchstart', function(e) {
+            if (isMobileDevice()) {
+                touchTimer = setTimeout(() => {
                     showInvoicePreview(record);
-                } else {
-                    // On desktop, toggle selection
-                    this.classList.toggle('selected-row');
-                }
-                e.stopPropagation();
+                    touchTimer = null;
+                }, 500); // 500ms press for long touch
+                e.preventDefault();
             }
         });
         
-        // Add double click handler for preview (desktop only)
+        row.addEventListener('touchend', function(e) {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+            }
+        });
+        
+        row.addEventListener('touchmove', function(e) {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+            }
+        });
+        
+        // Keep double click for desktop
         if (!isMobileDevice()) {
             row.addEventListener('dblclick', function(e) {
                 if (!e.target.closest('.action-btns')) {
@@ -686,6 +696,14 @@ function refreshTable(filteredRecords = null) {
                 }
             });
         }
+        
+        // Keep single click for selection
+        row.addEventListener('click', function(e) {
+            if (!isMobileDevice() && !e.target.closest('.action-btns')) {
+                this.classList.toggle('selected-row');
+                e.stopPropagation();
+            }
+        });
         
         tableBody.appendChild(row);
     });
@@ -1346,16 +1364,32 @@ function refreshSiteTable(filteredRecords = null) {
             <td>${record.note || '-'}</td>
         `;
         
-        // Handle both mobile and desktop interactions
-        row.addEventListener('click', function(e) {
-            if (!e.target.matches('input[type="checkbox"]')) {
-                if (isMobileDevice()) {
+        // Add touch event handlers for mobile
+        let touchTimer;
+        
+        row.addEventListener('touchstart', function(e) {
+            if (isMobileDevice()) {
+                touchTimer = setTimeout(() => {
                     showDashboardRecordPreview(record);
-                }
-                e.stopPropagation();
+                    touchTimer = null;
+                }, 500); // 500ms press for long touch
+                e.preventDefault();
             }
         });
         
+        row.addEventListener('touchend', function(e) {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+            }
+        });
+        
+        row.addEventListener('touchmove', function(e) {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+            }
+        });
+        
+        // Keep double click for desktop
         if (!isMobileDevice()) {
             row.addEventListener('dblclick', function(e) {
                 if (!e.target.matches('input[type="checkbox"]')) {
@@ -1363,6 +1397,16 @@ function refreshSiteTable(filteredRecords = null) {
                 }
             });
         }
+        
+        // Keep single click for selection
+        row.addEventListener('click', function(e) {
+            if (!isMobileDevice() && !e.target.matches('input[type="checkbox"]')) {
+                if (isMobileDevice()) {
+                    showDashboardRecordPreview(record);
+                }
+                e.stopPropagation();
+            }
+        });
         
         tableBody.appendChild(row);
     });
