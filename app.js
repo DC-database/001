@@ -27,12 +27,8 @@ const isLocal = window.location.protocol === 'file:' ||
                 window.location.hostname.endsWith('.local');
 
 // Path configurations
-const PDF_BASE_PATH = isLocal
-    ? "L:/Files/INVOICE/"
-    : "https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/";
-const SRV_BASE_PATH = isLocal
-    ? "L:/Files/SRV/"
-    : "https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/SRV/";
+const PDF_BASE_PATH = "https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/";
+const SRV_BASE_PATH = "https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/SRV/";
 
 // Site WhatsApp numbers mapping
 const SITE_WHATSAPP_NUMBERS = {
@@ -253,11 +249,7 @@ function viewPDF(fileName) {
         return;
     }
     
-    if (isLocal) {
-        window.open(`${PDF_BASE_PATH}${encodeURIComponent(fileName)}`);
-    } else {
-        alert("Invoice files are only accessible when using the system on the local network.");
-    }
+    window.open(`${PDF_BASE_PATH}${encodeURIComponent(fileName)}`, '_blank');
 }
 
 // View SRV file
@@ -267,11 +259,7 @@ function viewSRV(fileName) {
         return;
     }
     
-    if (isLocal) {
-        window.open(`${SRV_BASE_PATH}${encodeURIComponent(fileName)}`);
-    } else {
-        alert("SRV files are only accessible when using the system on the local network.");
-    }
+    window.open(`${SRV_BASE_PATH}${encodeURIComponent(fileName)}`, '_blank');
 }
 
 // Loading overlay functions
