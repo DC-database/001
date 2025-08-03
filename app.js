@@ -663,32 +663,50 @@ function refreshTable(filteredRecords = null) {
             </td>
         `;
         
-        // Add touch event handlers for mobile
+        // Touch handling variables
         let touchTimer;
+        let isLongPress = false;
         
+        // Touch start - start timer for long press
         row.addEventListener('touchstart', function(e) {
             if (isMobileDevice()) {
+                isLongPress = false;
                 touchTimer = setTimeout(() => {
+                    isLongPress = true;
                     showInvoicePreview(record);
-                    touchTimer = null;
-                }, 500); // 500ms press for long touch
-                e.preventDefault();
+                }, 500); // 500ms for long press
             }
         });
         
+        // Touch end - clear timer if not long press
         row.addEventListener('touchend', function(e) {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
+            if (isMobileDevice()) {
+                if (touchTimer) clearTimeout(touchTimer);
+                if (!isLongPress && !e.target.closest('.action-btns')) {
+                    // Handle single tap for selection
+                    this.classList.toggle('selected-row');
+                }
+                isLongPress = false;
             }
         });
         
+        // Touch move - cancel long press if user moves finger
         row.addEventListener('touchmove', function(e) {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
+            if (isMobileDevice()) {
+                if (touchTimer) clearTimeout(touchTimer);
+                isLongPress = false;
             }
         });
         
-        // Keep double click for desktop
+        // Prevent default touch behavior to avoid conflicts
+        row.addEventListener('touchcancel', function(e) {
+            if (isMobileDevice()) {
+                if (touchTimer) clearTimeout(touchTimer);
+                isLongPress = false;
+            }
+        });
+        
+        // Keep double click for desktop preview
         if (!isMobileDevice()) {
             row.addEventListener('dblclick', function(e) {
                 if (!e.target.closest('.action-btns')) {
@@ -697,7 +715,7 @@ function refreshTable(filteredRecords = null) {
             });
         }
         
-        // Keep single click for selection
+        // Keep single click for desktop selection
         row.addEventListener('click', function(e) {
             if (!isMobileDevice() && !e.target.closest('.action-btns')) {
                 this.classList.toggle('selected-row');
@@ -710,6 +728,7 @@ function refreshTable(filteredRecords = null) {
     
     setupResponsiveElements();
 }
+
 
 // Helper function to get selected records from tracker
 function getSelectedTrackerRecords() {
