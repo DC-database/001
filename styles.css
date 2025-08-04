@@ -2256,3 +2256,41 @@ tr:hover {
     background-color: rgba(74, 111, 165, 0.2) !important;
     transition: background-color 0.1s;
 }
+/* Add this to your existing styles.css */
+@media (max-width: 480px) and (orientation: portrait) {
+    /* Dashboard table adjustments for portrait mobile */
+    #siteRecordsTable th:not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(8)),
+    #siteRecordsTable td:not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(8)) {
+        display: none;
+    }
+    
+    /* Adjust column widths for better fit */
+    #siteRecordsTable th:nth-child(3),
+    #siteRecordsTable td:nth-child(3),
+    #siteRecordsTable th:nth-child(4),
+    #siteRecordsTable td:nth-child(4),
+    #siteRecordsTable th:nth-child(5),
+    #siteRecordsTable td:nth-child(5),
+    #siteRecordsTable th:nth-child(8),
+    #siteRecordsTable td:nth-child(8) {
+        padding: 8px 4px;
+        font-size: 12px;
+    }
+    
+    /* Make status badges more compact */
+    .status-badge {
+        padding: 4px 6px;
+        font-size: 10px;
+    }
+    
+    /* Adjust the checkbox column */
+    #siteRecordsTable th:first-child,
+    #siteRecordsTable td:first-child {
+        width: 20px;
+    }
+    
+    #siteRecordsTable input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+    }
+}
