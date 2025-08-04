@@ -2256,33 +2256,3 @@ tr:hover {
     background-color: rgba(74, 111, 165, 0.2) !important;
     transition: background-color 0.1s;
 }
-
-@media (max-width: 480px) {
-    #siteRecordsTable th:nth-child(2),  /* ID */
-    #siteRecordsTable th:nth-child(3),  /* Release Date */
-    #siteRecordsTable th:nth-child(7),  /* Invoice */
-    #siteRecordsTable th:nth-child(8),  /* Amount */
-    #siteRecordsTable th:nth-child(10), /* Note */
-    #siteRecordsTable td:nth-child(2),
-    #siteRecordsTable td:nth-child(3),
-    #siteRecordsTable td:nth-child(7),
-    #siteRecordsTable td:nth-child(8),
-    #siteRecordsTable td:nth-child(10) {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    #mainPageSection #siteRecordsTable th:nth-child(2),
-    #mainPageSection #siteRecordsTable th:nth-child(3),
-    #mainPageSection #siteRecordsTable th:nth-child(7),
-    #mainPageSection #siteRecordsTable th:nth-child(8),
-    #mainPageSection #siteRecordsTable th:nth-child(10),
-    #mainPageSection #siteRecordsTable td:nth-child(2),
-    #mainPageSection #siteRecordsTable td:nth-child(3),
-    #mainPageSection #siteRecordsTable td:nth-child(7),
-    #mainPageSection #siteRecordsTable td:nth-child(8),
-    #mainPageSection #siteRecordsTable td:nth-child(10) {
-        visibility: collapse;
-    }
-}
