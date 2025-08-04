@@ -1478,14 +1478,24 @@ tr:hover {
         display: none;
     }
 
-    /* Main Dashboard Table adjustments */
-    #siteRecordsTable th:nth-child(4), 
-    #siteRecordsTable td:nth-child(4),
-    #siteRecordsTable th:nth-child(5), 
-    #siteRecordsTable td:nth-child(5),
-    #siteRecordsTable th:nth-child(6), 
-    #siteRecordsTable td:nth-child(6) {
+    /* Main Dashboard Table adjustments - Updated to show only checkbox, site, PO, vendor, status */
+    #siteRecordsTable th:not(:first-child):not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(8)),
+    #siteRecordsTable td:not(:first-child):not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(8)) {
         display: none;
+    }
+    
+    /* Keep checkbox (1st col), site (3rd col), PO (4th col), vendor (5th col), and status (8th col) */
+    #siteRecordsTable th:nth-child(1),
+    #siteRecordsTable td:nth-child(1),
+    #siteRecordsTable th:nth-child(3),
+    #siteRecordsTable td:nth-child(3),
+    #siteRecordsTable th:nth-child(4),
+    #siteRecordsTable td:nth-child(4),
+    #siteRecordsTable th:nth-child(5),
+    #siteRecordsTable td:nth-child(5),
+    #siteRecordsTable th:nth-child(8),
+    #siteRecordsTable td:nth-child(8) {
+        display: table-cell;
     }
     
     .report-actions .btn {
@@ -2211,8 +2221,6 @@ tr:hover {
 .po-header-row:hover {
     background-color: #f5f5f5 !important;
 }
-
-
 
 /* Improve spacing and layout for the invoice preview modal */
 .invoice-preview-modal {
