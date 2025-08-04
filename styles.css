@@ -2256,36 +2256,3 @@ tr:hover {
     background-color: rgba(74, 111, 165, 0.2) !important;
     transition: background-color 0.1s;
 }
-
-@media (max-width: 480px) {
-    #siteRecordsTable th:nth-child(2),  /* ID */
-    #siteRecordsTable th:nth-child(3),  /* Release Date */
-    #siteRecordsTable th:nth-child(5),  /* PO */
-    #siteRecordsTable th:nth-child(7),  /* Invoice */
-    #siteRecordsTable th:nth-child(10), /* Note */
-    #siteRecordsTable td:nth-child(2),
-    #siteRecordsTable td:nth-child(3),
-    #siteRecordsTable td:nth-child(5),
-    #siteRecordsTable td:nth-child(7),
-    #siteRecordsTable td:nth-child(10) {
-        display: none;
-    }
-}
-
-
-@media (max-width: 480px) {
-    #siteRecordsTable th:nth-child(1),  /* Checkbox */
-    #siteRecordsTable th:nth-child(2),  /* ID */
-    #siteRecordsTable th:nth-child(3),  /* Release Date */
-    #siteRecordsTable th:nth-child(5),  /* PO */
-    #siteRecordsTable th:nth-child(7),  /* Invoice */
-    #siteRecordsTable th:nth-child(10), /* Note */
-    #siteRecordsTable td:nth-child(1),
-    #siteRecordsTable td:nth-child(2),
-    #siteRecordsTable td:nth-child(3),
-    #siteRecordsTable td:nth-child(5),
-    #siteRecordsTable td:nth-child(7),
-    #siteRecordsTable td:nth-child(10) {
-        display: none;
-    }
-}

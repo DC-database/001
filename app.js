@@ -2252,24 +2252,24 @@ function setupResponsiveElements() {
     
     // Records table responsiveness
     if (screenWidth <= 400) {
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(4), #recordsTable td:nth-child(4), #recordsTable th:nth-child(6), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(8), #recordsTable th:nth-child(9), #recordsTable td:nth-child(6), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 576) {
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(8), #recordsTable th:nth-child(9), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 768) {
-        document.querySelectorAll('#recordsTable th:nth-child(2), #recordsTable td:nth-child(2), #recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(7), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(8), #recordsTable th:nth-child(9), #recordsTable td:nth-child(7), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
             el.style.display = 'none';
         });
         
         // Site records table responsiveness
-        document.querySelectorAll('#siteRecordsTable th:nth-child(2), #siteRecordsTable td:nth-child(2), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
+        document.querySelectorAll('#siteRecordsTable th:nth-child(4), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(9)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 992) {
-        document.querySelectorAll('#recordsTable th:nth-child(3), #recordsTable td:nth-child(3), #recordsTable th:nth-child(8), #recordsTable td:nth-child(8)').forEach(el => {
+        document.querySelectorAll('#recordsTable th:nth-child(4), #recordsTable td:nth-child(5), #recordsTable th:nth-child(6), #recordsTable td:nth-child(9)').forEach(el => {
             el.style.display = 'none';
         });
     }
