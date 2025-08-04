@@ -1447,8 +1447,8 @@ function refreshSiteTable(filteredRecords = null) {
 }
 
 function showDashboardRecordPreview(record) {
-document.getElementById('dashboardPreviewVendor').textContent = record.vendor || '-';    
-document.getElementById('dashboardPreviewPoNumber').textContent = record.poNumber || '-';
+    document.getElementById('dashboardPreviewVendor').textContent = record.vendor || '-';    
+    document.getElementById('dashboardPreviewPoNumber').textContent = record.poNumber || '-';
     document.getElementById('dashboardPreviewInvoiceNumber').textContent = record.invoiceNumber || '-';
     document.getElementById('dashboardPreviewAmount').textContent = record.value ? formatNumber(record.value) : '-';
     document.getElementById('dashboardPreviewStatus').textContent = record.status || '-';
@@ -1490,25 +1490,31 @@ document.getElementById('dashboardPreviewPoNumber').textContent = record.poNumbe
         }
     });
     
-    // Update WhatsApp button with site-specific number
-    const whatsappBtn = document.getElementById('dashboardWhatsappReminderBtn');
-    let whatsappNumber = '50992023'; // Default number
+    // Update WhatsApp buttons with site-specific number
+    const whatsappHOBtn = document.getElementById('dashboardWhatsappHOReminderBtn');
+    const whatsappSiteBtn = document.getElementById('dashboardWhatsappSiteReminderBtn');
+    let whatsappHONumber = '50992023'; // Default HO number
+    let whatsappSiteNumber = '50992023'; // Default if no site match
     
     // Extract site number from the record's site
     if (record.site) {
         for (const [sitePattern, number] of Object.entries(SITE_WHATSAPP_NUMBERS)) {
             if (record.site.includes(sitePattern)) {
-                whatsappNumber = number;
+                whatsappSiteNumber = number;
                 break;
             }
         }
     }
     
-    whatsappBtn.onclick = function() {
-        sendWhatsAppReminder(record, whatsappNumber);
+    whatsappHOBtn.onclick = function() {
+        sendWhatsAppReminder(record, whatsappHONumber);
     };
     
-    // Add the new "View in Tracker" button functionality
+    whatsappSiteBtn.onclick = function() {
+        sendWhatsAppReminder(record, whatsappSiteNumber);
+    };
+    
+    // Add the "View in Tracker" button functionality
     const viewInTrackerBtn = document.getElementById('dashboardViewInTrackerBtn');
     if (record.poNumber) {
         viewInTrackerBtn.style.display = 'inline-block';
@@ -2264,8 +2270,8 @@ function setupResponsiveElements() {
             el.style.display = 'none';
         });
         
-        // Site records table responsiveness
-        document.querySelectorAll('#siteRecordsTable th:nth-child(2), #siteRecordsTable td:nth-child(2), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
+        // Site records table responsiveness - Updated for mobile view
+        document.querySelectorAll('#siteRecordsTable th:nth-child(2), #siteRecordsTable td:nth-child(2), #siteRecordsTable th:nth-child(5), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(6), #siteRecordsTable th:nth-child(7), #siteRecordsTable td:nth-child(7), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
             el.style.display = 'none';
         });
     } else if (screenWidth <= 992) {
@@ -2276,7 +2282,7 @@ function setupResponsiveElements() {
     
     // Extra small screens
     if (screenWidth <= 480) {
-        document.querySelectorAll('#siteRecordsTable th:nth-child(4), #siteRecordsTable td:nth-child(4), #siteRecordsTable th:nth-child(5), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(6)').forEach(el => {
+        document.querySelectorAll('#siteRecordsTable th:nth-child(4), #siteRecordsTable td:nth-child(4), #siteRecordsTable th:nth-child(5), #siteRecordsTable td:nth-child(5), #siteRecordsTable th:nth-child(6), #siteRecordsTable td:nth-child(6), #siteRecordsTable th:nth-child(7), #siteRecordsTable td:nth-child(7), #siteRecordsTable th:nth-child(9), #siteRecordsTable td:nth-child(9)').forEach(el => {
             el.style.display = 'none';
         });
     }

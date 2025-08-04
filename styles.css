@@ -2258,69 +2258,13 @@ tr:hover {
 }
 /* Add this to your existing styles.css */
 @media (max-width: 480px) {
-    /* Dashboard table adjustments for mobile */
-    #siteRecordsTable thead tr th:nth-child(1),
-    #siteRecordsTable tbody tr td:nth-child(1) {
-        display: table-cell !important; /* Always show checkbox */
-        width: 30px;
+    #dashboardPreviewModal .action-btns {
+        flex-direction: column;
+        gap: 10px;
     }
     
-    #siteRecordsTable thead tr th:nth-child(2),
-    #siteRecordsTable tbody tr td:nth-child(2),
-    #siteRecordsTable thead tr th:nth-child(6),
-    #siteRecordsTable tbody tr td:nth-child(6),
-    #siteRecordsTable thead tr th:nth-child(7),
-    #siteRecordsTable tbody tr td:nth-child(7),
-    #siteRecordsTable thead tr th:nth-child(9),
-    #siteRecordsTable tbody tr td:nth-child(9) {
-        display: none !important;
-    }
-    
-    /* Force specific columns to show */
-    #siteRecordsTable thead tr th:nth-child(3),
-    #siteRecordsTable tbody tr td:nth-child(3), /* Site */
-    #siteRecordsTable thead tr th:nth-child(4),
-    #siteRecordsTable tbody tr td:nth-child(4), /* PO */
-    #siteRecordsTable thead tr th:nth-child(5),
-    #siteRecordsTable tbody tr td:nth-child(5), /* Vendor */
-    #siteRecordsTable thead tr th:nth-child(8),
-    #siteRecordsTable tbody tr td:nth-child(8) { /* Status */
-        display: table-cell !important;
-    }
-    
-    /* Adjust column widths */
-    #siteRecordsTable th:nth-child(3),
-    #siteRecordsTable td:nth-child(3) {
-        width: 20%; /* Site */
-    }
-    #siteRecordsTable th:nth-child(4),
-    #siteRecordsTable td:nth-child(4) {
-        width: 20%; /* PO */
-    }
-    #siteRecordsTable th:nth-child(5),
-    #siteRecordsTable td:nth-child(5) {
-        width: 30%; /* Vendor */
-    }
-    #siteRecordsTable th:nth-child(8),
-    #siteRecordsTable td:nth-child(8) {
-        width: 30%; /* Status */
-    }
-    
-    /* Make table more compact */
-    #siteRecordsTable th,
-    #siteRecordsTable td {
-        padding: 6px 4px;
-        font-size: 12px;
-    }
-    
-    /* Compact status badges */
-    .status-badge {
-        padding: 3px 6px;
-        font-size: 10px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100px;
-        display: inline-block;
+    #dashboardPreviewModal .action-btns button {
+        width: 100%;
+        margin-right: 0 !important;
     }
 }
