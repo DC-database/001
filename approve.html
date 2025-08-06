@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Invoice Approval</title>
+<link href="styles.css" rel="stylesheet"/>
+<style>
+:root {
+  --primary: #007bff;
+  --success: #28a745;
+  --warning: #ffc107;
+  --light: #f8f9fa;
+  --dark: #343a40;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+}
+
+.approval-container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.approval-container h1 {
+  text-align: center;
+  color: var(--primary);
+}
+
+.approval-info {
+  margin: 20px 0;
+  font-size: 16px;
+}
+
+.approval-info p {
+  margin: 5px 0;
+}
+
+.signature-box {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  height: 150px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.btn {
+  flex: 1;
+  margin: 0 5px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  color: white;
+}
+
+.btn-warning {
+  background-color: var(--warning);
+}
+
+.btn-success {
+  background-color: var(--success);
+}
+
+canvas {
+  touch-action: none;
+}
+</style>
+</head>
+<body>
+<div class="approval-container">
+<h1>Invoice Approval</h1>
+<div class="approval-info">
+<p><strong>PO Number:</strong> <span id="poNumber"></span></p>
+<p><strong>Invoice Number:</strong> <span id="invoiceNumber"></span></p>
+<p><strong>Mobile:</strong> <span id="mobileNumber"></span></p>
+<p><strong>Invoice PDF:</strong> <a href="#" id="pdfLink" target="_blank">View</a></p>
+</div>
+<label for="signature">Draw your signature:</label>
+<div class="signature-box">
+<canvas id="signatureCanvas"></canvas>
+</div>
+<div class="btn-group">
+<button class="btn btn-warning" onclick="clearSignature()">Clear</button>
+<button class="btn btn-success" onclick="submitApproval()">Approve</button>
+</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtEp9HL7MfOlnrCI-MWuTY4k6vuGTMCIs",
+      authDomain: "invoice-ac1bc.firebaseapp.com",
+      databaseURL: "https://invoice-ac1bc-default-rtdb.firebaseio.com",
+      projectId: "invoice-ac1bc",
+      storageBucket: "invoice-ac1bc.appspot.com",
+      messagingSenderId: "345752448964",
+      appId: "1:345752448964:web:e57f43e36ad3aa11efbe91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const po = urlParams.get("po");
+    const invoice = urlParams.get("invoice");
+    const mobile = urlParams.get("mobile");
+
+    document.getElementById("poNumber").textContent = po;
+    document.getElementById("invoiceNumber").textContent = invoice;
+    document.getElementById("mobileNumber").textContent = mobile;
+    document.getElementById("pdfLink").href = `https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/${invoice}.pdf`;
+
+    const canvas = document.getElementById("signatureCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    let drawing = false;
+
+    
+    canvas.addEventListener("mousedown", (e) => {
+      drawing = true;
+      draw(e);
+    }, { passive: false });
+    canvas.addEventListener("mouseup", () => {
+      drawing = false;
+      ctx.beginPath();
+    }, { passive: false });
+    canvas.addEventListener("mouseout", () => {
+      drawing = false;
+      ctx.beginPath();
+    }, { passive: false });
+    canvas.addEventListener("mousemove", draw);
+
+    // Touch support for mobile
+    canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  drawing = true;
+  drawTouch(e);
+}, { passive: false });
+      e.preventDefault();
+      drawing = true;
+      drawTouch(e);
+    }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  drawTouch(e);
+}, { passive: false });
+      e.preventDefault();
+      drawTouch(e);
+    }, { passive: false });
+    canvas.addEventListener("touchend", () => {
+  drawing = false;
+  ctx.beginPath();
+}, { passive: false });
+      drawing = false;
+      ctx.beginPath();
+    }, { passive: false });
+
+    function drawTouch(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "black";
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+    
+
+    function draw(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "black";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+    }
+
+    function submitApproval() {
+      const year = new Date().getFullYear().toString();
+      const recordsRef = db.ref(`records/${year}`);
+
+      recordsRef.once("value").then(snapshot => {
+        const records = snapshot.val();
+        if (!records) return alert("No records found.");
+
+        const updatedRecords = Object.values(records).map(r => {
+          if (r.poNumber === po && (!invoice || r.invoiceNumber === invoice)) {
+            r.status = "Approved";
+            r.lastUpdated = new Date().toISOString();
+            r.approvedBy = "Signed via Link";
+          }
+          return r;
+        }, { passive: false });
+
+        const updatedObj = {};
+        updatedRecords.forEach((r, i) => {
+          updatedObj[i] = r;
+        }, { passive: false });
+
+        return recordsRef.set(updatedObj);
+      }).then(() => {
+        
+        const msg = `✅ Approved Invoice%0A%0APO: ${po}%0AInvoice: ${invoice}%0AApproved by: ${mobile}`;
+        window.open(`https://api.whatsapp.com/send?phone=50992023&text=${msg}`, '_blank');
+        alert("Invoice approved successfully!");
+    
+        window.location.href = "https://dc-database.github.io/001/";
+      }).catch(err => {
+        alert("Error approving: " + err.message);
+      }, { passive: false });
+    }
+  </script>
+</body>
+</html>
