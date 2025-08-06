@@ -5,99 +5,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice Approval</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-    }
     .approval-container {
       max-width: 600px;
-      margin: 40px auto;
-      background: white;
+      margin: 50px auto;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    h1 {
+    .approval-container h1 {
       text-align: center;
-      color: #007bff;
+      color: var(--primary);
     }
-    .info {
+    .approval-info {
       margin: 20px 0;
-    }
-    .info p {
-      margin: 5px 0;
+      font-size: 16px;
     }
     .signature-box {
       border: 1px solid #ccc;
+      border-radius: 4px;
       height: 150px;
-      border-radius: 5px;
-      margin-bottom: 15px;
+      margin-top: 10px;
     }
     canvas {
       width: 100%;
       height: 150px;
+      border-radius: 4px;
     }
     .btn-group {
       display: flex;
       justify-content: space-between;
+      margin-top: 20px;
     }
     .btn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      color: white;
-      font-weight: bold;
-    }
-    .btn-warning {
-      background-color: #ffc107;
-    }
-    .btn-success {
-      background-color: #28a745;
-    }
-    .barcode {
-      text-align: center;
-      font-weight: bold;
-      font-family: monospace;
-      margin-top: 20px;
-      border-top: 1px dashed #ccc;
-      padding-top: 10px;
+      flex: 1;
+      margin: 0 5px;
     }
   </style>
 </head>
 <body>
   <div class="approval-container">
     <h1>Invoice Approval</h1>
-    <div class="info">
+    <div class="approval-info">
       <p><strong>PO Number:</strong> <span id="poNumber"></span></p>
-      <p><strong>Vendor:</strong> <span id="vendor"></span></p>
-      <p><strong>Site:</strong> <span id="site"></span></p>
+      <p><strong>Invoice Number:</strong> <span id="invoiceNumber"></span></p>
+      <p><strong>Mobile:</strong> <span id="mobileNumber"></span></p>
       <p><strong>Invoice PDF:</strong> <a id="pdfLink" href="#" target="_blank">View</a></p>
     </div>
-    <label>Sign below:</label>
+    <label for="signature">Draw your signature:</label>
     <div class="signature-box">
       <canvas id="signatureCanvas"></canvas>
     </div>
     <div class="btn-group">
       <button class="btn btn-warning" onclick="clearSignature()">Clear</button>
-      <button class="btn btn-success" onclick="downloadSignedPDF()">Download PDF</button>
-    </div>
-    <div class="barcode">
-      Barcode ID: AUTH-20250805140622-MKTYO9N7
+      <button class="btn btn-success" onclick="submitApproval()">Approve</button>
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const po = params.get("po") || "N/A";
-    const site = params.get("site") || "N/A";
-    const vendor = params.get("vendor") || "N/A";
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtEp9HL7MfOlnrCI-MWuTY4k6vuGTMCIs",
+      authDomain: "invoice-ac1bc.firebaseapp.com",
+      databaseURL: "https://invoice-ac1bc-default-rtdb.firebaseio.com",
+      projectId: "invoice-ac1bc",
+      storageBucket: "invoice-ac1bc.appspot.com",
+      messagingSenderId: "345752448964",
+      appId: "1:345752448964:web:e57f43e36ad3aa11efbe91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const po = urlParams.get("po");
+    const invoice = urlParams.get("invoice");
+    const mobile = urlParams.get("mobile");
 
     document.getElementById("poNumber").textContent = po;
-    document.getElementById("site").textContent = site;
-    document.getElementById("vendor").textContent = vendor;
-    document.getElementById("pdfLink").href = `https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/${po}.pdf`;
+    document.getElementById("invoiceNumber").textContent = invoice;
+    document.getElementById("mobileNumber").textContent = mobile;
+    document.getElementById("pdfLink").href = `https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/${invoice}.pdf`;
 
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");
@@ -105,17 +95,18 @@
     canvas.height = canvas.offsetHeight;
 
     let drawing = false;
+
     canvas.addEventListener("mousedown", () => drawing = true);
     canvas.addEventListener("mouseup", () => drawing = false);
-    canvas.addEventListener("mousemove", draw);
     canvas.addEventListener("mouseout", () => drawing = false);
+    canvas.addEventListener("mousemove", draw);
 
     function draw(e) {
       if (!drawing) return;
       const rect = canvas.getBoundingClientRect();
       ctx.lineWidth = 2;
       ctx.lineCap = "round";
-      ctx.strokeStyle = "#000";
+      ctx.strokeStyle = "black";
       ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
       ctx.stroke();
       ctx.beginPath();
@@ -127,26 +118,39 @@
       ctx.beginPath();
     }
 
-    
-function downloadSignedPDF() {
-  // Delay slightly to ensure canvas drawing is flushed
-  setTimeout(() => {
+    function submitApproval() {
+      const year = new Date().getFullYear().toString();
+      const recordsRef = db.ref(`records/${year}`);
 
-      const dataURL = canvas.toDataURL("image/png");
-      const win = window.open();
-      win.document.write('<html><head><title>Signed PDF</title></head><body>');
-      win.document.write('<h2>Signed Invoice Approval</h2>');
-      win.document.write(`<p><strong>PO Number:</strong> ${po}</p>`);
-      win.document.write(`<p><strong>Vendor:</strong> ${vendor}</p>`);
-      win.document.write(`<p><strong>Site:</strong> ${site}</p>`);
-      win.document.write(`<p><strong>PDF:</strong> <a href="https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/${po}.pdf" target="_blank">View Invoice</a></p>`);
-      win.document.write(`<p><strong>Barcode:</strong> AUTH-20250805140622-MKTYO9N7</p>`);
-      win.document.write('<h3>Signature:</h3>');
-      win.document.write(`<img src="${dataURL}" style="width:100%;border:1px solid #ccc;" />`);
-      win.document.write('</body></html>');
-  }, 100);
-      win.document.close();
-      win.print();
+      recordsRef.once("value").then(snapshot => {
+        const records = snapshot.val();
+        if (!records) return alert("No records found.");
+
+        const updatedRecords = Object.values(records).map(r => {
+          if (r.poNumber === po && (!invoice || r.invoiceNumber === invoice)) {
+            r.status = "Approved";
+            r.lastUpdated = new Date().toISOString();
+            r.approvedBy = "Signed via Link";
+          }
+          return r;
+        });
+
+        const updatedObj = {};
+        updatedRecords.forEach((r, i) => {
+          updatedObj[i] = r;
+        });
+
+        return recordsRef.set(updatedObj);
+      }).then(() => {
+        
+        const msg = `✅ Approved Invoice%0A%0APO: ${po}%0AInvoice: ${invoice}%0AApproved by: ${mobile}`;
+        window.open(`https://api.whatsapp.com/send?phone=50992023&text=${msg}`, '_blank');
+        alert("Invoice approved successfully!");
+    
+        window.location.href = "https://dc-database.github.io/001/";
+      }).catch(err => {
+        alert("Error approving: " + err.message);
+      });
     }
   </script>
 </body>
