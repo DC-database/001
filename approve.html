@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Invoice Approval</title>
 <link href="styles.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <style>
 :root {
   --primary: #007bff;
@@ -84,16 +85,39 @@ canvas {
 .btn-success {
   background-color: var(--success);
 }
+
+.barcode-container {
+  margin-top: 30px;
+  text-align: center;
+  padding: 15px;
+  border-top: 1px dashed #ccc;
+}
+
+.barcode-container svg {
+  margin: 10px auto;
+  display: block;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
 </style>
 </head>
 <body>
 <div class="approval-container">
 <h1>Invoice Approval</h1>
 <div class="approval-info">
-<p><strong>PO Number:</strong> <span id="poNumber"></span></p>
-<p><strong>Invoice Number:</strong> <span id="invoiceNumber"></span></p>
-<p><strong>Mobile:</strong> <span id="mobileNumber"></span></p>
-<p><strong>Invoice PDF:</strong> <a href="#" id="pdfLink" target="_blank">View</a></p>
+  <div class="info-grid">
+    <p><strong>PO Number:</strong> <span id="poNumber"></span></p>
+    <p><strong>Vendor:</strong> <span id="vendor"></span></p>
+    <p><strong>Invoice Number:</strong> <span id="invoiceNumber"></span></p>
+    <p><strong>Site:</strong> <span id="site"></span></p>
+  </div>
+  <p><strong>Approval Mobile:</strong> <span id="mobileNumber"></span></p>
+  <p><strong>Invoice PDF:</strong> <a href="#" id="pdfLink" target="_blank">View</a></p>
 </div>
 <label for="signature">Draw your signature:</label>
 <div class="signature-box">
@@ -102,6 +126,10 @@ canvas {
 <div class="btn-group">
 <button class="btn btn-warning" onclick="clearSignature()">Clear</button>
 <button class="btn btn-success" onclick="submitApproval()">Approve</button>
+</div>
+<div class="barcode-container">
+  <p>Approval Reference:</p>
+  <svg id="barcode"></svg>
 </div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -123,11 +151,25 @@ canvas {
     const po = urlParams.get("po");
     const invoice = urlParams.get("invoice");
     const mobile = urlParams.get("mobile");
+    const vendor = urlParams.get("vendor") || "Not specified";
+    const site = urlParams.get("site") || "Not specified";
 
     document.getElementById("poNumber").textContent = po;
     document.getElementById("invoiceNumber").textContent = invoice;
     document.getElementById("mobileNumber").textContent = mobile;
+    document.getElementById("vendor").textContent = vendor;
+    document.getElementById("site").textContent = site;
     document.getElementById("pdfLink").href = `https://ibaqatar-my.sharepoint.com/personal/dc_iba_com_qa/Documents/DC%20Files/INVOICE/${invoice}.pdf`;
+
+    // Generate barcode
+    const barcodeValue = `${po}-${invoice}-${mobile}`;
+    JsBarcode("#barcode", barcodeValue, {
+      format: "CODE128",
+      lineColor: "#000",
+      width: 2,
+      height: 50,
+      displayValue: true
+    });
 
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");
@@ -224,6 +266,9 @@ canvas {
             r.status = "Approved";
             r.lastUpdated = new Date().toISOString();
             r.approvedBy = "Signed via Link";
+            r.approvalMobile = mobile;
+            r.vendor = vendor;
+            r.site = site;
           }
           return r;
         });
@@ -235,7 +280,7 @@ canvas {
 
         return recordsRef.set(updatedObj);
       }).then(() => {
-        const msg = `✅ Approved Invoice%0A%0APO: ${po}%0AInvoice: ${invoice}%0AApproved by: ${mobile}`;
+        const msg = `✅ Approved Invoice%0A%0APO: ${po}%0AInvoice: ${invoice}%0AVendor: ${vendor}%0ASite: ${site}%0AApproved by: ${mobile}`;
         window.open(`https://api.whatsapp.com/send?phone=50992023&text=${msg}`, '_blank');
         alert("Invoice approved successfully!");
         window.location.href = "https://dc-database.github.io/001/";
