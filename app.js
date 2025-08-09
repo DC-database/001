@@ -652,6 +652,20 @@ function refreshTable(filteredRecords = null) {
                     ${!record.details ? 'disabled' : ''}>
                     <i class="fas fa-file-alt"></i> SRV
                 </button>
+            
+                <button class="btn btn-primary" 
+                    onclick='openApprovalModal(${JSON.stringify({ 
+                        site: record.site||"", 
+                        poNumber: record.poNumber||"", 
+                        vendor: record.vendor||"", 
+                        value: record.value||"", 
+                        fileName: record.fileName||"", 
+                        invoiceNumber: record.invoiceNumber||"", 
+                        status: record.status||"" 
+                    })})'>
+                    <i class="fab fa-whatsapp"></i> Approval
+                </button>
+    
             </td>
         `;
         
@@ -2887,4 +2901,181 @@ function sendHOReminder() {
   const phone = "50992023";
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   window.open(url, '_blank');
+}
+
+
+// === Approval/Approver Feature (Injected) ===
+let approvers = [];
+let pendingApprovalRecord = null;
+
+function loadApprovers() {
+  return database.ref('Approver').once('value').then(snap => {
+    const data = snap.val() || {};
+    approvers = Object.values(data).map(x => {
+      const name    = (x.Name || x.name || '').toString().trim();
+      const pos     = (x.Position || x.position || '').toString().trim();
+      const mobile  = (x['Mobile Number'] || x.Mobile || x.mobile || '').toString().replace(/\D/g,'');
+      const email   = (x.Email || x.email || '').toString().trim();
+      return { name, position: pos, mobile, email };
+    }).filter(a => a.name && a.mobile);
+    console.log(`Approvers loaded: ${approvers.length}`);
+  }).catch(err => {
+    console.error('Approver load error:', err);
+    approvers = [];
+  });
+}
+
+function openApprovalModal(rec) {
+  pendingApprovalRecord = rec;
+  const el = (id) => document.getElementById(id);
+
+  if (el('apprSite'))   el('apprSite').textContent   = rec.site || '-';
+  if (el('apprPO'))     el('apprPO').textContent     = rec.poNumber || '-';
+  if (el('apprVendor')) el('apprVendor').textContent = rec.vendor || '-';
+  if (el('apprAmount')) el('apprAmount').textContent = rec.value ? formatNumber(rec.value) : '-';
+
+  const sel = el('approverSelect');
+  if (sel) {
+    // Start with a blank placeholder
+    sel.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '— Select approver —';
+    sel.appendChild(placeholder);
+  }
+
+  // Load/refresh approvers and append options; do NOT auto-select any
+  loadApprovers().then(() => {
+    if (!sel) return;
+    // Keep only the placeholder, then append options
+    sel.options.length = 1;
+    if (!approvers || approvers.length === 0) {
+      sel.options[0].textContent = 'No approvers found (upload in Data Management)';
+      sel.value = '';
+      return;
+    }
+    approvers.forEach((a, idx) => {
+      const opt = document.createElement('option');
+      opt.value = (a.mobile || '').toString().replace(/\D/g,'');
+      opt.setAttribute('data-index', idx.toString());
+      opt.textContent = `${a.name} — ${a.position}`;
+      sel.appendChild(opt);
+    });
+    sel.value = ''; // force user to choose
+  }).catch(err => console.warn('Approver refresh failed:', err));
+
+  const btn = el('sendApprovalBtn');
+  if (btn) btn.onclick = sendApprovalWhatsApp;
+
+  const modal = el('approvalModal');
+  if (modal) {
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  } else {
+    console.warn('approvalModal not found in DOM.');
+  }
+}
+
+function closeApprovalModal() {
+  const modal = document.getElementById('approvalModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  const msg = document.getElementById('approvalMessage');
+  if (msg) msg.value = '';
+  pendingApprovalRecord = null;
+}
+
+function sendApprovalWhatsApp() {
+  if (!pendingApprovalRecord) return;
+  const sel = document.getElementById('approverSelect');
+  const msgExtra = (document.getElementById('approvalMessage')?.value || '').trim();
+
+  // Must pick someone
+  const waNumber = (sel && sel.value ? sel.value : '').replace(/\D/g,'');
+  if (!waNumber) { alert('Please choose an approver'); return; }
+
+  // Find current approver by mobile; fallback to exact label match if needed
+  const approver = (approvers.find(a => (a.mobile||'').replace(/\D/g,'') === waNumber) || null);
+  if (!approver) { alert('Approver not found. Try re-opening the modal.'); return; }
+
+  const r = pendingApprovalRecord;
+
+  let message = `*Invoice Approval Request*\n\n`;
+  message += `Site: ${r.site || 'N/A'}\n`;
+  message += `PO: ${r.poNumber || 'N/A'}\n`;
+  message += `Vendor: ${r.vendor || 'N/A'}\n`;
+  message += `Amount: ${r.value ? formatNumber(r.value) : 'N/A'}\n`;
+  if (r.status) message += `Status: ${r.status}\n`;
+
+  if (r.fileName) {
+    const pdfUrl = `${PDF_BASE_PATH}${encodeURIComponent(r.fileName)}`;
+    message += `\nInvoice PDF: ${pdfUrl}\n`;
+    message += `If it doesn't open, please use your phone's PDF app.\n`;
+  } else {
+    message += `\n[No PDF linked in the system]\n`;
+  }
+
+  if (msgExtra) message += `\nNote: ${msgExtra}\n`;
+  message += `\nSent from IBA Invoice Status Tracker`;
+
+  const encodedMessage = encodeURIComponent(message);
+  window.open(`https://wa.me/${waNumber}?text=${encodedMessage}`, '_blank');
+  closeApprovalModal();
+}
+
+
+function downloadApproverTemplate() {
+  const headers = ['Name','Position','Mobile Number','Email'].join(',');
+  const blob = new Blob([headers], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'approver_template.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function uploadApproverCSV() {
+  const file = document.getElementById('approverCsvInput').files[0];
+  const status = document.getElementById('approverUploadStatus');
+  if (!file) { if (status) { status.textContent = 'Please select an Approver CSV file'; status.className = 'upload-status error'; } return; }
+  if (typeof showLoading === 'function') showLoading();
+  if (status) { status.textContent = 'Processing Approver CSV...'; status.className = 'upload-status'; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    Papa.parse(e.target.result, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const rows = results.data || [];
+        if (rows.length === 0) { if (status) { status.textContent = 'No valid rows in CSV'; status.className = 'upload-status error'; } if (typeof hideLoading === 'function') hideLoading(); return; }
+        const obj = {};
+        rows.forEach((r, i) => {
+          const rec = {
+            Name: (r['Name'] || '').toString().trim(),
+            Position: (r['Position'] || '').toString().trim(),
+            'Mobile Number': (r['Mobile Number'] || r['Mobile'] || '').toString().replace(/\D/g,''),
+            Email: (r['Email'] || '').toString().trim()
+          };
+          if (rec.Name && rec['Mobile Number']) obj[i] = rec;
+        });
+        database.ref('Approver').set(obj).then(()=>{
+          if (status) { status.textContent = `Uploaded ${Object.keys(obj).length} approver(s) to Firebase`; status.className = 'upload-status success'; }
+          if (typeof hideLoading === 'function') hideLoading();
+          loadApprovers();
+        }).catch(err=>{
+          if (status) { status.textContent = `Error uploading approvers: ${err.message}`; status.className = 'upload-status error'; }
+          if (typeof hideLoading === 'function') hideLoading();
+        });
+      },
+      error: (error) => {
+        if (status) { status.textContent = `Error parsing CSV: ${error.message}`; status.className = 'upload-status error'; }
+        if (typeof hideLoading === 'function') hideLoading();
+      }
+    });
+  };
+  reader.readAsText(file);
 }
