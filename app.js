@@ -2119,6 +2119,7 @@ function showInvoicePreview(record) {
     document.getElementById('previewInvoiceNumber').textContent = record.invoiceNumber || '-';
     document.getElementById('previewAmount').textContent = record.value ? formatNumber(record.value) : '-';
     document.getElementById('previewStatus').textContent = record.status || '-';
+    document.getElementById('previewReleaseDate').textContent = record.releaseDate ? formatDate(record.releaseDate) : '-';
     document.getElementById('previewNotes').textContent = record.note || '-';
     
     const statusSteps = {
